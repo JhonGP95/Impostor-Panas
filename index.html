@@ -1,0 +1,2750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Impostor">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="El Impostor Chazey Panas - Juego de roles para grupos">
+<title>El Impostor · Chazey Panas</title>
+
+<!-- PWA Manifest inline via link -->
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22El%20Impostor%20Chazey%20Panas%22%2C%22short_name%22%3A%22Impostor%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23000000%22%2C%22orientation%22%3A%22portrait%22%7D">
+
+<style>
+/* ================================================================
+   VARIABLES & RESET
+   ================================================================ */
+:root {
+  --green:    #39FF14;
+  --red:      #FF3131;
+  --blue:     #4D9FFF;
+  --violet:   #A855F7;
+  --cyan:     #00F5FF;
+  --yellow:   #FFD600;
+  --bg:       #000000;
+  --surface:  #0A0A0F;
+  --surface2: #111118;
+  --border:   rgba(255,255,255,0.08);
+  --text:     #F0F0FF;
+  --muted:    rgba(240,240,255,0.45);
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bot: env(safe-area-inset-bottom, 20px);
+  --radius:   16px;
+  --radius-sm:10px;
+  --font:     'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif;
+  --trans:    0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ================================================================
+   SCREENS
+   ================================================================ */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: max(44px, var(--safe-top));
+  padding-bottom: max(20px, var(--safe-bot));
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(100%);
+  transition: opacity var(--trans), transform var(--trans);
+  overflow: hidden;
+}
+
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(0);
+}
+
+.screen.exit-left {
+  opacity: 0;
+  transform: translateX(-40%);
+  pointer-events: none;
+}
+
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 20px;
+}
+
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+.title-xl {
+  font-size: clamp(28px, 8vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.title-lg {
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.title-md {
+  font-size: clamp(18px, 5vw, 22px);
+  font-weight: 600;
+}
+.body-lg { font-size: 17px; line-height: 1.5; }
+.body-md { font-size: 15px; line-height: 1.5; }
+.caption  { font-size: 13px; color: var(--muted); }
+
+/* ================================================================
+   GLOW EFFECTS
+   ================================================================ */
+.glow-green { text-shadow: 0 0 20px var(--green), 0 0 40px rgba(57,255,20,0.3); color: var(--green); }
+.glow-red   { text-shadow: 0 0 20px var(--red),   0 0 40px rgba(255,49,49,0.3);  color: var(--red); }
+.glow-blue  { text-shadow: 0 0 20px var(--blue),  0 0 40px rgba(77,159,255,0.3); color: var(--blue); }
+.glow-violet{ text-shadow: 0 0 20px var(--violet),0 0 40px rgba(168,85,247,0.3); color: var(--violet); }
+.glow-cyan  { text-shadow: 0 0 20px var(--cyan),  0 0 40px rgba(0,245,255,0.3);  color: var(--cyan); }
+
+/* ================================================================
+   BUTTONS
+   ================================================================ */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 18px 24px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(168,85,247,0.35), 0 0 0 1px rgba(255,255,255,0.08);
+}
+.btn-primary:active {
+  box-shadow: 0 2px 12px rgba(168,85,247,0.5);
+}
+
+.btn-green {
+  background: var(--bg);
+  color: var(--green);
+  border: 1.5px solid var(--green);
+  box-shadow: 0 0 16px rgba(57,255,20,0.2), inset 0 0 24px rgba(57,255,20,0.04);
+}
+
+.btn-red {
+  background: var(--bg);
+  color: var(--red);
+  border: 1.5px solid var(--red);
+  box-shadow: 0 0 16px rgba(255,49,49,0.2), inset 0 0 24px rgba(255,49,49,0.04);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
+
+.btn-sm {
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-hold {
+  background: linear-gradient(135deg, #1a0030 0%, #000820 100%);
+  color: var(--violet);
+  border: 1.5px solid var(--violet);
+  box-shadow: 0 0 24px rgba(168,85,247,0.25);
+  padding: 22px 24px;
+  font-size: 17px;
+}
+
+/* ================================================================
+   CARDS & SURFACES
+   ================================================================ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.card-glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+/* ================================================================
+   FORM ELEMENTS
+   ================================================================ */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  outline: none;
+  transition: border-color var(--trans);
+}
+
+.form-input:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 12px rgba(168,85,247,0.2);
+}
+
+/* Stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 52px;
+  height: 52px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.stepper-btn:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.stepper-val {
+  flex: 1;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Toggle */
+.toggle-group {
+  display: flex;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.toggle-option {
+  flex: 1;
+  padding: 14px 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--trans), color var(--trans);
+  text-align: center;
+}
+
+.toggle-option.active {
+  background: linear-gradient(135deg, var(--violet), var(--blue));
+  color: #fff;
+}
+
+/* Select */
+.form-select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+
+/* Checkbox toggle */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.switch {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.switch input { display: none; }
+
+.switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background var(--trans);
+}
+
+.switch input:checked + .switch-track {
+  background: var(--violet);
+}
+
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--trans);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.switch input:checked + .switch-track::after {
+  transform: translateX(22px);
+}
+
+/* ================================================================
+   MODALS
+   ================================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: max(20px, var(--safe-bot));
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--trans);
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 480px;
+  transform: translateY(100%);
+  transition: transform var(--trans);
+}
+
+.modal-overlay.open .modal-sheet {
+  transform: translateY(0);
+}
+
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+/* ================================================================
+   PLAYER LIST
+   ================================================================ */
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.player-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.player-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  outline: none;
+}
+
+/* Vote list */
+.vote-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  transition: opacity 0.3s;
+}
+
+.vote-item.eliminated {
+  opacity: 0.4;
+}
+
+/* ================================================================
+   STATUS INDICATORS
+   ================================================================ */
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.stat-chip-red {
+  background: rgba(255,49,49,0.12);
+  border: 1px solid rgba(255,49,49,0.3);
+  color: var(--red);
+}
+
+.stat-chip-blue {
+  background: rgba(77,159,255,0.12);
+  border: 1px solid rgba(77,159,255,0.3);
+  color: var(--blue);
+}
+
+/* ================================================================
+   ROLE REVEAL CARD
+   ================================================================ */
+.role-card {
+  border-radius: 24px;
+  padding: 36px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.role-card-human {
+  background: linear-gradient(160deg, #000d00 0%, #001a00 50%, #000000 100%);
+  border: 2px solid rgba(57,255,20,0.4);
+  box-shadow: 0 0 60px rgba(57,255,20,0.15), inset 0 0 60px rgba(57,255,20,0.03);
+}
+
+.role-card-impostor {
+  background: linear-gradient(160deg, #1a0000 0%, #2a0000 50%, #000000 100%);
+  border: 2px solid rgba(255,49,49,0.4);
+  box-shadow: 0 0 60px rgba(255,49,49,0.15), inset 0 0 60px rgba(255,49,49,0.03);
+}
+
+.role-card::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  opacity: 0.03;
+  background: radial-gradient(circle, white 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 20px rgba(57,255,20,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(57,255,20,0.6), 0 0 80px rgba(57,255,20,0.2); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 20px rgba(255,49,49,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(255,49,49,0.6), 0 0 80px rgba(255,49,49,0.2); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glitch {
+  0%   { transform: translate(0); }
+  20%  { transform: translate(-3px, 2px); }
+  40%  { transform: translate(3px,-2px); }
+  60%  { transform: translate(-2px, 3px); }
+  80%  { transform: translate(2px,-3px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes scan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+
+@keyframes countdown {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: 220; }
+}
+
+.anim-fade-up { animation: fadeInUp 0.4s ease both; }
+.anim-scale   { animation: scaleIn 0.35s ease both; }
+.anim-fade    { animation: fadeIn  0.3s ease both; }
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+.screen-header {
+  padding: 12px 20px 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.back-btn:active { background: var(--surface2); }
+
+/* ================================================================
+   FOOTER ACTIONS
+   ================================================================ */
+.screen-footer {
+  padding: 12px 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ================================================================
+   DIVIDER
+   ================================================================ */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+/* ================================================================
+   EMPTY / SECTION LABELS
+   ================================================================ */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+/* ================================================================
+   PROGRESS / ROUND INDICATOR
+   ================================================================ */
+.round-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 20px;
+  flex-shrink: 0;
+}
+
+.round-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background var(--trans), transform var(--trans);
+}
+
+.round-dot.active {
+  background: var(--violet);
+  transform: scale(1.3);
+}
+
+.round-dot.done {
+  background: rgba(168,85,247,0.4);
+}
+
+/* ================================================================
+   LOGO / SPLASH
+   ================================================================ */
+.logo-mark {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 0 20px var(--violet));
+}
+
+/* ================================================================
+   VICTORY SCREEN
+   ================================================================ */
+.victory-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.victory-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  animation: float-up linear infinite;
+}
+
+@keyframes float-up {
+  from { transform: translateY(100vh) scale(1); opacity: 1; }
+  to   { transform: translateY(-20px) scale(0); opacity: 0; }
+}
+
+/* Scanline overlay */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+}
+
+/* ================================================================
+   HOLD BUTTON PROGRESS
+   ================================================================ */
+.hold-container {
+  position: relative;
+  user-select: none;
+}
+
+.hold-progress {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hold-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  opacity: 0.3;
+  transition: width 0.05s linear;
+}
+
+/* ================================================================
+   BADGE
+   ================================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge-impostor {
+  background: rgba(255,49,49,0.15);
+  border: 1px solid rgba(255,49,49,0.4);
+  color: var(--red);
+}
+
+.badge-human {
+  background: rgba(57,255,20,0.15);
+  border: 1px solid rgba(57,255,20,0.4);
+  color: var(--green);
+}
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div id="app"></div>
+
+<!-- ================================================================
+     MODAL GLOBAL
+     ================================================================ -->
+<div id="modal" class="modal-overlay" onclick="closeModalOnBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   BASE DE DATOS
+   ================================================================ */
+const BASE_DE_DATOS = [
+{
+  categoria: "🗺️ Lugares Icónicos",
+  palabras: [
+    { palabra: "Machu Picchu",       pista1: "Niebla",      pista2: "Inca" },
+    { palabra: "Petra",              pista1: "Cañón",       pista2: "Tallado" },
+    { palabra: "Gran Muralla",       pista1: "Frontera",    pista2: "Piedra" },
+    { palabra: "Taj Mahal",          pista1: "Mármol",      pista2: "Simetría" },
+    { palabra: "Connecta 26",             pista1: "Chamba",    pista2: "Trabajo" },
+    { palabra: "Everest",            pista1: "Cima",        pista2: "Ventisca" },
+    
+    // 🔹 NUEVOS LUGARES (26 adicionales)
+    { palabra: "Coliseo",            pista1: "Arena",       pista2: "Eco" },
+    { palabra: "Estatua de Libertad",pista1: "Antorcha",    pista2: "Exilio" },
+    { palabra: "Torre Eiffel",       pista1: "Remache",     pista2: "Silueta" },
+    { palabra: "Pirámides de Giza",  pista1: "Dunas",       pista2: "Geometría" },
+    { palabra: "Caño Cristales",         pista1: "Color",  pista2: "Encanto" },
+    { palabra: "Cabo de la vela",         pista1: "Guajira",        pista2: "Azucar" },
+    { palabra: "Cristo Redentor",    pista1: "Cumbre",      pista2: "Abraza" },
+    { palabra: "Sagrada Familia",    pista1: "Agujas",      pista2: "Luz" },
+    { palabra: "Big Ben",            pista1: "Westminster", pista2: "Campana" },
+    { palabra: "Versalles",          pista1: "Reflejo",     pista2: "Laberinto" },
+    { palabra: "Salar de Uyuni",           pista1: "Espejo",    pista2: "Alto" },
+    { palabra: "Santorini",          pista1: "Caldera",     pista2: "Blanco" },
+    { palabra: "Venecia",            pista1: "Reflejo",     pista2: "Máscara" },
+    { palabra: "Kyoto",              pista1: "Torii",       pista2: "Koi" },
+    { palabra: "Bali",               pista1: "Ofrenda",     pista2: "Arrozal" },
+    { palabra: "Serengeti",          pista1: "Manada",      pista2: "Horizonte" },
+    { palabra: "Amazonía",           pista1: "Dosel",       pista2: "Caudal" },
+    { palabra: "Gran Cañón",         pista1: "Erosión",     pista2: "Estrato" },
+    { palabra: "Fiordos",            pista1: "Profundidad", pista2: "Espejo" },
+    { palabra: "Maldivas",           pista1: "Atolón",      pista2: "Arena" },
+    { palabra: "Isla de Pascua",     pista1: "Rostro",      pista2: "Aislamiento" },
+    { palabra: "Galápagos",          pista1: "Adaptación",  pista2: "Tortuga" },
+    { palabra: "Mont Saint-Michel",  pista1: "Marea",       pista2: "Escalera" },
+    { palabra: "Neuschwanstein",     pista1: "Cuento",      pista2: "Niebla" }
+  ]
+},
+
+{
+  categoria: "🍜 Gastronomía",
+  palabras: [
+    // 🔹 Originales
+    { palabra: "Sushi",              pista1: "Alga",        pista2: "Crudo" },
+    { palabra: "Pizza",              pista1: "Masa",        pista2: "Hilo" },
+    { palabra: "Tacos",              pista1: "Maíz",        pista2: "Lima" },
+    { palabra: "Paella",             pista1: "Azafrán",     pista2: "Leña" },
+    { palabra: "Croissant",          pista1: "Hoja",        pista2: "Luna" },
+    { palabra: "Kimchi",             pista1: "Fermento",    pista2: "Col" },
+    
+    // 🔹 Colombia 🇨🇴
+    { palabra: "Bandeja Paisa",            pista1: "Abundancia",  pista2: "Frijoles" },
+    { palabra: "Ajiaco",                   pista1: "Crema",       pista2: "Altura" },
+    { palabra: "Lechona",                  pista1: "Fiesta",      pista2: "Relleno" },
+    { palabra: "Changua",                  pista1: "Mañana",      pista2: "Leche" },
+    { palabra: "Pandebono",                pista1: "Queso",       pista2: "Tibio" },
+    { palabra: "Arequipe",                 pista1: "Dulce",       pista2: "Untar" },
+    { palabra: "Buñuelo",                  pista1: "Navidad",     pista2: "Esfera" },
+    { palabra: "Sancocho",                 pista1: "Olla",        pista2: "Reunión" },
+    { palabra: "Empanadas Colombianas",    pista1: "Ají",         pista2: "Crujiente" },
+    { palabra: "Mazamorra",                pista1: "Blanco",      pista2: "Tradición" },
+    { palabra: "Aborrajado",               pista1: "Maduro",      pista2: "Derretido" },
+    { palabra: "Patacón",                  pista1: "Aplastado",   pista2: "Verde" },
+    { palabra: "Tamal",                    pista1: "Envuelto",    pista2: "Hoja" },
+    { palabra: "Hormigas Culonas",         pista1: "Santander",   pista2: "Crujiente" },
+    { palabra: "Calentado",                pista1: "Sobras",      pista2: "Desayuno" },
+    
+    // 🔹 Global Accesible 🌍 (más reconocibles)
+    { palabra: "Hamburguesa",          pista1: "Parrilla",      pista2: "Pan" },
+    { palabra: "Spaghetti",            pista1: "Largo",         pista2: "Salsa" },
+    { palabra: "Ensalada",             pista1: "Frescura",      pista2: "Bowl" },
+    { palabra: "Sandwich",             pista1: "Doble",         pista2: "Miga" },
+    { palabra: "Helado",               pista1: "Frío",          pista2: "Cono" },
+    { palabra: "Brownie",              pista1: "Chocolate",     pista2: "Húmedo" },
+    { palabra: "Pancakes",             pista1: "Jarabe",        pista2: "Apilado" },
+    { palabra: "Donut",                pista1: "Agujero",       pista2: "Glaseado" },
+    { palabra: "Nachos",               pista1: "Queso",         pista2: "Triángulo" },
+    { palabra: "Burrito",              pista1: "Envuelto",      pista2: "Frijol" },
+    { palabra: "Ramen",                pista1: "Caldo",         pista2: "Fideos" },
+    { palabra: "Falafel",              pista1: "Garbanzo",      pista2: "Frito" },
+    { palabra: "Hummus",               pista1: "Untable",       pista2: "Sésamo" },
+    { palabra: "Pad Thai",             pista1: "Wok",           pista2: "Dulce" },
+    { palabra: "Pho",                  pista1: "Vapor",         pista2: "Hierbas" },
+    { palabra: "Tarta",               pista1: "Masa",          pista2: "Horno" },
+    { palabra: "Goulash",              pista1: "Pimentón",      pista2: "Cazuela" },
+    { palabra: "Carbonara",             pista1: "Yema",     pista2: "Roma" },
+    { palabra: "Tapas",                pista1: "Pequeño",       pista2: "Compartir" },
+    { palabra: "Tiramisu",      pista1: "Cafe",     pista2: "Capas" },
+    { palabra: "Fish and Chips",       pista1: "Rebozado",      pista2: "Papel" },
+    { palabra: "Alitas de pollo",        pista1: "Salsa",         pista2: "Dedos" },
+    { palabra: "Ceviche",              pista1: "Limón",         pista2: "Fresco" },
+    { palabra: "Empanada",             pista1: "Masa",          pista2: "Horno" },
+	{ palabra: "Curry",             pista1: "Aromatico",          pista2: "Intenso" },
+    { palabra: "Arepa",                pista1: "Maíz",          pista2: "Plancha" }
+  ]
+},
+{
+  categoria: "🎞️ Cine y Cultura Pop",
+  palabras: [
+    // 🔹 Originales (mantenidos)
+    { palabra: "Matrix",             pista1: "Código",      pista2: "Reflejo" },
+    { palabra: "Titanic",            pista1: "Iceberg",     pista2: "Carta" },
+    { palabra: "El Padrino",         pista1: "Naranja",     pista2: "Familia" },
+    { palabra: "Inception",          pista1: "Peonza",      pista2: "Sueño" },
+    { palabra: "Parásitos",          pista1: "Sótano",      pista2: "Escalera" },
+    { palabra: "Interstellar",       pista1: "Maíz",        pista2: "Reloj" },
+    
+    // 🔹 Blockbusters 🍿
+    { palabra: "Avatar",             pista1: "Azul",        pista2: "Flotante" },
+    { palabra: "Jurassic Park",      pista1: "Ámbar",       pista2: "Diente" },
+    { palabra: "Star Wars",          pista1: "Sable",       pista2: "Fuerza" },
+    { palabra: "Harry Potter",       pista1: "Varita",      pista2: "Cicatriz" },
+    { palabra: "Spider-Man",         pista1: "Telaraña",    pista2: "Rascacielos" },
+    { palabra: "Batman",             pista1: "Murciélago",  pista2: "Cueva" },
+    { palabra: "Superman",           pista1: "Capa",        pista2: "Kryptonita" },
+    { palabra: "Avengers",           pista1: "Equipo",      pista2: "Guantelete" },
+    { palabra: "Frozen",             pista1: "Nieve",       pista2: "Castillo" },
+    { palabra: "Toy Story",          pista1: "Vaquero",     pista2: "Espacio" },
+    { palabra: "Shrek",              pista1: "Ogro",        pista2: "Pantano" },
+    { palabra: "El Rey León",        pista1: "Sabana",      pista2: "Trono" },
+    { palabra: "Aladdin",            pista1: "Lámpara",     pista2: "Alfombra" },
+    { palabra: "La Bella y la Bestia", pista1: "Rosa",      pista2: "Bestia" },
+    { palabra: "Buscando a Nemo",    pista1: "Océano",      pista2: "Payaso" },
+    { palabra: "Coco",               pista1: "Guitarra",    pista2: "Ofrenda" },
+    { palabra: "Moana",              pista1: "Ola",         pista2: "Vela" },
+    { palabra: "Encanto",            pista1: "Mariposa",    pista2: "Casa" },
+    { palabra: "Minions",            pista1: "Plátano",     pista2: "Amarillo" },
+    { palabra: "Rápido y Furioso",   pista1: "Velocidad",   pista2: "Familia" },
+    { palabra: "Piratas del Caribe", pista1: "Barco",       pista2: "Tesoro" },
+    { palabra: "Indiana Jones",      pista1: "Sombrero",    pista2: "Látigo" },
+    { palabra: "James Bond",         pista1: "Traje",       pista2: "Martini" },
+    { palabra: "Misión Imposible",   pista1: "Máscara",     pista2: "Cuerda" },
+    { palabra: "Terminator",         pista1: "Robot",       pista2: "Futuro" },
+    { palabra: "Alien",              pista1: "Espacio",     pista2: "Criatura" },
+    { palabra: "Rocky",              pista1: "Boxeo",       pista2: "Escalera" },
+    { palabra: "Home Alone",         pista1: "Trampa",      pista2: "Solo" },
+    { palabra: "E.T.",               pista1: "Bicicleta",   pista2: "Luna" },
+    { palabra: "Regreso al Futuro",  pista1: "DeLorean",    pista2: "Flux" },
+    { palabra: "Ghostbusters",       pista1: "Fantasma",    pista2: "Trampa" },
+    { palabra: "Hombres de Negro",   pista1: "Gafas",       pista2: "Extraterrestre" },
+    { palabra: "Black Panther",      pista1: "Wakanda",     pista2: "Tecnología" },
+    { palabra: "Wonder Woman",       pista1: "Lazo",        pista2: "Amazona" },
+    { palabra: "Thor",               pista1: "Martillo",    pista2: "Trueno" },
+    { palabra: "Iron Man",           pista1: "Armadura",    pista2: "Reactores" },
+    { palabra: "Capitán América",    pista1: "Escudo",      pista2: "Estrella" },
+    
+    // 🔹 Series y Streaming 📺
+    { palabra: "Friends",            pista1: "Café",        pista2: "Sofá" },
+    { palabra: "Stranger Things",    pista1: "Bicicleta",   pista2: "Inverso" },
+    { palabra: "Game of Thrones",    pista1: "Trono",       pista2: "Dragón" },
+    { palabra: "Breaking Bad",       pista1: "Azul",        pista2: "Química" },
+    { palabra: "The Office",         pista1: "Papel",       pista2: "Reunión" },
+    { palabra: "La Casa de Papel",   pista1: "Máscara",     pista2: "Bogotá" },
+    { palabra: "Narcos",             pista1: "Colombia",    pista2: "Polvo" },
+    { palabra: "Pedro el escamoso",        pista1: "Cabello",        pista2: "Baile" },
+    { palabra: "Squid Game",         pista1: "Triángulo",   pista2: "Muñeca" },
+	{ palabra: "El Chavo del 8",         pista1: "Viejo",   pista2: "Mexico" },
+    { palabra: "Los Simpsons",    pista1: "Amarillo",       pista2: "Generacional" },
+    
+    // 🔹 Pop Culture General 🌐
+    { palabra: "Marvel",             pista1: "Superhéroe",  pista2: "Universo" },
+    { palabra: "Disney",             pista1: "Castillo",    pista2: "Magia" },
+    { palabra: "Netflix",            pista1: "Streaming",   pista2: "Serie" },
+    { palabra: "TikTok",             pista1: "Baile",       pista2: "Viral" },
+    { palabra: "YouTube",            pista1: "Video",       pista2: "Suscriptor" },
+    { palabra: "Instagram",          pista1: "Filtro",      pista2: "Historia" },
+    { palabra: "Pokémon",            pista1: "Bola",        pista2: "Pikachu" },
+    { palabra: "Minecraft",          pista1: "Cubo",        pista2: "Construir" },
+    { palabra: "Fortnite",           pista1: "Batalla",     pista2: "Baile" },
+    { palabra: "Among Us",           pista1: "Traje",       pista2: "Sospecha" },
+    { palabra: "Roblox",             pista1: "Avatar",      pista2: "Mundo" },
+    { palabra: "Spotify",            pista1: "Playlist",    pista2: "Onda" },
+    { palabra: "Twitch",             pista1: "Stream",      pista2: "Chat" },
+    { palabra: "Emoji",              pista1: "Carita",      pista2: "Universal" },
+    { palabra: "Meme",               pista1: "Viral",       pista2: "Risa" },
+    { palabra: "Selfie",             pista1: "Brazo",       pista2: "Ángulo" },
+    { palabra: "Influencer",         pista1: "Seguidor",    pista2: "Marca" },
+    { palabra: "Viral",              pista1: "Compartir",   pista2: "Tendencia" }
+  ]
+},
+  {
+  categoria: "🌿 Naturaleza y Ciencia",
+  palabras: [
+    // 🔹 Originales (6)
+    { palabra: "Aurora Boreal",      pista1: "Magnetismo",  pista2: "Cielo" },
+    { palabra: "Volcán",             pista1: "Magma",       pista2: "Crisol" },
+    { palabra: "Tsunami",            pista1: "Placa",       pista2: "Retroceso" },
+    { palabra: "Célula",             pista1: "Núcleo",      pista2: "División" },
+    { palabra: "Arcoíris",           pista1: "Refracción",  pista2: "Prisma" },
+    { palabra: "Glaciar",            pista1: "Erosión",     pista2: "Grieta" },
+    
+    // 🐾 Animales (15)
+    { palabra: "León",               pista1: "Selva",       pista2: "Melena" },
+    { palabra: "Elefante",           pista1: "Trompa",      pista2: "Memoria" },
+    { palabra: "Jirafa",             pista1: "Cuello",      pista2: "Acacia" },
+    { palabra: "Delfín",             pista1: "Salto",       pista2: "Eco" },
+    { palabra: "Águila",             pista1: "Vista",       pista2: "Presas" },
+    { palabra: "Pingüino",           pista1: "Hielo",       pista2: "Nado" },
+    { palabra: "Camaleón",           pista1: "Color",       pista2: "Lento" },
+    { palabra: "Mariposa",           pista1: "Metamorfosis", pista2: "Néctar" },
+    { palabra: "Canguro",            pista1: "Bolsa",       pista2: "Salto" },
+    { palabra: "Oso Polar",          pista1: "Blanco",      pista2: "Ártico" },
+    { palabra: "Tiburón",            pista1: "Aleta",       pista2: "Depredador" },
+    { palabra: "Lobo",               pista1: "Manada",      pista2: "Aullido" },
+    { palabra: "Cebra",              pista1: "Rayas",       pista2: "Estepa" },
+    { palabra: "Pavo Real",          pista1: "Plumaje",     pista2: "Exhibición" },
+    { palabra: "Pulpo",              pista1: "Tentáculos",  pista2: "Tinta" },
+    
+    // 🌲 Ecosistemas & Paisajes (15)
+    { palabra: "Selva",              pista1: "Humedad",     pista2: "Canopy" },
+    { palabra: "Desierto",           pista1: "Arena",       pista2: "Sequía" },
+    { palabra: "Tundra",             pista1: "Permafrost",  pista2: "Musgo" },
+    { palabra: "Sabana",             pista1: "Acacia",      pista2: "Manada" },
+    { palabra: "Manglar",            pista1: "Raíz",        pista2: "Marea" },
+    { palabra: "Arrecife",           pista1: "Coral",       pista2: "Pez" },
+    { palabra: "Pradera",            pista1: "Hierba",      pista2: "Viento" },
+    { palabra: "Bosque",             pista1: "Hoja",        pista2: "Sombra" },
+    { palabra: "Pantano",            pista1: "Barro",       pista2: "Niebla" },
+    { palabra: "Cañón",              pista1: "Estrato",     pista2: "Garganta" },
+    { palabra: "Lago",               pista1: "Reflejo",     pista2: "Profundidad" },
+    { palabra: "Isla",               pista1: "Aislamiento", pista2: "Playa" },
+    { palabra: "Oasis",              pista1: "Agua",        pista2: "Palmera" },
+    { palabra: "Cueva",              pista1: "Oscuridad",   pista2: "Eco" },
+    { palabra: "Montaña",            pista1: "Cumbre",      pista2: "Roca" },
+    
+    // 🌤️ Fenómenos Naturales (15)
+    { palabra: "Tormenta",           pista1: "Trueno",      pista2: "Relámpago" },
+    { palabra: "Huracán",            pista1: "Ojo",         pista2: "Viento" },
+    { palabra: "Terremoto",          pista1: "Sismo",       pista2: "Réplica" },
+    { palabra: "Avalancha",          pista1: "Nieve",       pista2: "Caída" },
+    { palabra: "Sequía",             pista1: "Seco",        pista2: "Reservorio" },
+    { palabra: "Inundación",         pista1: "Lluvia",      pista2: "Nivel" },
+    { palabra: "Eclipse",            pista1: "Sombra",      pista2: "Alineación" },
+    { palabra: "Tornado",            pista1: "Embudo",      pista2: "Destrucción" },
+    { palabra: "Granizo",            pista1: "Hielo",       pista2: "Impacto" },
+    { palabra: "Niebla",              pista1: "Bruma",      pista2: "Suave" },
+    { palabra: "Rocío",              pista1: "Mañana",      pista2: "Gota" },
+    { palabra: "Viento",             pista1: "Corriente",   pista2: "Silbido" },
+    { palabra: "Lluvia",             pista1: "Gota",        pista2: "Nube" },
+    { palabra: "Nieve",              pista1: "Copo",        pista2: "Frío" },
+    { palabra: "Rayo",               pista1: "Chispa",      pista2: "Cielo" },
+    
+    // 🔬 Ciencia & Cuerpo Humano (15)
+    { palabra: "Corazón",            pista1: "Latido",      pista2: "Sangre" },
+    { palabra: "Cerebro",            pista1: "Neurona",     pista2: "Pensamiento" },
+    { palabra: "Hueso",              pista1: "Esqueleto",   pista2: "Duro" },
+    { palabra: "Músculo",            pista1: "Fuerza",      pista2: "Contracción" },
+    { palabra: "Piel",               pista1: "Tacto",       pista2: "Barrera" },
+    { palabra: "ADN",                pista1: "Código",      pista2: "Herencia" },
+    { palabra: "Átomo",              pista1: "Partícula",   pista2: "Electrón" },
+    { palabra: "Gravedad",           pista1: "Caída",       pista2: "Peso" },
+    { palabra: "Luz",                pista1: "Velocidad",   pista2: "Espectro" },
+    { palabra: "Sonido",             pista1: "Onda",        pista2: "Frecuencia" },
+    { palabra: "Temperatura",        pista1: "Termómetro",  pista2: "Grado" },
+    { palabra: "Presión",            pista1: "Barómetro",   pista2: "Atmósfera" },
+    { palabra: "Energía",            pista1: "Movimiento",  pista2: "Calor" },
+    { palabra: "Oxígeno",            pista1: "Respirar",    pista2: "Vital" },
+    { palabra: "Virus",              pista1: "Infección",   pista2: "Micro" },
+    
+    // 🌊 Agua & Clima (15)
+    { palabra: "Océano",             pista1: "Salado",      pista2: "Inmenso" },
+    { palabra: "Río",                pista1: "Corriente",   pista2: "Nacimiento" },
+    { palabra: "Mar",                pista1: "Oleaje",      pista2: "Horizonte" },
+    { palabra: "Cascada",            pista1: "Caída",       pista2: "Ruido" },
+    { palabra: "Termal",             pista1: "Vapor",       pista2: "volcan" },
+    { palabra: "Marea",              pista1: "Luna",        pista2: "Sube" },
+    { palabra: "Corriente",          pista1: "Giro",        pista2: "Temperatura" },
+    { palabra: "Abismo",             pista1: "Oscuridad",   pista2: "Presión" },
+    { palabra: "Acuario",            pista1: "Vidrio",      pista2: "Peces" },
+    { palabra: "Polo",           pista1: "Norte",      pista2: "Sur" },
+    { palabra: "Laguna",             pista1: "Calma",       pista2: "Poco" },
+    { palabra: "Ciénaga",            pista1: "Fango",       pista2: "Pantano" },
+    { palabra: "Arroyo",             pista1: "Pequeño",     pista2: "Roca" },
+    { palabra: "Glaciar",            pista1: "Hielo",       pista2: "Lento" }, // (ya está arriba, puedes cambiar por: "Fiordo", pista1: "Agua", pista2: "Montaña")
+    { palabra: "Nebulosa",           pista1: "Gas",         pista2: "Cuna" },
+    
+    // 🌱 Flora & Elementos (24)
+    { palabra: "Árbol",              pista1: "Raíz",        pista2: "Copa" },
+    { palabra: "Flor",               pista1: "Pétalo",      pista2: "Polinización" },
+    { palabra: "Cactus",             pista1: "Espina",      pista2: "Reserva" },
+    { palabra: "Helecho",            pista1: "Sombra",      pista2: "Espora" },
+    { palabra: "Musgo",              pista1: "Húmedo",      pista2: "Verde" },
+    { palabra: "Bambú",              pista1: "Flexible",    pista2: "Rápido" },
+    { palabra: "Palma",              pista1: "Coco",        pista2: "Tropical" },
+    { palabra: "Roble",              pista1: "Fuerte",      pista2: "Hoja" },
+    { palabra: "Pino",               pista1: "Resina",      pista2: "Cono" },
+    { palabra: "Orquídea",           pista1: "Exótica",     pista2: "Elegante" },
+    { palabra: "Alga",               pista1: "Marina",      pista2: "Oxígeno" },
+    { palabra: "Semilla",            pista1: "Germinar",    pista2: "Futuro" },
+    { palabra: "Polen",              pista1: "Abeja",       pista2: "Néctar" },
+    { palabra: "Espina",             pista1: "Defensa",     pista2: "Dolor" },
+    { palabra: "Fósil",              pista1: "Antiguo",     pista2: "Piedra" },
+    { palabra: "Meteorito",          pista1: "Cráter",      pista2: "Espacio" },
+    { palabra: "Hongo",              pista1: "Espora",      pista2: "Humedad" },
+    { palabra: "Cristal",            pista1: "Estructura",  pista2: "Transparente" },
+    { palabra: "Agua",               pista1: "H2O",         pista2: "Universal" },
+    { palabra: "Fuego",              pista1: "Llama",       pista2: "Combustión" },
+    { palabra: "Tierra",             pista1: "Suelo",       pista2: "Cultivo" },
+    { palabra: "Aire",               pista1: "Invisible",   pista2: "Respirar" },
+    { palabra: "Oro",                pista1: "Brillante",   pista2: "Metal" },
+    { palabra: "Carbono",            pista1: "Vida",        pista2: "Grafito" }
+  ]
+},
+{
+  categoria: "🎸 Música y Artes",
+  palabras: [
+    // 🔹 Originales (6)
+    { palabra: "Jazz",               pista1: "Síncopa",     pista2: "Latón" },
+    { palabra: "Ballet",             pista1: "Puntas",      pista2: "Gracia" },
+    { palabra: "Rock",               pista1: "Pesado",      pista2: "Guitarra" },
+    { palabra: "Ópera",              pista1: "Aria",        pista2: "Teatro" },
+    { palabra: "Grafiti",            pista1: "Aerosol",     pista2: "Firma" },
+    { palabra: "Flamenco",           pista1: "Duende",      pista2: "Palmas" },
+
+    // 🎵 Géneros Musicales (10)
+    { palabra: "Reggaetón",          pista1: "Urbano",      pista2: "Perro" },
+    { palabra: "Salsa",              pista1: "Claves",      pista2: "Ritmo" },
+    { palabra: "Cumbia",             pista1: "Tambores",    pista2: "Pollera" },
+    { palabra: "Pop",                pista1: "Éxito",       pista2: "Comercial" },
+    { palabra: "Electrónica",        pista1: "Sintetizador",pista2: "Fiesta" },
+    { palabra: "Musica Clásica",            pista1: "Orquesta",    pista2: "Partitura" },
+    { palabra: "Country",            pista1: "Botas",       pista2: "Nashville" },
+    { palabra: "K-Pop",              pista1: "Corea",       pista2: "Coreografía" },
+    { palabra: "Metal",              pista1: "Distorsión",  pista2: "Cadena" },
+    { palabra: "Blues",              pista1: "Melancolía",  pista2: "Delta" },
+
+    // 🎻 Instrumentos (10)
+    { palabra: "Piano",              pista1: "Teclas",      pista2: "Blanco" },
+    { palabra: "Batería",            pista1: "Platillos",   pista2: "Golpe" },
+    { palabra: "Violín",             pista1: "Arco",        pista2: "Cuerda" },
+    { palabra: "Saxofón",            pista1: "Jazz",        pista2: "Viento" },
+    { palabra: "Trompeta",           pista1: "Metal",       pista2: "Brillo" },
+    { palabra: "Flauta",             pista1: "Aire",        pista2: "Madera" },
+    { palabra: "Ukelele",            pista1: "Hawaii",      pista2: "Pequeño" },
+    { palabra: "Arpa",               pista1: "Dedos",       pista2: "Celestial" },
+    { palabra: "Maracas",            pista1: "Agitación",   pista2: "Semilla" },
+    { palabra: "Acordeón",           pista1: "Fuelle",      pista2: "Folk" },
+
+    // 🎨 Artes Visuales (10)
+    { palabra: "Pintura",            pista1: "Lienzo",      pista2: "Color" },
+    { palabra: "Escultura",          pista1: "Tallado",     pista2: "Bulto" },
+    { palabra: "Fotografía",         pista1: "Lente",       pista2: "Instante" },
+    { palabra: "Dibujo",             pista1: "Lápiz",       pista2: "Trazo" },
+    { palabra: "Acuarela",           pista1: "Agua",        pista2: "Transparente" },
+    { palabra: "Óleo",               pista1: "Textura",     pista2: "Lento" },
+    { palabra: "Mosaico",            pista1: "Piezas",      pista2: "Vidrio" },
+    { palabra: "Cerámica",           pista1: "Arcilla",     pista2: "Horno" },
+    { palabra: "Tapiz",              pista1: "Hilos",       pista2: "Pared" },
+    { palabra: "Collage",            pista1: "Recorte",     pista2: "Mezcla" },
+
+    // 💃 Danza y Performance (10)
+    { palabra: "Tango",              pista1: "Abrazo",      pista2: "Milonga" },
+    { palabra: "Hip Hop",            pista1: "Calle",       pista2: "Break" },
+    { palabra: "Samba",              pista1: "Carnaval",    pista2: "Río" },
+    { palabra: "Bachata",            pista1: "Pareja",      pista2: "Sentimiento" },
+    { palabra: "Contemporáneo",      pista1: "Libre",       pista2: "Piso" },
+    { palabra: "Tap",                pista1: "Sonido",      pista2: "Madera" },
+    { palabra: "Folclore",           pista1: "Tradición",   pista2: "Traje" },
+    { palabra: "Capoeira",           pista1: "Acrobacia",   pista2: "Rueda" },
+    { palabra: "Pole Dance",         pista1: "Vertical",    pista2: "Fuerza" },
+    { palabra: "Breakdance",         pista1: "Giro",        pista2: "Suelo" },
+
+    // 🎼 Conceptos y Elementos (10)
+    { palabra: "Concierto",          pista1: "Escenario",   pista2: "Público" },
+    { palabra: "Álbum",              pista1: "Portada",     pista2: "Colección" },
+    { palabra: "Museo",              pista1: "Exhibición",  pista2: "Galería" },
+    { palabra: "Cuadro",             pista1: "Marco",       pista2: "Pared" },
+    { palabra: "Micrófono",          pista1: "Voz",         pista2: "Amplificación" },
+    { palabra: "Partitura",          pista1: "Notas",       pista2: "Pentagrama" },
+    { palabra: "Ritmo",              pista1: "Pulso",       pista2: "Compás" },
+    { palabra: "Melodía",            pista1: "Oído",        pista2: "Tarareo" },
+    { palabra: "Pincel",             pista1: "Cerdas",      pista2: "Mancha" },
+    { palabra: "Paleta",             pista1: "Mezcla",      pista2: "Colores" }
+  ]
+},
+{
+  categoria: "🌏 Historia y Mitología",
+  palabras: [
+    // 🔹 Originales (6)
+    { palabra: "Pompeya",            pista1: "Ceniza",      pista2: "Fósil" },
+    { palabra: "Caballo de Troya",   pista1: "Madera",      pista2: "Engaño" },
+    { palabra: "Renacimiento",       pista1: "Perspectiva", pista2: "Lienzo" },
+    { palabra: "Ruta de la Seda",    pista1: "Oasis",       pista2: "Caravana" },
+    { palabra: "Atlántida",          pista1: "Círculos",    pista2: "Diluvio" },
+    { palabra: "Revolución Industrial", pista1: "Vapor",    pista2: "Telar" },
+    
+    // 🏛️ Historia Global (20)
+    { palabra: "Imperio Romano",     pista1: "Coliseo",     pista2: "Legión" },
+    { palabra: "Antiguo Egipto",     pista1: "Faraón",      pista2: "Nilo" },
+    { palabra: "Vikingos",           pista1: "Barco",       pista2: "Runas" },
+    { palabra: "Samuráis",           pista1: "Katana",      pista2: "Honor" },
+    { palabra: "Piratas",            pista1: "Parche",      pista2: "Cañón" },
+    { palabra: "Revolución Francesa",pista1: "Guillotina",  pista2: "Libertad" },
+    { palabra: "Edad Media",         pista1: "Castillo",    pista2: "Cruzada" },
+    { palabra: "Guerra Fría",        pista1: "Muro",        pista2: "Espía" },
+    { palabra: "Cleopatra",          pista1: "Serpiente",   pista2: "Reina" },
+    { palabra: "Napoleón",           pista1: "Exilio",      pista2: "Batalla" },
+    { palabra: "Mayas",              pista1: "Calendario",  pista2: "Selva" },
+    { palabra: "Aztecas",            pista1: "Templo",      pista2: "Maíz" },
+    { palabra: "Incas",              pista1: "Oro",         pista2: "Cusco" },
+    { palabra: "Darwin",             pista1: "Evolución",   pista2: "Pinzón" },
+    { palabra: "Newton",             pista1: "Manzana",     pista2: "Gravedad" },
+    { palabra: "Mona Lisa",          pista1: "Sonrisa",     pista2: "Museo" },
+    { palabra: "Muro de Berlín",     pista1: "Caída",       pista2: "Concreto" },
+    { palabra: "Cruzadas",           pista1: "Jerusalén",   pista2: "Cruz" },
+    { palabra: "Esparta",            pista1: "Guerrero",    pista2: "Escudo" },
+    { palabra: "Atenas",             pista1: "Ágora",       pista2: "Democracia" },
+    
+    // 🐉 Mitología y Leyendas (15)
+    { palabra: "Zeus",               pista1: "Rayo",        pista2: "Olimpo" },
+    { palabra: "Thor",               pista1: "Martillo",    pista2: "Trueno" },
+    { palabra: "Poseidón",           pista1: "Tridente",    pista2: "Mares" },
+    { palabra: "Atenea",             pista1: "Sabiduría",   pista2: "Búho" },
+    { palabra: "Medusa",             pista1: "Serpientes",  pista2: "Mirada" },
+    { palabra: "Minotauro",          pista1: "Laberinto",   pista2: "Toro" },
+    { palabra: "Hércules",           pista1: "Fuerza",      pista2: "Hazaña" },
+    { palabra: "Aquiles",            pista1: "Talón",       pista2: "Guerra" },
+    { palabra: "Fénix",              pista1: "Resurrección",pista2: "Fuego" },
+    { palabra: "Unicornio",          pista1: "Cuerno",      pista2: "Bosque" },
+    { palabra: "Dragón",             pista1: "Fuego",       pista2: "Escamas" },
+    { palabra: "Sirena",             pista1: "Canto",       pista2: "Roca" },
+    { palabra: "Vampiro",            pista1: "Sangre",      pista2: "Noche" },
+    { palabra: "Momia",              pista1: "Vendaje",     pista2: "Tumba" },
+    { palabra: "Kraken",             pista1: "Tentáculos",  pista2: "Abismo" },
+    
+    // 📖 Leyendas Urbanas y Arte (10)
+    { palabra: "Nessie",             pista1: "Lago",        pista2: "Escocia" },
+    { palabra: "Quetzalcóatl",       pista1: "Serpiente",   pista2: "Plumas" },
+    { palabra: "Anubis",             pista1: "Balanza",     pista2: "Chacal" },
+    { palabra: "Ícaro",              pista1: "Alas",        pista2: "Cera" },
+    { palabra: "Pandora",            pista1: "Caja",        pista2: "Esperanza" },
+    { palabra: "Excalibur",          pista1: "Espada",      pista2: "Piedra" },
+    { palabra: "Merlín",             pista1: "Varita",      pista2: "Profecía" },
+    { palabra: "Robin Hood",         pista1: "Arco",        pista2: "Sherwood" },
+    { palabra: "Drácula",            pista1: "Conde",       pista2: "Transilvania" },
+    { palabra: "Frankenstein",       pista1: "Costura",     pista2: "Rayo" }
+  ]
+},
+{
+  categoria: "🚄 Transporte",
+  palabras: [
+    // 🔹 Originales (6)
+    { palabra: "Velero",             pista1: "Vela",        pista2: "Quilla" },
+    { palabra: "Tren Bala",          pista1: "Rieles",      pista2: "Aerodinámica" },
+    { palabra: "Globo Aerostático",  pista1: "Helio",       pista2: "Cesto" },
+    { palabra: "Submarino",          pista1: "Profundidad", pista2: "Sonar" },
+    { palabra: "Motocicleta",        pista1: "Escape",      pista2: "Curva" },
+    { palabra: "Teleférico",         pista1: "Cable",       pista2: "Góndola" },
+
+    // 🚗 Urbano y Diario (12)
+    { palabra: "Bicicleta",          pista1: "Pedal",       pista2: "Casco" },
+    { palabra: "Automóvil",          pista1: "Volante",     pista2: "Motor" },
+    { palabra: "Autobús",            pista1: "Parada",      pista2: "Pasajeros" },
+    { palabra: "Taxi",               pista1: "Tarifa",      pista2: "Luces" },
+    { palabra: "Ambulancia",         pista1: "Sirena",      pista2: "Emergencia" },
+    { palabra: "Camión",             pista1: "Carga",       pista2: "Flete" },
+    { palabra: "Furgoneta",          pista1: "Espacio",     pista2: "Mudanza" },
+    { palabra: "Scooter",            pista1: "Ciudad",      pista2: "Casco" },
+    { palabra: "Patineta",           pista1: "Truco",       pista2: "Asfalto" },
+    { palabra: "Monopatín",          pista1: "Ruedas",      pista2: "Pie" },
+    { palabra: "Subway",             pista1: "Subterraneo",  pista2: "Eléctrico" },
+    { palabra: "Triciclo",           pista1: "Tres",        pista2: "Niños" },
+
+    // 🚂 Vías y Rieles (6)
+    { palabra: "Metro",              pista1: "Subterráneo", pista2: "Vías" },
+    { palabra: "Tranvía",            pista1: "Campana",     pista2: "Carril" },
+    { palabra: "Funicular",          pista1: "Pendiente",   pista2: "Cuesta" },
+    { palabra: "Tren de Carga",      pista1: "Vagones",     pista2: "Mercancía" },
+    { palabra: "Monorraíl",          pista1: "Elevado",     pista2: "Futuro" },
+    { palabra: "Tren Nocturno",      pista1: "Cama",        pista2: "Ritmo" },
+
+    // ⛵ Agua y Mar (8)
+    { palabra: "Barco",              pista1: "Muelle",      pista2: "Puerto" },
+    { palabra: "Yate",               pista1: "Lujo",        pista2: "Marina" },
+    { palabra: "Crucero",            pista1: "Pasaje",      pista2: "Ola" },
+    { palabra: "Canoa",              pista1: "Remo",        pista2: "Lago" },
+    { palabra: "Kayak",              pista1: "Estrecho",    pista2: "Rápido" },
+    { palabra: "Lancha",             pista1: "Motor",       pista2: "Estela" },
+    { palabra: "Portaaviones",       pista1: "Cubierta",    pista2: "Despegue" },
+    { palabra: "Aerodeslizador",     pista1: "Cojín",       pista2: "Aire" },
+
+    // ✈️ Cielo y Espacio (8)
+    { palabra: "Avión",              pista1: "Alas",        pista2: "Despegue" },
+    { palabra: "Helicóptero",        pista1: "Hélice",      pista2: "Vertical" },
+    { palabra: "Planeador",          pista1: "Silencio",    pista2: "Viento" },
+    { palabra: "Dirigible",          pista1: "Nave",        pista2: "Lento" },
+    { palabra: "Paracaídas",         pista1: "Salto",       pista2: "Tela" },
+    { palabra: "Cohete",             pista1: "Propulsión",  pista2: "Órbita" },
+    { palabra: "Transbordador",      pista1: "NASA",        pista2: "Reutilizable" },
+    { palabra: "Ala Delta",          pista1: "Arnes",       pista2: "Cima" },
+
+    // 🐪 Especial, Recreativo y Clásico (11)
+    { palabra: "Caballo",            pista1: "Silla",       pista2: "Galope" },
+    { palabra: "Trineo",             pista1: "Nieve",       pista2: "Renos" },
+    { palabra: "Carreta",            pista1: "Madera",      pista2: "Tiro" },
+   
+    { palabra: "Bicitaxi",           pista1: "Pedales",     pista2: "Turista" },
+    { palabra: "Carromato",          pista1: "Pioneros",    pista2: "Lonas" },
+    { palabra: "Telecabina",         pista1: "Altura",      pista2: "Ventana" },
+    { palabra: "Roller",             pista1: "Freno",       pista2: "Inline" },
+    { palabra: "Camello",            pista1: "Arena",       pista2: "Paso" },
+    { palabra: "Carro de Golf",      pista1: "Green",       pista2: "Silencio" },
+    { palabra: "Balsa",              pista1: "Inflable",    pista2: "Río" }
+  ]
+},
+{
+  categoria: "🤖 Tecnología",
+  palabras: [
+    { palabra: "Inteligencia Artificial", pista1: "Algoritmo", pista2: "Redes" },
+    { palabra: "Blockchain",             pista1: "Nodo",      pista2: "Cadena" },
+    { palabra: "Realidad Virtual",       pista1: "Inmersión", pista2: "Lentes" },
+    { palabra: "Satélite",               pista1: "Órbita",    pista2: "Antena" },
+    { palabra: "Impresora 3D",           pista1: "Filamento", pista2: "Capas" },
+    { palabra: "Dron",                   pista1: "Rotores",   pista2: "GPS" },
+    { palabra: "Algoritmo",              pista1: "Secuencia", pista2: "Pasos" },
+    { palabra: "Ciberseguridad",         pista1: "Cortafuegos", pista2: "Amenazas" },
+    { palabra: "Big Data",               pista1: "Volumen",   pista2: "Análisis" },
+    { palabra: "Cloud Computing",        pista1: "Nube",      pista2: "Remoto" },
+    { palabra: "Internet de las Cosas",  pista1: "Sensores",  pista2: "Conectividad" },
+    { palabra: "5G",                     pista1: "Banda ancha", pista2: "Latencia" },
+    { palabra: "Realidad Aumentada",     pista1: "Superposición", pista2: "Cámara" },
+    { palabra: "Robótica",               pista1: "Automatización", pista2: "Actuadores" },
+    { palabra: "Nanotecnología",         pista1: "Escala atómica", pista2: "Moléculas" },
+    { palabra: "Biotecnología",          pista1: "Genes",     pista2: "Fermentación" },
+    { palabra: "Criptomoneda",           pista1: "Descentralizada", pista2: "Minado" },
+    { palabra: "Contrato inteligente",   pista1: "Código",    pista2: "Autoejecutable" },
+    { palabra: "Deep Learning",          pista1: "Red neuronal", pista2: "Capas ocultas" },
+    { palabra: "Procesamiento de lenguaje natural", pista1: "Tokens", pista2: "Semántica" },
+    { palabra: "Visión por computadora", pista1: "Píxeles",   pista2: "Detección" },
+    { palabra: "Reconocimiento facial",  pista1: "Rostros",   pista2: "Biometría" },
+    { palabra: "Asistente virtual",      pista1: "Voz",       pista2: "Órdenes" },
+    { palabra: "Chatbot",                pista1: "Diálogo",   pista2: "Respuestas" },
+    { palabra: "Computación cuántica",   pista1: "Qubit",     pista2: "Superposición" },
+    { palabra: "Fibra óptica",           pista1: "Luz",       pista2: "Reflexión" },
+    { palabra: "Router",                 pista1: "Paquetes",  pista2: "IP" },
+    { palabra: "Switch",                 pista1: "Puertos",   pista2: "Conmutación" },
+    { palabra: "Firewall",               pista1: "Reglas",    pista2: "Bloqueo" },
+    { palabra: "VPN",                    pista1: "Túnel",     pista2: "Privacidad" },
+    { palabra: "Proxy",                  pista1: "Intermediario", pista2: "Caché" },
+    { palabra: "Servidor",               pista1: "Host",      pista2: "Peticiones" },
+    { palabra: "Cliente-servidor",       pista1: "Arquitectura", pista2: "Solicitudes" },
+    { palabra: "API",                    pista1: "Endpoint",  pista2: "JSON" },
+    { palabra: "Microservicios",         pista1: "Contenedores", pista2: "Escalado" },
+    { palabra: "Docker",                 pista1: "Contenedor", pista2: "Imagen" },
+    { palabra: "Kubernetes",             pista1: "Orquestación", pista2: "Pods" },
+    { palabra: "DevOps",                 pista1: "Integración continua", pista2: "Despliegue" },
+    { palabra: "Git",                    pista1: "Commit",    pista2: "Rama" },
+    { palabra: "Repositorio",            pista1: "Código",    pista2: "Versiones" },
+    { palabra: "Compilador",             pista1: "Fuente",    pista2: "Máquina" },
+    { palabra: "Intérprete",             pista1: "Ejecución línea a línea", pista2: "Lenguaje" },
+    { palabra: "Depurador",              pista1: "Breakpoint", pista2: "Variables" },
+    { palabra: "IDE",                    pista1: "Editor",    pista2: "Entorno" },
+    { palabra: "Framework",              pista1: "Librerías", pista2: "Estructura" },
+    { palabra: "Biblioteca",             pista1: "Funciones", pista2: "Reutilización" },
+    { palabra: "Paquete",                pista1: "Dependencia", pista2: "Gestor" },
+    { palabra: "Almacenamiento en la nube", pista1: "Drive",  pista2: "Sincronización" },
+    { palabra: "SSD",                    pista1: "Estado sólido", pista2: "Velocidad" },
+    { palabra: "RAM",                    pista1: "Volátil",   pista2: "Temporal" },
+    { palabra: "CPU",                    pista1: "Procesador", pista2: "Núcleos" },
+    { palabra: "GPU",                    pista1: "Gráficos",  pista2: "Paralelismo" },
+    { palabra: "Placa base",             pista1: "Chipset",   pista2: "Zócalo" },
+    { palabra: "Fuente de alimentación", pista1: "Vatios",    pista2: "Eficiencia" },
+    { palabra: "Refrigeración líquida",  pista1: "Radiador",  pista2: "Bloque" },
+    { palabra: "Monitor",                pista1: "Resolución", pista2: "Hz" },
+    { palabra: "Teclado mecánico",       pista1: "Switches",  pista2: "Retroiluminación" },
+    { palabra: "Ratón",                  pista1: "DPI",       pista2: "Sensor" },
+    { palabra: "Impresora láser",        pista1: "Tóner",     pista2: "Tambor" },
+    { palabra: "Escáner",                pista1: "Digitalización", pista2: "CCD" },
+    { palabra: "Proyector",              pista1: "Lúmenes",   pista2: "Lente" },
+    { palabra: "Webcam",                 pista1: "Megapíxeles", pista2: "Enfoque" },
+    { palabra: "Micrófono",              pista1: "Diafragma", pista2: "Patrón polar" },
+    { palabra: "Auriculares",            pista1: "Cancelación de ruido", pista2: "Drivers" },
+    { palabra: "Altavoz",                pista1: "Woofer",    pista2: "Tweeter" },
+    { palabra: "Módem",                  pista1: "Modulación", pista2: "Demodulación" }
+  ]
+},  
+  
+  // 🔹 NUEVAS CATEGORÍAS CON EMOJIS
+{
+  categoria: "👔 Profesiones",
+  palabras: [
+    // 🔹 Originales (6)
+    { palabra: "Cirujano", pista1: "Esterilidad", pista2: "Pulso" },
+    { palabra: "Arquitecto", pista1: "Boceto", pista2: "Cimiento" },
+    { palabra: "Chef", pista1: "Mandil", pista2: "Prueba" },
+    { palabra: "Bombero", pista1: "Alarma", pista2: "Retaguardia" },
+    { palabra: "Periodista", pista1: "Grabadora", pista2: "Fuente" },
+    { palabra: "Astronauta", pista1: "Vacío", pista2: "Oxígeno" },
+
+    // 🏥 Salud & Cuidado (15)
+    { palabra: "Médico", pista1: "Guardapolvo", pista2: "Diagnóstico" },
+    { palabra: "Enfermera", pista1: "Jeringa", pista2: "Turno" },
+    { palabra: "Dentista", pista1: "Muela", pista2: "Sillón" },
+    { palabra: "Veterinario", pista1: "Mascota", pista2: "Vacuna" },
+    { palabra: "Psicólogo", pista1: "Diván", pista2: "Escucha" },
+    { palabra: "Nutricionista", pista1: "Balance", pista2: "Dieta" },
+    { palabra: "Fisioterapeuta", pista1: "Masaje", pista2: "Rehabilitación" },
+    { palabra: "Farmacéutico", pista1: "Receta", pista2: "Mostrador" },
+    { palabra: "Paramédico", pista1: "Camilla", pista2: "Urgencia" },
+    { palabra: "Optometrista", pista1: "Lente", pista2: "Tabla" },
+    { palabra: "Comadrona", pista1: "Parto", pista2: "Recién" },
+    { palabra: "Dermatólogo", pista1: "Piel", pista2: "Protector" },
+    { palabra: "Fonoaudiólogo", pista1: "Voz", pista2: "Articulación" },
+    { palabra: "Podólogo", pista1: "Pie", pista2: "Uña" },
+    { palabra: "Cardiólogo", pista1: "Electro", pista2: "Latido" },
+
+    // 🏗️ Construcción & Oficios (15)
+    { palabra: "Albañil", pista1: "Ladrillo", pista2: "Cemento" },
+    { palabra: "Electricista", pista1: "Cable", pista2: "Chispa" },
+    { palabra: "Plomero", pista1: "Tubo", pista2: "Fuga" },
+    { palabra: "Carpintero", pista1: "Serrucho", pista2: "Madera" },
+    { palabra: "Pintor", pista1: "Rodillo", pista2: "Brocha" },
+    { palabra: "Soldador", pista1: "Máscara", pista2: "Chispa" },
+    { palabra: "Herrero", pista1: "Yunque", pista2: "Fragua" },
+    { palabra: "Vidriero", pista1: "Cristal", pista2: "Corte" },
+    { palabra: "Fontanero", pista1: "Grifo", pista2: "Presión" },
+    { palabra: "Técnico", pista1: "Herramienta", pista2: "Reparación" },
+    { palabra: "Yesero", pista1: "Yeso", pista2: "Alisado" },
+    { palabra: "Techador", pista1: "Teja", pista2: "Pendiente" },
+    { palabra: "Cerrajero", pista1: "Llave", pista2: "Cerradura" },
+    { palabra: "Cortador", pista1: "Piedra", pista2: "Diamante" },
+    { palabra: "Montador", pista1: "Andamio", pista2: "Altura" },
+
+    // 🎓 Educación & Ciencias (15)
+    { palabra: "Profesor", pista1: "Pizarra", pista2: "Alumno" },
+    { palabra: "Científico", pista1: "Laboratorio", pista2: "Hipótesis" },
+    { palabra: "Matemático", pista1: "Fórmula", pista2: "Teorema" },
+    { palabra: "Biólogo", pista1: "Microscopio", pista2: "Especie" },
+    { palabra: "Químico", pista1: "Reactivo", pista2: "Tubo" },
+    { palabra: "Astrónomo", pista1: "Telescopio", pista2: "Galaxia" },
+    { palabra: "Geólogo", pista1: "Roca", pista2: "Estrato" },
+    { palabra: "Historiador", pista1: "Archivo", pista2: "Códice" },
+    { palabra: "Bibliotecario", pista1: "Catálogo", pista2: "Silencio" },
+    { palabra: "Investigador", pista1: "Pista", pista2: "Evidencia" },
+    { palabra: "Lingüista", pista1: "Gramática", pista2: "Idioma" },
+    { palabra: "Arqueólogo", pista1: "Excavación", pista2: "Ruina" },
+    { palabra: "Filósofo", pista1: "Pensamiento", pista2: "Duda" },
+    { palabra: "Pedagogo", pista1: "Método", pista2: "Aprendizaje" },
+    { palabra: "Tutor", pista1: "Guía", pista2: "Seguimiento" },
+
+    // 💼 Oficina & Negocios (15)
+    { palabra: "Abogado", pista1: "Demanda", pista2: "Tribunal" },
+    { palabra: "Contador", pista1: "Balance", pista2: "Impuesto" },
+    { palabra: "Economista", pista1: "Mercado", pista2: "Oferta" },
+    { palabra: "Gerente", pista1: "Reunión", pista2: "Meta" },
+    { palabra: "Secretario", pista1: "Agenda", pista2: "Teléfono" },
+    { palabra: "Vendedor", pista1: "Catálogo", pista2: "Comisión" },
+    { palabra: "Corredor", pista1: "Bienes", pista2: "Firma" },
+    { palabra: "Analista", pista1: "Dato", pista2: "Reporte" },
+    { palabra: "Consultor", pista1: "Estrategia", pista2: "Asesoría" },
+    { palabra: "Traductor", pista1: "Diccionario", pista2: "Versión" },
+    { palabra: "Banquero", pista1: "Bóveda", pista2: "Crédito" },
+    { palabra: "Actuario", pista1: "Riesgo", pista2: "Tabla" },
+    { palabra: "Auditor", pista1: "Revisión", pista2: "Cifra" },
+    { palabra: "Reclutador", pista1: "Entrevista", pista2: "CV" },
+    { palabra: "Relaciones", pista1: "Red", pista2: "Contacto" },
+
+    // 🎭 Creatividad & Entretenimiento (15)
+    { palabra: "Actor", pista1: "Guion", pista2: "Escenario" },
+    { palabra: "Músico", pista1: "Instrumento", pista2: "Compás" },
+    { palabra: "Cantante", pista1: "Micrófono", pista2: "Voz" },
+    { palabra: "Bailarín", pista1: "Coreografía", pista2: "Ritmo" },
+    { palabra: "Director", pista1: "Lente", pista2: "Acción" },
+    { palabra: "Escritor", pista1: "Borrador", pista2: "Narrativa" },
+    { palabra: "Diseñador", pista1: "Boceto", pista2: "Paleta" },
+    { palabra: "Fotógrafo", pista1: "Obturador", pista2: "Enfoque" },
+    { palabra: "Ilustrador", pista1: "Tinta", pista2: "Dibujo" },
+    { palabra: "Comediante", pista1: "Chiste", pista2: "Risa" },
+    { palabra: "Modelo", pista1: "Pasarela", pista2: "Posa" },
+    { palabra: "Productor", pista1: "Presupuesto", pista2: "Cronograma" },
+    { palabra: "Guionista", pista1: "Diálogo", pista2: "Escena" },
+    { palabra: "Editor", pista1: "Recorte", pista2: "Formato" },
+    { palabra: "Crítico", pista1: "Reseña", pista2: "Juicio" },
+
+    // 🛡️ Seguridad & Ley (15)
+    { palabra: "Policía", pista1: "Placa", pista2: "Patrulla" },
+    { palabra: "Guardia", pista1: "Ronda", pista2: "Portón" },
+    { palabra: "Detective", pista1: "Lupa", pista2: "Caso" },
+    { palabra: "Juez", pista1: "Mazo", pista2: "Veredicto" },
+    { palabra: "Fiscal", pista1: "Acusación", pista2: "Prueba" },
+    { palabra: "Carcelero", pista1: "Rejas", pista2: "Llave" },
+    { palabra: "Vigilante", pista1: "Cámara", pista2: "Turno" },
+    { palabra: "Escolta", pista1: "Protección", pista2: "Traje" },
+    { palabra: "Militar", pista1: "Uniforme", pista2: "Rango" },
+    { palabra: "Guardabosques", pista1: "Árbol", pista2: "Fuego" },
+    { palabra: "Bombero", pista1: "Alarma", pista2: "Retaguardia" }, // (ya está, se mantiene por coherencia)
+    { palabra: "Defensor", pista1: "Causa", pista2: "Voz" },
+    { palabra: "Perito", pista1: "Dictamen", pista2: "Forense" },
+    { palabra: "Inspector", pista1: "Norma", pista2: "Sello" },
+    { palabra: "Conserje", pista1: "Llave", pista2: "Acceso" },
+
+    // 🌾 Campo & Naturaleza (10)
+    { palabra: "Granjero", pista1: "Cosecha", pista2: "Surco" },
+    { palabra: "Leñador", pista1: "Hacha", pista2: "Tronco" },
+    { palabra: "Pastor", pista1: "Rebaño", pista2: "Oveja" },
+    { palabra: "Pescador", pista1: "Red", pista2: "Muelle" },
+    { palabra: "Cazador", pista1: "Rastro", pista2: "Silencio" },
+    { palabra: "Apicultor", pista1: "Panal", pista2: "Miel" },
+    { palabra: "Jardinero", pista1: "Tijera", pista2: "Podadera" },
+    { palabra: "Agrónomo", pista1: "Suelo", pista2: "Semilla" },
+    { palabra: "Minero", pista1: "Pico", pista2: "Túnel" },
+    { palabra: "Cavador", pista1: "Fosa", pista2: "Tierra" },
+
+    // 🛠️ Tecnología & Digital (10)
+    { palabra: "Programador", pista1: "Código", pista2: "Bucle" },
+    { palabra: "Ingeniero", pista1: "Plano", pista2: "Cálculo" },
+    { palabra: "Diseñador", pista1: "Interfaz", pista2: "UX" },
+    { palabra: "Analista", pista1: "Datos", pista2: "SQL" },
+    { palabra: "Técnico", pista1: "Pantalla", pista2: "Reinicio" },
+    { palabra: "Community", pista1: "Post", pista2: "Hashtag" },
+    { palabra: "Streamer", pista1: "Cámara", pista2: "Directo" },
+    { palabra: "Creador", pista1: "Contenido", pista2: "Algoritmo" },
+    { palabra: "Soporte (IT)", pista1: "Ticket", pista2: "Ayuda" },
+    { palabra: "Ciberseguridad", pista1: "Firewall", pista2: "Acceso" }
+  ]
+},
+{
+  categoria: "🎉 Festividades",
+  palabras: [
+    { palabra: "Halloween", pista1: "Umbral", pista2: "Dulce" },
+    { palabra: "Año Nuevo", pista1: "Reloj", pista2: "Medianoche" },
+    { palabra: "Día de Muertos", pista1: "Ofrenda", pista2: "Calavera" },
+    { palabra: "Carnaval", pista1: "Máscara", pista2: "Comparsa" },
+    { palabra: "Navidad", pista1: "Nochebuena", pista2: "Nacimiento" },
+    { palabra: "Holi", pista1: "Croma", pista2: "Primavera" },
+    { palabra: "Hanukkah", pista1: "Menorá", pista2: "Aceite" },
+    { palabra: "Ramadán", pista1: "Ayuno", pista2: "Luna creciente" },
+    { palabra: "Pascua", pista1: "Resurrección", pista2: "Huevos" },
+    { palabra: "San Valentín", pista1: "Cupido", pista2: "Tarjeta" },
+    { palabra: "Día del Trabajo", pista1: "Primero de Mayo", pista2: "Sindicato" },
+    { palabra: "Oktoberfest", pista1: "Cerveza", pista2: "Tirol" },
+    { palabra: "Thanksgiving", pista1: "Pavo", pista2: "Cosecha" },
+    { palabra: "Cuaresma", pista1: "Miércoles de Ceniza", pista2: "40 días" },
+    { palabra: "Reyes Magos", pista1: "Oro", pista2: "Carbón" },
+    { palabra: "San Juan", pista1: "Hoguera", pista2: "Noche más corta" },
+    { palabra: "Día de la Independencia", pista1: "20 de julio", pista2: "Fuegos artificiales" },
+	{ palabra: "Purim", pista1: "Disfraz", pista2: "Groggers" },    
+    { palabra: "Día de San Patricio", pista1: "Trébol", pista2: "Verde" },
+    { palabra: "Cinco de Mayo", pista1: "Batalla", pista2: "Puebla" },
+    { palabra: "Día de la Raza", pista1: "12 de octubre", pista2: "Descubrimiento" },
+    { palabra: "Semana Santa", pista1: "Palmas", pista2: "Procesión" },
+    { palabra: "Janucá", pista1: "8 noches", pista2: "Dreidel" },  
+    { palabra: "Lunar New Year", pista1: "Dragón", pista2: "Sobres rojos" },
+    { palabra: "Día de la Tierra", pista1: "22 de abril", pista2: "Reciclaje" },
+    { palabra: "Día de la Madre", pista1: "Clavel", pista2: "Segundo domingo" },
+    { palabra: "Día del Padre", pista1: "Corbata", pista2: "Junio" },
+    { palabra: "Día del Niño", pista1: "20 de noviembre", pista2: "Derechos" },
+    { palabra: "Día de la Mujer", pista1: "8 de marzo", pista2: "Lucha" },
+    { palabra: "La Tomatina", pista1: "Tomate", pista2: "Buñol" },
+    { palabra: "Coachella", pista1: "Festival musical", pista2: "Desierto" },
+    { palabra: "Burning Man", pista1: "Efigie", pista2: "Black Rock" },
+    { palabra: "Día de la Constitución", pista1: "Carta Magna", pista2: "Ciudadanos" },
+    { palabra: "Día de la Victoria", pista1: "8 de mayo", pista2: "1945" },
+    { palabra: "Día de los Santos Inocentes", pista1: "28 de diciembre", pista2: "Bromas" },
+    { palabra: "Oktoberfest", pista1: "Carpa", pista2: "Pretzel" }
+  ]
+},
+{
+  categoria: "⚽ Deportes",
+  palabras: [
+    { palabra: "Fútbol", pista1: "Esférica", pista2: "Once" },
+    { palabra: "Tenis", pista1: "Arcilla", pista2: "Red" },
+    { palabra: "Natación", pista1: "Carril", pista2: "Mariposa" },
+    { palabra: "Golf", pista1: "Green", pista2: "Driver" },
+    { palabra: "Rugby", pista1: "Oval", pista2: "Melé" },
+    { palabra: "Boxeo", pista1: "Lonas", pista2: "Round" },
+    { palabra: "Baloncesto", pista1: "Aro", pista2: "Triple" },
+    { palabra: "Voleibol", pista1: "Red alta", pista2: "Remate" },
+    { palabra: "Beisbol", pista1: "Bate", pista2: "Jonrón" },
+    { palabra: "Ciclismo", pista1: "Pelotón", pista2: "Maillot" },
+    { palabra: "Atletismo", pista1: "Pista", pista2: "Vallas" },
+    { palabra: "Esgrima", pista1: "Florete", pista2: "Toque" },
+    { palabra: "Judo", pista1: "Judogi", pista2: "Ippon" },
+    { palabra: "Hockey sobre hielo", pista1: "Puck", pista2: "Slapshot" },
+    { palabra: "Snowboard", pista1: "Halfpipe", pista2: "Tabla" },
+    { palabra: "Surf", pista1: "Ola", pista2: "Longboard" },
+    { palabra: "Escalada", pista1: "Presas", pista2: "Cuerda" },
+    { palabra: "Pádel", pista1: "Pala", pista2: "Malla" },
+    { palabra: "Ajedrez", pista1: "Enroque", pista2: "Jaque mate" },
+    { palabra: "Póker", pista1: "Farol", pista2: "River" },
+    { palabra: "Dominó", pista1: "Mula", pista2: "Fichas" },
+    { palabra: "Damas", pista1: "Coronación", pista2: "Tablero" },
+    { palabra: "Monopoly", pista1: "Cárcel", pista2: "Avenida" },
+    { palabra: "Risk", pista1: "Dados", pista2: "Conquistar" },
+    { palabra: "Clue", pista1: "Sospecha", pista2: "Candado" },
+    { palabra: "Scrabble", pista1: "Palabras", pista2: "Comodín" },
+    { palabra: "Jenga", pista1: "Torre", pista2: "Bloques" },
+    { palabra: "Uno", pista1: "Reverso", pista2: "Colores" },
+    { palabra: "Catan", pista1: "Ladrillo", pista2: "Comercio" },
+    { palabra: "Tiro al arco", pista1: "Diana", pista2: "Flecha" }
+  ]
+},
+{
+  categoria: "🔭 Astronomía",
+  palabras: [
+    { palabra: "Luna", pista1: "Cráter", pista2: "Marea" },
+    { palabra: "Marte", pista1: "Rover", pista2: "Óxido" },
+    { palabra: "Saturno", pista1: "Anillos", pista2: "Hielo" },
+    { palabra: "Cometa", pista1: "Estela", pista2: "Cola" },
+    { palabra: "Agujero Negro", pista1: "Singularidad", pista2: "Horizonte" },
+    { palabra: "Supernova", pista1: "Explosión", pista2: "Remanente" },
+    { palabra: "Sol", pista1: "Fusión", pista2: "Manchas" },
+    { palabra: "Júpiter", pista1: "Gigante", pista2: "Gran Mancha Roja" },
+    { palabra: "Mercurio", pista1: "Rocoso", pista2: "Cercano" },
+    { palabra: "Venus", pista1: "Lucero", pista2: "Efecto invernadero" },
+    { palabra: "Urano", pista1: "Acostado", pista2: "Hielo" },
+    { palabra: "Neptuno", pista1: "Vientos", pista2: "Azul" },
+    { palabra: "Plutón", pista1: "Enano", pista2: "Cinturón de Kuiper" },
+    { palabra: "Asteroides", pista1: "Cinturón", pista2: "Rocas" },
+    { palabra: "Meteoro", pista1: "Estrella fugaz", pista2: "Fricción" },
+    { palabra: "Galaxia", pista1: "Vía Láctea", pista2: "Espiral" },
+    { palabra: "Estrella", pista1: "Luz propia", pista2: "Brillo" },
+    { palabra: "Constelación", pista1: "Orión", pista2: "Figura" },
+    { palabra: "Telescopio", pista1: "Galileo", pista2: "Lente" },
+    { palabra: "Órbita", pista1: "Elipse", pista2: "Girar" },
+    { palabra: "Gravedad", pista1: "Atracción", pista2: "Newton" },
+    { palabra: "Eclipse", pista1: "Sombra", pista2: "Solar" },
+    { palabra: "Aurora", pista1: "Boreal", pista2: "Polos" },
+    { palabra: "Exoplaneta", pista1: "Fuera", pista2: "Habitable" },
+    { palabra: "Nebulosa", pista1: "Nube", pista2: "Orion" },
+    { palabra: "Satélite", pista1: "Luna artificial", pista2: "GPS" },
+    { palabra: "Cúmulo estelar", pista1: "Pléyades", pista2: "Grupo" },
+    { palabra: "Enana Blanca", pista1: "Final", pista2: "Densa" },
+    { palabra: "Materia oscura", pista1: "Invisible", pista2: "Masa" },
+    { palabra: "Big Bang", pista1: "Origen", pista2: "Expansión" }
+  ]
+},
+{
+  categoria: "🧣 Prendas y Accesorios",
+  palabras: [
+    { palabra: "Reloj", pista1: "Correa", pista2: "Esfera" },
+    { palabra: "Gafas", pista1: "Cristal", pista2: "Puente" },
+    { palabra: "Sombrero", pista1: "Ala", pista2: "Copa" },
+    { palabra: "Bufanda", pista1: "Lazo", pista2: "Vuelta" },
+    { palabra: "Guantes", pista1: "Dedal", pista2: "Agarre" },
+    { palabra: "Paraguas", pista1: "Varilla", pista2: "Tormenta" },
+    { palabra: "Camisa", pista1: "Cuello", pista2: "Botones" },
+    { palabra: "Pantalón", pista1: "Cremallera", pista2: "Bolsillos" },
+    { palabra: "Zapatos", pista1: "Cordones", pista2: "Suela" },
+    { palabra: "Chaqueta", pista1: "Cremallera", pista2: "Forro" },
+    { palabra: "Vestido", pista1: "Manga", pista2: "Tirantes" },
+    { palabra: "Falda", pista1: "Pliegues", pista2: "Cintura" },
+    { palabra: "Corbata", pista1: "Nudo", pista2: "Seda" }, 
+    { palabra: "Cinturón", pista1: "Hebilla", pista2: "Agujeros" },
+    { palabra: "Gorra", pista1: "Visera", pista2: "Lona" },
+    { palabra: "Chaleco", pista1: "Sin mangas", pista2: "Acetato" },
+    { palabra: "Sudadera", pista1: "Capucha", pista2: "Kangaroo" },
+    { palabra: "Jersey", pista1: "Lana", pista2: "Cuello alto" },
+    { palabra: "Calcetines", pista1: "Puntera", pista2: "Par" },
+    { palabra: "Pantuflas", pista1: "Casa", pista2: "Felpa" },
+    { palabra: "Sandalias", pista1: "Verano", pista2: "Tiras" },
+    { palabra: "Botas", pista1: "Caña", pista2: "Tacos" },
+    { palabra: "Mochila", pista1: "Correas", pista2: "Cierre" },
+    { palabra: "Bolso", pista1: "Asa", pista2: "Bandolera" },
+    { palabra: "Cartera", pista1: "Bolsillos", pista2: "Monedero" },
+    { palabra: "Llavero", pista1: "Anilla", pista2: "Llamas" },
+    { palabra: "Pulsera", pista1: "Brazalete", pista2: "Cierre" },
+    { palabra: "Collar", pista1: "Gargantilla", pista2: "Colgante" },
+    { palabra: "Anillo", pista1: "Sortija", pista2: "Compromiso" },
+    { palabra: "Arete", pista1: "Aro", pista2: "Lóbulo" },
+    { palabra: "Diadema", pista1: "Pelo", pista2: "Flores" },
+    { palabra: "Pañuelo", pista1: "Cuello", pista2: "Nudo" },
+    { palabra: "Chaqueta vaquera", pista1: "Denim", pista2: "Remaches" },
+    { palabra: "Leggings", pista1: "Elástico", pista2: "Deporte" },
+    { palabra: "Bikini", pista1: "Triángulo", pista2: "Playa" }
+  ]
+},
+{
+  categoria: "🛠️ Herramientas y Utensilios",
+  palabras: [
+    // 🔹 Originales (6)
+    { palabra: "Martillo", pista1: "Impacto", pista2: "Clavo" },
+    { palabra: "Destornillador", pista1: "Punta", pista2: "Tornillo" },
+    { palabra: "Llave", pista1: "Dentado", pista2: "Giro" },
+    { palabra: "Tijeras", pista1: "Filo", pista2: "Bisagra" },
+    { palabra: "Regla", pista1: "Milímetro", pista2: "Línea" },
+    { palabra: "Alicates", pista1: "Mordaza", pista2: "Corte" },
+
+    // 🔧 Taller y Construcción (30)
+    { palabra: "Sierra", pista1: "Diente", pista2: "Corte" },
+    { palabra: "Taladro", pista1: "Broca", pista2: "Ruido" },
+    { palabra: "Lija", pista1: "Áspero", pista2: "Suave" },
+    { palabra: "Formón", pista1: "Cincel", pista2: "Madera" },
+    { palabra: "Cepillo", pista1: "Cerda", pista2: "Alisado" },
+    { palabra: "Tenaza", pista1: "Mordaza", pista2: "Extracción" },
+    { palabra: "Llave Inglesa", pista1: "Ajuste", pista2: "Tuerca" },
+    { palabra: "Nivel", pista1: "Burbuja", pista2: "Recto" },
+    { palabra: "Cinta Métrica", pista1: "Deslizar", pista2: "Medida" },
+    { palabra: "Escuadra", pista1: "Ángulo", pista2: "Recto" },
+    { palabra: "Sargento", pista1: "Sujeción", pista2: "Presión" },
+    { palabra: "Lima", pista1: "Desgaste", pista2: "Filo" },
+    { palabra: "Buril", pista1: "Grabado", pista2: "Metal" },
+    { palabra: "Pico", pista1: "Roca", pista2: "Excavación" },
+    { palabra: "Pala", pista1: "Tierra", pista2: "Cava" },
+    { palabra: "Carretilla", pista1: "Rueda", pista2: "Carga" },
+    { palabra: "Amoladora", pista1: "Chispa", pista2: "Disco" },
+    { palabra: "Soldadora", pista1: "Arco", pista2: "Unión" },
+    { palabra: "Pistola Calor", pista1: "Temperatura", pista2: "Encoger" },
+    { palabra: "Compresor", pista1: "Aire", pista2: "Potencia" },
+    { palabra: "Generador", pista1: "Corriente", pista2: "Respaldo" },
+    { palabra: "Multímetro", pista1: "Voltaje", pista2: "Medir" },
+    { palabra: "Pistola Silicona", pista1: "Adhesivo", pista2: "Caliente" },
+    { palabra: "Rodillo Pintura", pista1: "Textura", pista2: "Pared" },
+    { palabra: "Espátula", pista1: "Raspar", pista2: "Superficie" },
+    { palabra: "Lijadora", pista1: "Vibración", pista2: "Polvo" },
+    { palabra: "Pulidora", pista1: "Brillo", pista2: "Esfera" },
+    { palabra: "Fresadora", pista1: "Giro", pista2: "Surco" },
+    { palabra: "Sierra Circular", pista1: "Hoja", pista2: "Rápido" },
+    { palabra: "Caladora", pista1: "Curva", pista2: "Corte" },
+
+    // 🍳 Cocina y Mesa (30)
+    { palabra: "Cuchillo", pista1: "Hoja", pista2: "Cortar" },
+    { palabra: "Tenedor", pista1: "Dientes", pista2: "Pinchar" },
+    { palabra: "Cuchara", pista1: "Curva", pista2: "Líquido" },
+    { palabra: "Sartén", pista1: "Fuego", pista2: "Freír" },
+    { palabra: "Olla", pista1: "Hervor", pista2: "Tapa" },
+    { palabra: "Tetera", pista1: "Vapor", pista2: "Infusión" },
+    { palabra: "Cafetera", pista1: "Grano", pista2: "Líquido" },
+    { palabra: "Licuadora", pista1: "Hélice", pista2: "Mezcla" },
+    { palabra: "Batidora", pista1: "Varillas", pista2: "Aire" },
+    { palabra: "Microondas", pista1: "Ondas", pista2: "Calentar" },
+    { palabra: "Tostadora", pista1: "Resistencia", pista2: "Dorado" },
+    { palabra: "Abrelatas", pista1: "Corte", pista2: "Envase" },
+    { palabra: "Pelador", pista1: "Cáscara", pista2: "Filo" },
+    { palabra: "Rallador", pista1: "Queso", pista2: "Rayas" },
+    { palabra: "Espumadera", pista1: "Drenaje", pista2: "Aceite" },
+    { palabra: "Cucharón", pista1: "Sopa", pista2: "Hondo" },
+    { palabra: "Pinzas", pista1: "Agarre", pista2: "Calor" },
+    { palabra: "Molinillo", pista1: "Grano", pista2: "Polvo" },
+    { palabra: "Mortero", pista1: "Majado", pista2: "Especias" },
+    { palabra: "Tabla Cortar", pista1: "Cuchillo", pista2: "Superficie" },
+    { palabra: "Colador", pista1: "Agujeros", pista2: "Drenar" },
+    { palabra: "Tamiz", pista1: "Fino", pista2: "Harina" },
+    { palabra: "Rodillo Amasar", pista1: "Masa", pista2: "Plano" },
+    { palabra: "Cortador Pizza", pista1: "Rueda", pista2: "Rebanar" },
+    { palabra: "Afilador", pista1: "Piedra", pista2: "Bordes" },
+    { palabra: "Termómetro Cocina", pista1: "Grados", pista2: "Calor" },
+    { palabra: "Temporizador", pista1: "Cuenta", pista2: "Alarma" },
+    { palabra: "Pesa", pista1: "Exactitud", pista2: "Balance" },
+    { palabra: "Taza", pista1: "Asa", pista2: "Café" },
+    { palabra: "Vaso", pista1: "Cristal", pista2: "Bebida" },
+
+    // 📐 Oficina y Escuela (20)
+    { palabra: "Calculadora", pista1: "Teclas", pista2: "Operar" },
+    { palabra: "Compás", pista1: "Radio", pista2: "Círculo" },
+    { palabra: "Transportador", pista1: "Grados", pista2: "Ángulo" },
+    { palabra: "Grapadora", pista1: "Pines", pista2: "Unir" },
+    { palabra: "Perforadora", pista1: "Agujero", pista2: "Papel" },
+    { palabra: "Corrector", pista1: "Tinta", pista2: "Tapar" },
+    { palabra: "Pegamento", pista1: "Unión", pista2: "Líquido" },
+    { palabra: "Cinta Adhesiva", pista1: "Pegar", pista2: "Transparente" },
+    { palabra: "Carpeta", pista1: "Documentos", pista2: "Orden" },
+    { palabra: "Archivador", pista1: "Cajas", pista2: "Archivo" },
+    { palabra: "Bloc", pista1: "Notas", pista2: "Hojas" },
+    { palabra: "Post-it", pista1: "Recordatorio", pista2: "Amarillo" },
+    { palabra: "Pizarra", pista1: "Tiza", pista2: "Escribir" },
+    { palabra: "Sacapuntas", pista1: "Mina", pista2: "Cono" },
+    { palabra: "Borrador", pista1: "Goma", pista2: "Limpiar" },
+    { palabra: "Portaminas", pista1: "Presión", pista2: "Gráfico" },
+    { palabra: "Rotulador", pista1: "Tinta", pista2: "Color" },
+    { palabra: "Subrayador", pista1: "Marca", pista2: "Texto" },
+    { palabra: "Clip", pista1: "Metal", pista2: "Sujetar" },
+    { palabra: "Chincheta", pista1: "Muro", pista2: "Fijar" },
+
+    // 🌿 Jardín y Hogar (20)
+    { palabra: "Manguera", pista1: "Agua", pista2: "Riego" },
+    { palabra: "Regadera", pista1: "Ducha", pista2: "Gota" },
+    { palabra: "Podadora", pista1: "Corte", pista2: "Jardín" },
+    { palabra: "Rastrillo", pista1: "Púas", pista2: "Hojas" },
+    { palabra: "Azadón", pista1: "Surco", pista2: "Tierra" },
+    { palabra: "Tijeras Poda", pista1: "Rama", pista2: "Corte" },
+    { palabra: "Guantes Jardín", pista1: "Protección", pista2: "Espinas" },
+    { palabra: "Maceta", pista1: "Barro", pista2: "Raíz" },
+    { palabra: "Injerto", pista1: "Unión", pista2: "Planta" },
+    { palabra: "Navaja", pista1: "Hoja", pista2: "Plegable" },
+    { palabra: "Multiherramienta", pista1: "Compacto", pista2: "Versátil" },
+    { palabra: "Linterna", pista1: "Haz", pista2: "Oscuridad" },
+    { palabra: "Brújula", pista1: "Norte", pista2: "Aguja" },
+    { palabra: "Extintor", pista1: "Polvo", pista2: "Fuego" },
+    { palabra: "Botiquín", pista1: "Curación", pista2: "Emergencia" },
+    { palabra: "Escoba", pista1: "Cerda", pista2: "Barrer" },
+    { palabra: "Trapeador", pista1: "Húmedo", pista2: "Suelo" },
+    { palabra: "Aspiradora", pista1: "Succión", pista2: "Polvo" },
+    { palabra: "Plancha", pista1: "Vapor", pista2: "Arruga" },
+    { palabra: "Desatascador", pista1: "Vacío", pista2: "Tubería" }
+  ]
+}
+];  // ← ✅ Cierre final del array
+
+/* ================================================================
+   ESTADO GLOBAL
+   ================================================================ */
+const STATE = {
+  // Configuración
+  config: {
+    numPlayers: 5,
+    numImpostors: 1,
+    numBullets: 3,
+    infiniteBullets: false,
+    category: "aleatorio",
+    withHints: true,
+    playerNames: []
+  },
+  // Partida en curso
+  game: {
+    players: [],        // {id, name, role, alive, isImpostor}
+    secretWord: null,
+    currentHint: null,
+    usedHints: [],
+    currentPlayerIndex: 0,
+    revealPhase: true,  // true = fase de revelación
+    bullets: 0,
+    impostorsAlive: 0,
+    humansAlive: 0,
+    eliminated: [],
+    starter: null,
+    category: null
+  },
+  // Control de pantalla
+  currentScreen: 'splash'
+};
+
+/* ================================================================
+   UTILIDADES
+   ================================================================ */
+const $ = id => document.getElementById(id);
+const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+const PLAYER_COLORS = [
+  '#A855F7','#4D9FFF','#39FF14','#FF3131','#FFD600',
+  '#00F5FF','#FF6B35','#FF85A1','#5EFF8B','#B8C0FF'
+];
+
+const AVATARS = ['👾','🤖','👽','🦾','🧠','💀','🎭','🔮','⚡','🌀'];
+
+function saveToStorage() {
+  try {
+    localStorage.setItem('chazey_config', JSON.stringify({
+      numPlayers:    STATE.config.numPlayers,
+      numImpostors:  STATE.config.numImpostors,
+      numBullets:    STATE.config.numBullets,
+      infiniteBullets: STATE.config.infiniteBullets,
+      category:      STATE.config.category,
+      withHints:     STATE.config.withHints,
+      playerNames:   STATE.config.playerNames
+    }));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('chazey_config');
+    if (saved) {
+      const d = JSON.parse(saved);
+      Object.assign(STATE.config, d);
+    }
+  } catch(e) {}
+}
+
+/* ================================================================
+   NAVEGACIÓN SPA
+   ================================================================ */
+function navigate(toId, back = false) {
+  const current = document.querySelector('.screen.active');
+  const next = $(toId);
+  if (!next) return;
+
+  if (current && current !== next) {
+    current.classList.add(back ? 'exit-left' : 'exit-left');
+    setTimeout(() => {
+      current.classList.remove('active', 'exit-left');
+    }, 350);
+  }
+
+  requestAnimationFrame(() => {
+    next.style.transform = back ? 'translateX(-100%)' : 'translateX(100%)';
+    next.classList.add('active');
+    requestAnimationFrame(() => {
+      next.style.transition = '';
+      next.style.transform = '';
+    });
+  });
+
+  STATE.currentScreen = toId;
+}
+
+/* ================================================================
+   MODALES
+   ================================================================ */
+function openModal(html) {
+  $('modal-content').innerHTML = html;
+  $('modal').classList.add('open');
+}
+
+function closeModal() {
+  $('modal').classList.remove('open');
+}
+
+function closeModalOnBg(e) {
+  if (e.target === $('modal')) closeModal();
+}
+
+/* ================================================================
+   RENDER DEL APP
+   ================================================================ */
+function renderApp() {
+  $('app').innerHTML = `
+    ${renderSplash()}
+    ${renderConfig()}
+    ${renderReveal()}
+    ${renderDiscussion()}
+    ${renderVoting()}
+    ${renderVictory()}
+  `;
+
+  // Activate splash
+  $('screen-splash').classList.add('active');
+
+  // Event listeners post-render
+  bindConfigEvents();
+  bindRevealEvents();
+  bindVotingEvents();
+
+  // Auto-navigate splash after 2.2s
+  setTimeout(() => {
+    loadFromStorage();
+    syncConfigUI();
+    navigate('screen-config');
+  }, 2200);
+}
+
+/* ================================================================
+   1. SPLASH
+   ================================================================ */
+function renderSplash() {
+  return `
+  <div class="screen" id="screen-splash" style="align-items:center;justify-content:center;text-align:center;background:var(--bg);">
+    <div class="anim-scale" style="margin-bottom:24px;">
+      <div style="font-size:72px;filter:drop-shadow(0 0 30px var(--violet));line-height:1;">👁</div>
+    </div>
+    <div class="anim-fade-up delay-1">
+      <div class="title-xl" style="letter-spacing:-0.04em;">
+        El <span class="glow-violet">Impostor</span>
+      </div>
+      <div style="color:var(--muted);font-size:15px;margin-top:8px;letter-spacing:0.06em;text-transform:uppercase;">
+        Chazey Panas Edition
+      </div>
+    </div>
+    <div class="anim-fade delay-4" style="position:absolute;bottom:60px;display:flex;gap:6px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--violet);animation:pulse-green 1.2s infinite;"></div>
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse-green 1.2s 0.2s infinite;"></div>
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse-green 1.2s 0.4s infinite;"></div>
+    </div>
+  </div>`;
+}
+
+/* ================================================================
+   2. CONFIGURACIÓN
+   ================================================================ */
+function renderConfig() {
+  const cats = ['aleatorio', ...BASE_DE_DATOS.map(c => c.categoria)];
+  const catOptions = cats.map(c =>
+    `<option value="${c}">${c === 'aleatorio' ? '🎲 Aleatorio' : c}</option>`
+  ).join('');
+
+  // Initial player name inputs
+  const playerInputs = Array.from({length: STATE.config.numPlayers}, (_, i) => {
+    const name = STATE.config.playerNames[i] || `Jugador ${i+1}`;
+    return `
+    <div class="player-item anim-fade-up" style="animation-delay:${i*0.05}s" id="player-row-${i}">
+      <div class="player-avatar" style="background:${PLAYER_COLORS[i]}22;color:${PLAYER_COLORS[i]};font-size:20px;">${AVATARS[i]}</div>
+      <input class="player-input" type="text" id="player-name-${i}" value="${name}" maxlength="18" placeholder="Jugador ${i+1}">
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="screen" id="screen-config">
+    <div class="screen-header">
+      <div style="flex:1;">
+        <div class="title-lg">Configurar <span class="glow-violet">Partida</span></div>
+        <div class="caption">Personaliza tu experiencia</div>
+      </div>
+      <div style="font-size:28px;">⚙️</div>
+    </div>
+
+    <div class="scroll-area" id="config-scroll">
+      <!-- Jugadores -->
+      <div class="form-group">
+        <div class="form-label">👥 Jugadores</div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="stepPlayers(-1)">−</button>
+          <div class="stepper-val" id="display-players">${STATE.config.numPlayers}</div>
+          <button class="stepper-btn" onclick="stepPlayers(1)">+</button>
+        </div>
+      </div>
+
+      <!-- Impostores -->
+      <div class="form-group">
+        <div class="form-label">🕵️ Impostores</div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="stepImpostors(-1)">−</button>
+          <div class="stepper-val" id="display-impostors">${STATE.config.numImpostors}</div>
+          <button class="stepper-btn" onclick="stepImpostors(1)">+</button>
+        </div>
+      </div>
+
+      <!-- Balas -->
+      <div class="form-group">
+        <div class="form-label">🔫 Balas / Intentos</div>
+        <div class="stepper" id="stepper-bullets" style="${STATE.config.infiniteBullets?'opacity:0.4;pointer-events:none':''}">
+          <button class="stepper-btn" onclick="stepBullets(-1)">−</button>
+          <div class="stepper-val" id="display-bullets">${STATE.config.infiniteBullets ? '∞' : STATE.config.numBullets}</div>
+          <button class="stepper-btn" onclick="stepBullets(1)">+</button>
+        </div>
+        <div style="margin-top:8px;">
+          <div class="switch-row">
+            <span class="body-md">Sin límite de balas</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-infinite" ${STATE.config.infiniteBullets?'checked':''} onchange="toggleInfinite(this)">
+              <div class="switch-track"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+		<!-- Categoría -->
+		<div class="form-group">
+		  <div class="form-label">📦 Categorías</div>
+		  <div style="display:flex;flex-direction:column;gap:8px;" id="cat-checkboxes">
+			${BASE_DE_DATOS.map(c => `
+			  <div class="switch-row" onclick="toggleCategory('${c.categoria}')">
+				<span class="body-md">${c.categoria}</span>
+				<label class="switch" onclick="event.stopPropagation()">
+				  <input type="checkbox" value="${c.categoria}"
+					${(STATE.config.selectedCategories||[]).includes(c.categoria) ? 'checked' : ''}
+					onchange="toggleCategory('${c.categoria}')">
+				  <div class="switch-track"></div>
+				</label>
+			  </div>
+			`).join('')}
+		  </div>
+		  <div style="margin-top:8px;">
+			<div class="switch-row" onclick="toggleAllCategories()">
+			  <span class="body-md" style="color:var(--violet);">🎲Todas</span>
+			  <label class="switch" onclick="event.stopPropagation()">
+				<input type="checkbox" id="toggle-all-cats"
+				  ${(STATE.config.selectedCategories||[]).length === BASE_DE_DATOS.length ? 'checked' : ''}
+				  onchange="toggleAllCategories()">
+				<div class="switch-track"></div>
+			  </label>
+			</div>
+		  </div>
+		</div>
+
+      <!-- Modalidad -->
+      <div class="form-group">
+        <div class="form-label">💡 Modalidad</div>
+        <div class="toggle-group">
+          <button class="toggle-option ${STATE.config.withHints?'active':''}" id="mode-hints" onclick="setMode(true)">Con Pistas</button>
+          <button class="toggle-option ${!STATE.config.withHints?'active':''}" id="mode-nohints" onclick="setMode(false)">Sin Pistas</button>
+        </div>
+      </div>
+
+      <!-- Nombres -->
+      <div class="form-group">
+        <div class="form-label">✏️ Nombres de Jugadores</div>
+        <div id="player-names-list">${playerInputs}</div>
+      </div>
+
+      <div style="height:16px;"></div>
+    </div>
+
+    <div class="screen-footer">
+      <button class="btn btn-primary" onclick="startGame()">
+        <span>⚡</span> Iniciar Partida
+      </button>
+    </div>
+  </div>`;
+}
+
+function toggleCategory(cat) {
+  let sel = STATE.config.selectedCategories || [];
+  const idx = sel.indexOf(cat);
+  if (idx === -1) sel.push(cat);
+  else sel.splice(idx, 1);
+  STATE.config.selectedCategories = sel;
+  // Sincronizar checkbox "todas"
+  const allBtn = $('toggle-all-cats');
+  if (allBtn) allBtn.checked = sel.length === BASE_DE_DATOS.length;
+}
+
+function toggleAllCategories() {
+  const allChecked = (STATE.config.selectedCategories || []).length === BASE_DE_DATOS.length;
+  STATE.config.selectedCategories = allChecked ? [] : BASE_DE_DATOS.map(c => c.categoria);
+
+  // Sincronizar todos los checkboxes del DOM
+  document.querySelectorAll('#cat-checkboxes input[type="checkbox"]').forEach(input => {
+    input.checked = STATE.config.selectedCategories.includes(input.value);
+  });
+
+  const allBtn = $('toggle-all-cats');
+  if (allBtn) allBtn.checked = !allChecked;
+}
+
+function bindConfigEvents() {
+  $('select-category') && ($('select-category').value = STATE.config.category);
+}
+
+function syncConfigUI() {
+  const disp_p = $('display-players');
+  const disp_i = $('display-impostors');
+  const disp_b = $('display-bullets');
+  if (disp_p) disp_p.textContent = STATE.config.numPlayers;
+  if (disp_i) disp_i.textContent = STATE.config.numImpostors;
+  if (disp_b) disp_b.textContent = STATE.config.infiniteBullets ? '∞' : STATE.config.numBullets;
+
+  // Rebuild player list if needed
+  rebuildPlayerList();
+}
+
+function rebuildPlayerList() {
+  const list = $('player-names-list');
+  if (!list) return;
+  const n = STATE.config.numPlayers;
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const name = STATE.config.playerNames[i] || `Jugador ${i+1}`;
+    html += `
+    <div class="player-item" id="player-row-${i}">
+      <div class="player-avatar" style="background:${PLAYER_COLORS[i]}22;color:${PLAYER_COLORS[i]};font-size:20px;">${AVATARS[i]}</div>
+      <input class="player-input" type="text" id="player-name-${i}" value="${name}" maxlength="18" placeholder="Jugador ${i+1}" onchange="updatePlayerName(${i}, this.value)" oninput="updatePlayerName(${i}, this.value)">
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+
+function updatePlayerName(i, val) {
+  STATE.config.playerNames[i] = val;
+}
+
+function stepPlayers(d) {
+  const n = Math.min(12, Math.max(3, STATE.config.numPlayers + d));
+  STATE.config.numPlayers = n;
+  // Cap impostors
+  const maxImp = Math.floor(n / 2);
+  if (STATE.config.numImpostors > maxImp) STATE.config.numImpostors = maxImp;
+  const disp_p = $('display-players');
+  const disp_i = $('display-impostors');
+  if (disp_p) disp_p.textContent = n;
+  if (disp_i) disp_i.textContent = STATE.config.numImpostors;
+  rebuildPlayerList();
+}
+
+function stepImpostors(d) {
+  const max = Math.floor(STATE.config.numPlayers / 2);
+  STATE.config.numImpostors = Math.min(max, Math.max(1, STATE.config.numImpostors + d));
+  const el = $('display-impostors');
+  if (el) el.textContent = STATE.config.numImpostors;
+}
+
+function stepBullets(d) {
+  STATE.config.numBullets = Math.min(20, Math.max(1, STATE.config.numBullets + d));
+  const el = $('display-bullets');
+  if (el) el.textContent = STATE.config.numBullets;
+}
+
+function toggleInfinite(cb) {
+  STATE.config.infiniteBullets = cb.checked;
+  const stepper = $('stepper-bullets');
+  const disp = $('display-bullets');
+  if (stepper) {
+    stepper.style.opacity = cb.checked ? '0.4' : '1';
+    stepper.style.pointerEvents = cb.checked ? 'none' : '';
+  }
+  if (disp) disp.textContent = cb.checked ? '∞' : STATE.config.numBullets;
+}
+
+function setMode(withHints) {
+  STATE.config.withHints = withHints;
+  const h = $('mode-hints');
+  const nh = $('mode-nohints');
+  if (h) h.classList.toggle('active', withHints);
+  if (nh) nh.classList.toggle('active', !withHints);
+}
+
+/* ================================================================
+   INICIO DE PARTIDA
+   ================================================================ */
+function startGame() {
+  // Recopilar nombres actualizados
+  for (let i = 0; i < STATE.config.numPlayers; i++) {
+    const input = $(`player-name-${i}`);
+    if (input) STATE.config.playerNames[i] = input.value || `Jugador ${i+1}`;
+  }
+
+  // Elegir palabra y categoría
+	const selected = STATE.config.selectedCategories || [];
+	let pool;
+	if (selected.length === 0) {
+	  // Si no eligió ninguna, usar todas
+	  pool = BASE_DE_DATOS.flatMap(c => c.palabras);
+	} else {
+	  pool = BASE_DE_DATOS
+		.filter(c => selected.includes(c.categoria))
+		.flatMap(c => c.palabras);
+	}
+
+  const chosen = rand(pool);
+  const catName = STATE.config.category === 'aleatorio'
+    ? BASE_DE_DATOS.find(c => c.palabras.includes(chosen))?.categoria || '?'
+    : STATE.config.category;
+
+  // Elegir pista aleatoria (si aplica)
+  let hint = null;
+  if (STATE.config.withHints) {
+    const hints = [chosen.pista1, chosen.pista2, chosen.pista3];
+    hint = rand(hints);
+  }
+
+  // Asignar roles
+  const n = STATE.config.numPlayers;
+  const impostorIndices = new Set();
+  while (impostorIndices.size < STATE.config.numImpostors) {
+    impostorIndices.add(Math.floor(Math.random() * n));
+  }
+
+  const shuffledOrder = [...Array(n).keys()];
+
+  const players = Array.from({length: n}, (_, i) => ({
+    id: i,
+    name: STATE.config.playerNames[i] || `Jugador ${i+1}`,
+    role: impostorIndices.has(i) ? 'impostor' : 'human',
+    isImpostor: impostorIndices.has(i),
+    alive: true,
+    color: PLAYER_COLORS[i],
+    avatar: AVATARS[i]
+  }));
+
+  STATE.game = {
+    players,
+    secretWord: chosen.palabra,
+    currentHint: hint,
+    usedHints: hint ? [hint] : [],
+    currentPlayerIndex: 0,
+    revealPhase: true,
+    bullets: STATE.config.infiniteBullets ? Infinity : STATE.config.numBullets,
+    impostorsAlive: STATE.config.numImpostors,
+    humansAlive: n - STATE.config.numImpostors,
+    eliminated: [],
+    starter: null,
+    category: catName,
+    revealOrder: shuffledOrder,
+    revealCount: 0
+  };
+
+  saveToStorage();
+  renderRevealScreen();
+  navigate('screen-reveal');
+}
+
+/* ================================================================
+   3. PANTALLA PASS & PLAY (REVELAR ROL)
+   ================================================================ */
+function renderReveal() {
+  return `<div class="screen" id="screen-reveal"></div>`;
+}
+
+function bindRevealEvents() {}
+
+function renderRevealScreen() {
+  const screen = $('screen-reveal');
+  if (!screen) return;
+
+  const g = STATE.game;
+  const orderIdx = g.revealCount;
+
+  if (orderIdx >= g.players.length) {
+    // Todos vieron su rol → pantalla de discusión
+    renderDiscussionScreen();
+    navigate('screen-discussion');
+    return;
+  }
+
+  const playerIdx = g.revealOrder[orderIdx];
+  const player = g.players[playerIdx];
+
+  screen.innerHTML = `
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;">
+      <div class="anim-fade-up" style="margin-bottom:8px;">
+        <div class="caption">Turno de</div>
+        <div class="title-xl" style="color:${player.color};filter:drop-shadow(0 0 12px ${player.color});">
+          ${player.avatar} ${player.name}
+        </div>
+      </div>
+
+      <div class="anim-fade-up delay-2" style="width:100%;margin-top:32px;">
+        <div id="reveal-pre" style="width:100%;">
+          <div class="card-glass" style="padding:28px;border-color:rgba(168,85,247,0.3);">
+            <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+            <div class="title-md" style="color:var(--muted);margin-bottom:8px;">Pantalla protegida</div>
+            <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+              Solo <strong style="color:${player.color}">${player.name}</strong> debe ver esto
+            </div>
+            <div class="hold-container" id="hold-container">
+              <button class="btn btn-hold" id="btn-hold"
+                      ontouchstart="startHold(event)"
+                      ontouchend="endHold(event)"
+                      ontouchcancel="endHold(event)"
+                      onmousedown="startHold(event)"
+                      onmouseup="endHold(event)"
+                      onmouseleave="endHold(event)">
+                Mantener para revelar
+              </button>
+              <div class="hold-progress"><div class="hold-fill" id="hold-fill"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="reveal-card" style="display:none;width:100%;">
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-footer" id="reveal-footer" style="display:none;">
+      <button class="btn btn-primary" onclick="nextReveal()">
+        Ya lo vi · Pasar celular 👉
+      </button>
+    </div>
+  `;
+}
+
+// Hold button logic
+let holdTimer = null;
+let holdProgress = 0;
+let holdInterval = null;
+const HOLD_DURATION = 800; // ms
+
+function startHold(e) {
+  e.preventDefault();
+  holdProgress = 0;
+  const fill = $('hold-fill');
+  if (!fill) return;
+
+  holdInterval = setInterval(() => {
+    holdProgress += (50 / HOLD_DURATION) * 100;
+    fill.style.width = Math.min(holdProgress, 100) + '%';
+    if (holdProgress >= 100) {
+      clearInterval(holdInterval);
+      revealRole();
+    }
+  }, 50);
+}
+
+function endHold(e) {
+  e.preventDefault();
+  clearInterval(holdInterval);
+  holdProgress = 0;
+  const fill = $('hold-fill');
+  if (fill) fill.style.width = '0%';
+}
+
+function revealRole() {
+  const g = STATE.game;
+  const playerIdx = g.revealOrder[g.revealCount];
+  const player = g.players[playerIdx];
+
+  const pre = $('reveal-pre');
+  const card = $('reveal-card');
+  const footer = $('reveal-footer');
+
+  if (!pre || !card || !footer) return;
+
+  pre.style.display = 'none';
+  footer.style.display = '';
+
+  if (player.isImpostor) {
+    card.style.display = '';
+    card.innerHTML = `
+      <div class="role-card role-card-impostor anim-scale" style="animation:pulse-red 2s infinite;">
+        <div style="font-size:52px;margin-bottom:16px;animation:glitch 0.5s infinite;">💀</div>
+        <div class="badge badge-impostor" style="margin-bottom:12px;">IMPOSTOR</div>
+        <div class="title-xl glow-red" style="margin-bottom:8px;">ERES EL<br>IMPOSTOR</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+          Nadie conoce la palabra.<br>Finge que la sabes.
+        </div>
+        ${g.currentHint ? `
+        <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para ti</div>
+          <div class="title-md glow-red">${g.currentHint}</div>
+        </div>` : ''}
+      </div>`;
+  } else {
+    card.style.display = '';
+    card.innerHTML = `
+      <div class="role-card role-card-human anim-scale" style="animation:pulse-green 2s infinite;">
+        <div style="font-size:52px;margin-bottom:16px;">✅</div>
+        <div class="badge badge-human" style="margin-bottom:12px;">HUMANO</div>
+        <div style="color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Categoría: ${g.category}</div>
+        <div class="title-xl glow-green">${g.secretWord}</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+          Esta es la palabra secreta.<br>¡No dejes que el impostor la adivine!
+        </div>
+      </div>`;
+  }
+}
+
+function nextReveal() {
+  STATE.game.revealCount++;
+  if (STATE.game.revealCount >= STATE.game.players.length) {
+    renderDiscussionScreen();
+    navigate('screen-discussion');
+  } else {
+    renderRevealScreen();
+  }
+}
+
+/* ================================================================
+   4. PANTALLA DISCUSIÓN
+   ================================================================ */
+function renderDiscussion() {
+  return `<div class="screen" id="screen-discussion"></div>`;
+}
+
+function renderDiscussionScreen() {
+  const screen = $('screen-discussion');
+  if (!screen) return;
+
+  const alivePlayers = STATE.game.players.filter(p => p.alive);
+  const starter = rand(alivePlayers);
+  STATE.game.starter = starter;
+
+  screen.innerHTML = `
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;">
+      <div class="anim-fade-up">
+        <div style="font-size:56px;margin-bottom:16px;">🗣️</div>
+        <div class="title-xl" style="margin-bottom:8px;">Todos Listos</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:32px;">
+          Discutan sin revelar información obvia.<br>El impostor está entre ustedes.
+        </div>
+
+        <div class="card-glass anim-scale delay-2" style="margin-bottom:0;border-color:rgba(0,245,255,0.3);">
+          <div class="caption" style="margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">Empieza hablando</div>
+          <div style="font-size:36px;margin-bottom:8px;">${starter.avatar}</div>
+          <div class="title-lg" style="color:${starter.color};filter:drop-shadow(0 0 12px ${starter.color});">
+            ${starter.name}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-footer">
+      <button class="btn btn-primary anim-fade-up delay-3" onclick="goToVoting()">
+        <span>🗳️</span> Ir a Votación
+      </button>
+    </div>
+  `;
+}
+
+function goToVoting() {
+  renderVotingScreen();
+  navigate('screen-voting');
+}
+
+/* ================================================================
+   5. PANTALLA VOTACIÓN
+   ================================================================ */
+function renderVoting() {
+  return `<div class="screen" id="screen-voting"></div>`;
+}
+
+function bindVotingEvents() {}
+
+function renderVotingScreen() {
+  const screen = $('screen-voting');
+  if (!screen) return;
+
+  const g = STATE.game;
+  const alivePlayers = g.players.filter(p => p.alive);
+
+  const bulletsDisplay = g.bullets === Infinity
+    ? '<span style="color:var(--cyan)">∞</span>'
+    : `<span style="${g.bullets <= 1 ? 'color:var(--red)' : 'color:var(--yellow)'}">${g.bullets}</span>`;
+
+  const playerRows = alivePlayers.map(p => `
+    <div class="vote-item anim-fade-up" id="vote-row-${p.id}">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="player-avatar" style="background:${p.color}22;color:${p.color};font-size:20px;">${p.avatar}</div>
+        <div>
+          <div class="body-md" style="font-weight:600;">${p.name}</div>
+          <div class="caption">En juego</div>
+        </div>
+      </div>
+      <button class="btn btn-red btn-sm" style="width:auto;padding:10px 18px;" onclick="confirmVote(${p.id})">
+        Votar
+      </button>
+    </div>
+  `).join('');
+
+  const elimRows = g.eliminated.map(p => {
+    const badge = p.isImpostor
+      ? `<span class="badge badge-impostor">Impostor</span>`
+      : `<span class="badge badge-human">Inocente</span>`;
+    return `
+    <div class="vote-item" style="opacity:0.45;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="player-avatar" style="background:${p.color}22;color:${p.color};font-size:20px;filter:grayscale(0.7);">${p.avatar}</div>
+        <div>
+          <div class="body-md" style="font-weight:600;text-decoration:line-through;">${p.name}</div>
+          ${badge}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  screen.innerHTML = `
+    <div class="screen-header">
+      <div style="flex:1;">
+        <div class="title-lg">Votación</div>
+        <div class="caption">Elimina al sospechoso</div>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 12px;display:flex;gap:10px;flex-shrink:0;">
+      <div class="stat-chip stat-chip-red">🔫 ${bulletsDisplay} balas</div>
+      <div class="stat-chip stat-chip-blue">🕵️ ${g.impostorsAlive} impostores</div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="section-label">Jugadores vivos</div>
+      <div id="alive-list">${playerRows}</div>
+
+      ${g.eliminated.length > 0 ? `
+        <div class="divider"></div>
+        <div class="section-label">Eliminados</div>
+        <div id="elim-list">${elimRows}</div>
+      ` : ''}
+
+      <div style="height:16px;"></div>
+    </div>
+
+    <div class="screen-footer">
+      <button class="btn btn-ghost btn-sm" onclick="confirmCancelGame()">Cancelar partida</button>
+    </div>
+  `;
+}
+
+function confirmVote(playerId) {
+  const p = STATE.game.players.find(x => x.id === playerId);
+  if (!p) return;
+
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">${p.avatar}</div>
+      <div class="title-md" style="margin-bottom:8px;">¿Eliminar a</div>
+      <div class="title-lg" style="color:${p.color};filter:drop-shadow(0 0 12px ${p.color});margin-bottom:24px;">${p.name}?</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:24px;">Esta acción no se puede deshacer.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-red" onclick="executeVote(${playerId})">⚡ Confirmar Eliminación</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  `);
+}
+
+function executeVote(playerId) {
+  closeModal();
+  const g = STATE.game;
+  const p = g.players.find(x => x.id === playerId);
+  if (!p) return;
+
+  p.alive = false;
+  g.eliminated.push(p);
+
+  if (p.isImpostor) {
+    g.impostorsAlive--;
+  } else {
+    g.humansAlive--;
+    if (g.bullets !== Infinity) g.bullets--;
+  }
+
+  // Verificar condiciones de victoria
+  const result = checkVictory();
+  if (result) {
+    renderVictoryScreen(result);
+    navigate('screen-victory');
+    return;
+  }
+
+  renderVotingScreen();
+}
+
+function checkVictory() {
+  const g = STATE.game;
+
+  if (g.impostorsAlive <= 0) {
+    return { winner: 'humans', reason: 'Todos los impostores fueron eliminados' };
+  }
+
+  if (g.bullets !== Infinity && g.bullets <= 0) {
+    return { winner: 'impostors', reason: 'Se agotaron todas las balas' };
+  }
+
+  if (g.impostorsAlive >= g.humansAlive) {
+    return { winner: 'impostors', reason: 'Los impostores superaron en número a los humanos' };
+  }
+
+  return null;
+}
+
+function confirmCancelGame() {
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+      <div class="title-md" style="margin-bottom:8px;">¿Cancelar partida?</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:24px;">Se perderá el progreso actual.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-red" onclick="cancelGame()">Cancelar Partida</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Volver al juego</button>
+      </div>
+    </div>
+  `);
+}
+
+function cancelGame() {
+  closeModal();
+  navigate('screen-config');
+}
+
+/* ================================================================
+   6. PANTALLA VICTORIA
+   ================================================================ */
+function renderVictory() {
+  return `<div class="screen" id="screen-victory"></div>`;
+}
+
+function renderVictoryScreen(result) {
+  const screen = $('screen-victory');
+  if (!screen) return;
+
+  const g = STATE.game;
+  const humansWin = result.winner === 'humans';
+  const color = humansWin ? 'var(--green)' : 'var(--red)';
+  const glow  = humansWin ? 'glow-green' : 'glow-red';
+  const emoji = humansWin ? '🏆' : '👿';
+  const title = humansWin ? '¡HUMANOS GANAN!' : '¡IMPOSTORES GANAN!';
+
+  const impostors = g.players.filter(p => p.isImpostor);
+  const impostorList = impostors.map(p => `
+    <div class="player-item" style="border-color:${humansWin ? 'rgba(57,255,20,0.2)' : 'rgba(255,49,49,0.2)'};">
+      <div class="player-avatar" style="background:${p.color}22;color:${p.color};font-size:20px;">${p.avatar}</div>
+      <div style="flex:1;">
+        <div class="body-md" style="font-weight:700;">${p.name}</div>
+        <div class="caption">El impostor</div>
+      </div>
+      <span class="badge badge-impostor">IMPOSTOR</span>
+    </div>
+  `).join('');
+
+  // Generate particles
+  const particleColor = humansWin ? 'var(--green)' : 'var(--red)';
+  const particles = Array.from({length: 20}, (_, i) => `
+    <div class="victory-particle" style="
+      left:${Math.random()*100}%;
+      background:${particleColor};
+      animation-duration:${2 + Math.random()*3}s;
+      animation-delay:${Math.random()*2}s;
+      width:${2+Math.random()*4}px;
+      height:${2+Math.random()*4}px;
+    "></div>
+  `).join('');
+
+  screen.innerHTML = `
+    <div class="victory-bg">${particles}</div>
+
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;position:relative;z-index:1;">
+      <div class="anim-scale">
+        <div style="font-size:72px;margin-bottom:16px;filter:drop-shadow(0 0 30px ${color});">${emoji}</div>
+      </div>
+      <div class="anim-fade-up delay-1">
+        <div class="title-xl ${glow}" style="margin-bottom:8px;">${title}</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:4px;">${result.reason}</div>
+        <div class="caption">Palabra secreta: <strong style="color:${color}">${g.secretWord}</strong></div>
+      </div>
+
+      <div class="anim-fade-up delay-2" style="width:100%;margin-top:32px;">
+        <div class="section-label" style="text-align:left;">Los Impostores eran</div>
+        <div>${impostorList}</div>
+      </div>
+    </div>
+
+    <div class="screen-footer">
+      <button class="btn ${humansWin ? 'btn-green' : 'btn-red'} anim-fade-up delay-3" onclick="playAgain()">
+        🔄 Jugar Otra Vez
+      </button>
+    </div>
+  `;
+}
+
+function playAgain() {
+  // Conservar nombres y config
+  navigate('screen-config');
+  syncConfigUI();
+}
+
+/* ================================================================
+   INIT
+   ================================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderApp();
+});
+
+// Prevenir zoom en doble tap iOS
+let lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouch < 300) e.preventDefault();
+  lastTouch = now;
+}, { passive: false });
+
+// Prevenir scroll bounce
+document.addEventListener('touchmove', e => {
+  if (!e.target.closest('.scroll-area')) {
+    e.preventDefault();
+  }
+}, { passive: false });
+</script>
+</body>
+</html>
