@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#000000">
 <meta name="description" content="El Impostor Chazey Panas - Juego de roles para grupos">
-<title>El Impostor · Chazey Panas</title>
+<title>El Impostor · Chazey Panas v2.0</title>
 
 <!-- PWA Manifest inline via link -->
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22El%20Impostor%20Chazey%20Panas%22%2C%22short_name%22%3A%22Impostor%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23000000%22%2C%22orientation%22%3A%22portrait%22%7D">
@@ -441,7 +441,7 @@ html, body {
 }
 
 /* ================================================================
-   PLAYER LIST
+   PLAYER LIST WITH REORDER
    ================================================================ */
 .player-item {
   display: flex;
@@ -452,6 +452,16 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   margin-bottom: 8px;
+}
+
+.player-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.player-item.drag-over {
+  border-color: var(--violet);
+  box-shadow: 0 0 12px rgba(168,85,247,0.3);
 }
 
 .player-avatar {
@@ -475,6 +485,52 @@ html, body {
   font-size: 16px;
   font-weight: 600;
   outline: none;
+}
+
+.player-drag-handle {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.player-drag-handle:active {
+  cursor: grabbing;
+}
+
+.player-move-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.player-move-btn {
+  width: 24px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.player-move-btn:active {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+}
+
+.player-move-btn.disabled {
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 /* Vote list */
@@ -590,14 +646,14 @@ html, body {
   100% { transform: translate(0); }
 }
 
-@keyframes scan {
-  0%   { transform: translateY(-100%); }
-  100% { transform: translateY(400%); }
-}
-
 @keyframes countdown {
   from { stroke-dashoffset: 0; }
   to   { stroke-dashoffset: 220; }
+}
+
+@keyframes float-up {
+  from { transform: translateY(100vh) scale(1); opacity: 1; }
+  to   { transform: translateY(-20px) scale(0); opacity: 0; }
 }
 
 .anim-fade-up { animation: fadeInUp 0.4s ease both; }
@@ -726,11 +782,6 @@ html, body {
   animation: float-up linear infinite;
 }
 
-@keyframes float-up {
-  from { transform: translateY(100vh) scale(1); opacity: 1; }
-  to   { transform: translateY(-20px) scale(0); opacity: 0; }
-}
-
 /* Scanline overlay */
 .scanlines {
   position: fixed;
@@ -796,11 +847,41 @@ html, body {
   border: 1px solid rgba(57,255,20,0.4);
   color: var(--green);
 }
+
+/* ================================================================
+   SOUND TOGGLE
+   ================================================================ */
+.sound-toggle {
+  position: fixed;
+  top: max(12px, var(--safe-top));
+  right: 16px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.sound-toggle:active {
+  transform: scale(0.9);
+}
+
+.sound-toggle.muted {
+  opacity: 0.5;
+}
 </style>
 </head>
 <body>
 
 <div class="scanlines"></div>
+<button class="sound-toggle" id="sound-toggle" onclick="toggleSound()">🔊</button>
 <div id="app"></div>
 
 <!-- ================================================================
@@ -814,6 +895,139 @@ html, body {
 </div>
 
 <script>
+/* ================================================================
+   WEB AUDIO API - SISTEMA DE SONIDOS
+   ================================================================ */
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = $('sound-toggle');
+  btn.textContent = soundEnabled ? '🔊' : '🔇';
+  btn.classList.toggle('muted', !soundEnabled);
+}
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+
+  switch(type) {
+    case 'tap':
+      // Sonido suave de toque
+      playTone(800, 0.1, 'sine', 0.15);
+      break;
+
+    case 'hold':
+      // Sonido ascendente mientras sostienes
+      playTone(400, 0.15, 'sine', 0.1);
+      break;
+
+    case 'reveal':
+      // Sonido dramático de revelacion
+      playTone(523, 0.15, 'sine', 0.25);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.25), 100);
+      setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 200);
+      break;
+
+    case 'victory':
+      // Fanfarria de victoria
+      playTone(523, 0.15, 'sine', 0.3);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 150);
+      setTimeout(() => playTone(784, 0.15, 'sine', 0.3), 300);
+      setTimeout(() => playTone(1047, 0.4, 'sine', 0.35), 450);
+      break;
+
+    case 'defeat':
+      // Sonido triste de derrota
+      playTone(400, 0.3, 'sawtooth', 0.2);
+      setTimeout(() => playTone(300, 0.3, 'sawtooth', 0.2), 200);
+      setTimeout(() => playTone(200, 0.5, 'sawtooth', 0.25), 400);
+      break;
+
+    case 'eliminate':
+      // Sonido de eliminacion
+      playTone(200, 0.1, 'square', 0.2);
+      setTimeout(() => playTone(150, 0.2, 'square', 0.15), 100);
+      setTimeout(() => playTone(100, 0.3, 'square', 0.1), 250);
+      break;
+
+    case 'countdown':
+      // Sonido de cuenta regresiva
+      playTone(600, 0.08, 'sine', 0.2);
+      break;
+
+    case 'tick':
+      // Sonido de reloj/tick
+      playTone(1000, 0.05, 'sine', 0.1);
+      break;
+
+    case 'success':
+      // Sonido de success
+      playTone(880, 0.1, 'sine', 0.2);
+      setTimeout(() => playTone(1100, 0.15, 'sine', 0.25), 80);
+      break;
+
+    case 'error':
+      // Sonido de error
+      playTone(200, 0.2, 'square', 0.15);
+      setTimeout(() => playTone(150, 0.2, 'square', 0.12), 150);
+      break;
+
+    case 'whoosh':
+      // Sonido de transicion
+      playTone(300, 0.15, 'sine', 0.08);
+      setTimeout(() => playTone(400, 0.1, 'sine', 0.05), 50);
+      break;
+
+    case 'start':
+      // Sonido de inicio de juego
+      playTone(440, 0.1, 'sine', 0.2);
+      setTimeout(() => playTone(554, 0.1, 'sine', 0.2), 100);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.25), 200);
+      setTimeout(() => playTone(880, 0.2, 'sine', 0.3), 300);
+      break;
+
+    case 'impostorWin':
+      // Sonido misterioso/oscuro para victoria impostor
+      playTone(150, 0.4, 'sawtooth', 0.15);
+      setTimeout(() => playTone(200, 0.3, 'sawtooth', 0.12), 300);
+      setTimeout(() => playTone(250, 0.5, 'sawtooth', 0.1), 500);
+      break;
+  }
+}
+
+function playTone(frequency, duration, type = 'sine', volume = 0.2) {
+  if (!audioCtx || audioCtx.state !== 'running') return;
+
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+  gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  oscillator.start(audioCtx.currentTime);
+  oscillator.stop(audioCtx.currentTime + duration);
+}
+
 /* ================================================================
    BASE DE DATOS
    ================================================================ */
@@ -1804,13 +2018,12 @@ const BASE_DE_DATOS = [
     { palabra: "Desatascador", pista1: "Vacío", pista2: "Tubería" }
   ]
 }
-];  // ← ✅ Cierre final del array
+]; 
 
 /* ================================================================
    ESTADO GLOBAL
    ================================================================ */
 const STATE = {
-  // Configuración
   config: {
     numPlayers: 5,
     numImpostors: 1,
@@ -1818,16 +2031,16 @@ const STATE = {
     infiniteBullets: false,
     category: "aleatorio",
     withHints: true,
-    playerNames: []
+    playerNames: [],
+    selectedCategories: []
   },
-  // Partida en curso
   game: {
-    players: [],        // {id, name, role, alive, isImpostor}
+    players: [],
     secretWord: null,
     currentHint: null,
     usedHints: [],
     currentPlayerIndex: 0,
-    revealPhase: true,  // true = fase de revelación
+    revealPhase: true,
     bullets: 0,
     impostorsAlive: 0,
     humansAlive: 0,
@@ -1835,7 +2048,6 @@ const STATE = {
     starter: null,
     category: null
   },
-  // Control de pantalla
   currentScreen: 'splash'
 };
 
@@ -1843,10 +2055,8 @@ const STATE = {
    UTILIDADES
    ================================================================ */
 const $ = id => document.getElementById(id);
-const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const rand = arr => arr[Math.floor(Math.random() * arr.length)];
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
-
-function lerp(a, b, t) { return a + (b - a) * t; }
 
 const PLAYER_COLORS = [
   '#A855F7','#4D9FFF','#39FF14','#FF3131','#FFD600',
@@ -1857,24 +2067,28 @@ const AVATARS = ['👾','🤖','👽','🦾','🧠','💀','🎭','🔮','⚡','
 
 function saveToStorage() {
   try {
-    localStorage.setItem('chazey_config', JSON.stringify({
+    localStorage.setItem('chazey_config_v2', JSON.stringify({
       numPlayers:    STATE.config.numPlayers,
       numImpostors:  STATE.config.numImpostors,
       numBullets:    STATE.config.numBullets,
       infiniteBullets: STATE.config.infiniteBullets,
       category:      STATE.config.category,
       withHints:     STATE.config.withHints,
-      playerNames:   STATE.config.playerNames
+      playerNames:   STATE.config.playerNames,
+      selectedCategories: STATE.config.selectedCategories
     }));
   } catch(e) {}
 }
 
 function loadFromStorage() {
   try {
-    const saved = localStorage.getItem('chazey_config');
+    const saved = localStorage.getItem('chazey_config_v2');
     if (saved) {
       const d = JSON.parse(saved);
       Object.assign(STATE.config, d);
+      if (!STATE.config.selectedCategories) {
+        STATE.config.selectedCategories = [];
+      }
     }
   } catch(e) {}
 }
@@ -1904,6 +2118,7 @@ function navigate(toId, back = false) {
   });
 
   STATE.currentScreen = toId;
+  playSound('whoosh');
 }
 
 /* ================================================================
@@ -1935,15 +2150,12 @@ function renderApp() {
     ${renderVictory()}
   `;
 
-  // Activate splash
   $('screen-splash').classList.add('active');
 
-  // Event listeners post-render
   bindConfigEvents();
   bindRevealEvents();
   bindVotingEvents();
 
-  // Auto-navigate splash after 2.2s
   setTimeout(() => {
     loadFromStorage();
     syncConfigUI();
@@ -1965,7 +2177,7 @@ function renderSplash() {
         El <span class="glow-violet">Impostor</span>
       </div>
       <div style="color:var(--muted);font-size:15px;margin-top:8px;letter-spacing:0.06em;text-transform:uppercase;">
-        Chazey Panas Edition
+        Chazey Panas Edition <span style="color:var(--cyan);">v2.0</span>
       </div>
     </div>
     <div class="anim-fade delay-4" style="position:absolute;bottom:60px;display:flex;gap:6px;">
@@ -1980,18 +2192,18 @@ function renderSplash() {
    2. CONFIGURACIÓN
    ================================================================ */
 function renderConfig() {
-  const cats = ['aleatorio', ...BASE_DE_DATOS.map(c => c.categoria)];
-  const catOptions = cats.map(c =>
-    `<option value="${c}">${c === 'aleatorio' ? '🎲 Aleatorio' : c}</option>`
-  ).join('');
-
-  // Initial player name inputs
   const playerInputs = Array.from({length: STATE.config.numPlayers}, (_, i) => {
     const name = STATE.config.playerNames[i] || `Jugador ${i+1}`;
+    const canMoveUp = i > 0;
+    const canMoveDown = i < STATE.config.numPlayers - 1;
     return `
-    <div class="player-item anim-fade-up" style="animation-delay:${i*0.05}s" id="player-row-${i}">
+    <div class="player-item anim-fade-up" style="animation-delay:${i*0.05}s" id="player-row-${i}" data-index="${i}">
       <div class="player-avatar" style="background:${PLAYER_COLORS[i]}22;color:${PLAYER_COLORS[i]};font-size:20px;">${AVATARS[i]}</div>
       <input class="player-input" type="text" id="player-name-${i}" value="${name}" maxlength="18" placeholder="Jugador ${i+1}">
+      <div class="player-move-btns">
+        <button class="player-move-btn ${canMoveUp ? '' : 'disabled'}" onclick="movePlayer(${i}, -1)" ${canMoveUp ? '' : 'disabled'}>↑</button>
+        <button class="player-move-btn ${canMoveDown ? '' : 'disabled'}" onclick="movePlayer(${i}, 1)" ${canMoveDown ? '' : 'disabled'}>↓</button>
+      </div>
     </div>`;
   }).join('');
 
@@ -2045,34 +2257,34 @@ function renderConfig() {
         </div>
       </div>
 
-		<!-- Categoría -->
-		<div class="form-group">
-		  <div class="form-label">📦 Categorías</div>
-		  <div style="display:flex;flex-direction:column;gap:8px;" id="cat-checkboxes">
-			${BASE_DE_DATOS.map(c => `
-			  <div class="switch-row" onclick="toggleCategory('${c.categoria}')">
-				<span class="body-md">${c.categoria}</span>
-				<label class="switch" onclick="event.stopPropagation()">
-				  <input type="checkbox" value="${c.categoria}"
-					${(STATE.config.selectedCategories||[]).includes(c.categoria) ? 'checked' : ''}
-					onchange="toggleCategory('${c.categoria}')">
-				  <div class="switch-track"></div>
-				</label>
-			  </div>
-			`).join('')}
-		  </div>
-		  <div style="margin-top:8px;">
-			<div class="switch-row" onclick="toggleAllCategories()">
-			  <span class="body-md" style="color:var(--violet);">🎲Todas</span>
-			  <label class="switch" onclick="event.stopPropagation()">
-				<input type="checkbox" id="toggle-all-cats"
-				  ${(STATE.config.selectedCategories||[]).length === BASE_DE_DATOS.length ? 'checked' : ''}
-				  onchange="toggleAllCategories()">
-				<div class="switch-track"></div>
-			  </label>
-			</div>
-		  </div>
-		</div>
+      <!-- Categoría -->
+      <div class="form-group">
+        <div class="form-label">📦 Categorías</div>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="cat-checkboxes">
+          ${BASE_DE_DATOS.map(c => `
+            <div class="switch-row" onclick="toggleCategory('${c.categoria}')">
+              <span class="body-md">${c.categoria}</span>
+              <label class="switch" onclick="event.stopPropagation()">
+                <input type="checkbox" value="${c.categoria}"
+                  ${(STATE.config.selectedCategories||[]).includes(c.categoria) ? 'checked' : ''}
+                  onchange="toggleCategory('${c.categoria}')">
+                <div class="switch-track"></div>
+              </label>
+            </div>
+          `).join('')}
+        </div>
+        <div style="margin-top:8px;">
+          <div class="switch-row" onclick="toggleAllCategories()">
+            <span class="body-md" style="color:var(--violet);">🎲 Todas</span>
+            <label class="switch" onclick="event.stopPropagation()">
+              <input type="checkbox" id="toggle-all-cats"
+                ${(STATE.config.selectedCategories||[]).length === BASE_DE_DATOS.length ? 'checked' : ''}
+                onchange="toggleAllCategories()">
+              <div class="switch-track"></div>
+            </label>
+          </div>
+        </div>
+      </div>
 
       <!-- Modalidad -->
       <div class="form-group">
@@ -2086,6 +2298,7 @@ function renderConfig() {
       <!-- Nombres -->
       <div class="form-group">
         <div class="form-label">✏️ Nombres de Jugadores</div>
+        <div class="caption" style="margin-bottom:8px;">Usa las flechas ↕ para reordenar</div>
         <div id="player-names-list">${playerInputs}</div>
       </div>
 
@@ -2100,28 +2313,42 @@ function renderConfig() {
   </div>`;
 }
 
+function movePlayer(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= STATE.config.numPlayers) return;
+
+  // Intercambiar nombres
+  const tempName = STATE.config.playerNames[index];
+  STATE.config.playerNames[index] = STATE.config.playerNames[newIndex];
+  STATE.config.playerNames[newIndex] = tempName;
+
+  playSound('tap');
+  rebuildPlayerList();
+}
+
 function toggleCategory(cat) {
   let sel = STATE.config.selectedCategories || [];
   const idx = sel.indexOf(cat);
   if (idx === -1) sel.push(cat);
   else sel.splice(idx, 1);
   STATE.config.selectedCategories = sel;
-  // Sincronizar checkbox "todas"
+
   const allBtn = $('toggle-all-cats');
   if (allBtn) allBtn.checked = sel.length === BASE_DE_DATOS.length;
+  playSound('tap');
 }
 
 function toggleAllCategories() {
   const allChecked = (STATE.config.selectedCategories || []).length === BASE_DE_DATOS.length;
   STATE.config.selectedCategories = allChecked ? [] : BASE_DE_DATOS.map(c => c.categoria);
 
-  // Sincronizar todos los checkboxes del DOM
   document.querySelectorAll('#cat-checkboxes input[type="checkbox"]').forEach(input => {
     input.checked = STATE.config.selectedCategories.includes(input.value);
   });
 
   const allBtn = $('toggle-all-cats');
   if (allBtn) allBtn.checked = !allChecked;
+  playSound('tap');
 }
 
 function bindConfigEvents() {
@@ -2136,7 +2363,6 @@ function syncConfigUI() {
   if (disp_i) disp_i.textContent = STATE.config.numImpostors;
   if (disp_b) disp_b.textContent = STATE.config.infiniteBullets ? '∞' : STATE.config.numBullets;
 
-  // Rebuild player list if needed
   rebuildPlayerList();
 }
 
@@ -2147,10 +2373,16 @@ function rebuildPlayerList() {
   let html = '';
   for (let i = 0; i < n; i++) {
     const name = STATE.config.playerNames[i] || `Jugador ${i+1}`;
+    const canMoveUp = i > 0;
+    const canMoveDown = i < n - 1;
     html += `
-    <div class="player-item" id="player-row-${i}">
+    <div class="player-item" id="player-row-${i}" data-index="${i}">
       <div class="player-avatar" style="background:${PLAYER_COLORS[i]}22;color:${PLAYER_COLORS[i]};font-size:20px;">${AVATARS[i]}</div>
       <input class="player-input" type="text" id="player-name-${i}" value="${name}" maxlength="18" placeholder="Jugador ${i+1}" onchange="updatePlayerName(${i}, this.value)" oninput="updatePlayerName(${i}, this.value)">
+      <div class="player-move-btns">
+        <button class="player-move-btn ${canMoveUp ? '' : 'disabled'}" onclick="movePlayer(${i}, -1)" ${canMoveUp ? '' : 'disabled'}>↑</button>
+        <button class="player-move-btn ${canMoveDown ? '' : 'disabled'}" onclick="movePlayer(${i}, 1)" ${canMoveDown ? '' : 'disabled'}>↓</button>
+      </div>
     </div>`;
   }
   list.innerHTML = html;
@@ -2163,7 +2395,6 @@ function updatePlayerName(i, val) {
 function stepPlayers(d) {
   const n = Math.min(12, Math.max(3, STATE.config.numPlayers + d));
   STATE.config.numPlayers = n;
-  // Cap impostors
   const maxImp = Math.floor(n / 2);
   if (STATE.config.numImpostors > maxImp) STATE.config.numImpostors = maxImp;
   const disp_p = $('display-players');
@@ -2171,6 +2402,7 @@ function stepPlayers(d) {
   if (disp_p) disp_p.textContent = n;
   if (disp_i) disp_i.textContent = STATE.config.numImpostors;
   rebuildPlayerList();
+  playSound('tap');
 }
 
 function stepImpostors(d) {
@@ -2178,12 +2410,14 @@ function stepImpostors(d) {
   STATE.config.numImpostors = Math.min(max, Math.max(1, STATE.config.numImpostors + d));
   const el = $('display-impostors');
   if (el) el.textContent = STATE.config.numImpostors;
+  playSound('tap');
 }
 
 function stepBullets(d) {
   STATE.config.numBullets = Math.min(20, Math.max(1, STATE.config.numBullets + d));
   const el = $('display-bullets');
   if (el) el.textContent = STATE.config.numBullets;
+  playSound('tap');
 }
 
 function toggleInfinite(cb) {
@@ -2195,6 +2429,7 @@ function toggleInfinite(cb) {
     stepper.style.pointerEvents = cb.checked ? 'none' : '';
   }
   if (disp) disp.textContent = cb.checked ? '∞' : STATE.config.numBullets;
+  playSound('tap');
 }
 
 function setMode(withHints) {
@@ -2203,43 +2438,37 @@ function setMode(withHints) {
   const nh = $('mode-nohints');
   if (h) h.classList.toggle('active', withHints);
   if (nh) nh.classList.toggle('active', !withHints);
+  playSound('tap');
 }
 
 /* ================================================================
    INICIO DE PARTIDA
    ================================================================ */
 function startGame() {
-  // Recopilar nombres actualizados
   for (let i = 0; i < STATE.config.numPlayers; i++) {
     const input = $(`player-name-${i}`);
     if (input) STATE.config.playerNames[i] = input.value || `Jugador ${i+1}`;
   }
 
-  // Elegir palabra y categoría
-	const selected = STATE.config.selectedCategories || [];
-	let pool;
-	if (selected.length === 0) {
-	  // Si no eligió ninguna, usar todas
-	  pool = BASE_DE_DATOS.flatMap(c => c.palabras);
-	} else {
-	  pool = BASE_DE_DATOS
-		.filter(c => selected.includes(c.categoria))
-		.flatMap(c => c.palabras);
-	}
+  const selected = STATE.config.selectedCategories || [];
+  let pool;
+  if (selected.length === 0) {
+    pool = BASE_DE_DATOS.flatMap(c => c.palabras);
+  } else {
+    pool = BASE_DE_DATOS
+      .filter(c => selected.includes(c.categoria))
+      .flatMap(c => c.palabras);
+  }
 
   const chosen = rand(pool);
-  const catName = STATE.config.category === 'aleatorio'
-    ? BASE_DE_DATOS.find(c => c.palabras.includes(chosen))?.categoria || '?'
-    : STATE.config.category;
+  const catName = BASE_DE_DATOS.find(c => c.palabras.includes(chosen))?.categoria || '?';
 
-  // Elegir pista aleatoria (si aplica)
   let hint = null;
   if (STATE.config.withHints) {
-    const hints = [chosen.pista1, chosen.pista2, chosen.pista3];
+    const hints = [chosen.pista1, chosen.pista2, chosen.pista3].filter(Boolean);
     hint = rand(hints);
   }
 
-  // Asignar roles
   const n = STATE.config.numPlayers;
   const impostorIndices = new Set();
   while (impostorIndices.size < STATE.config.numImpostors) {
@@ -2276,6 +2505,7 @@ function startGame() {
   };
 
   saveToStorage();
+  playSound('start');
   renderRevealScreen();
   navigate('screen-reveal');
 }
@@ -2297,7 +2527,6 @@ function renderRevealScreen() {
   const orderIdx = g.revealCount;
 
   if (orderIdx >= g.players.length) {
-    // Todos vieron su rol → pantalla de discusión
     renderDiscussionScreen();
     navigate('screen-discussion');
     return;
@@ -2351,11 +2580,10 @@ function renderRevealScreen() {
   `;
 }
 
-// Hold button logic
 let holdTimer = null;
 let holdProgress = 0;
 let holdInterval = null;
-const HOLD_DURATION = 800; // ms
+const HOLD_DURATION = 800;
 
 function startHold(e) {
   e.preventDefault();
@@ -2363,6 +2591,7 @@ function startHold(e) {
   const fill = $('hold-fill');
   if (!fill) return;
 
+  playSound('hold');
   holdInterval = setInterval(() => {
     holdProgress += (50 / HOLD_DURATION) * 100;
     fill.style.width = Math.min(holdProgress, 100) + '%';
@@ -2395,35 +2624,33 @@ function revealRole() {
   pre.style.display = 'none';
   footer.style.display = '';
 
-  if (player.isImpostor) {
-    card.style.display = '';
-    card.innerHTML = `
-      <div class="role-card role-card-impostor anim-scale" style="animation:pulse-red 2s infinite;">
-        <div style="font-size:52px;margin-bottom:16px;animation:glitch 0.5s infinite;">💀</div>
-        <div class="badge badge-impostor" style="margin-bottom:12px;">IMPOSTOR</div>
-        <div class="title-xl glow-red" style="margin-bottom:8px;">ERES EL<br>IMPOSTOR</div>
-        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-          Nadie conoce la palabra.<br>Finge que la sabes.
-        </div>
-        ${g.currentHint ? `
-        <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);">
-          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para ti</div>
-          <div class="title-md glow-red">${g.currentHint}</div>
-        </div>` : ''}
-      </div>`;
-  } else {
-    card.style.display = '';
-    card.innerHTML = `
-      <div class="role-card role-card-human anim-scale" style="animation:pulse-green 2s infinite;">
-        <div style="font-size:52px;margin-bottom:16px;">✅</div>
-        <div class="badge badge-human" style="margin-bottom:12px;">HUMANO</div>
-        <div style="color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Categoría: ${g.category}</div>
-        <div class="title-xl glow-green">${g.secretWord}</div>
-        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-          Esta es la palabra secreta.<br>¡No dejes que el impostor la adivine!
-        </div>
-      </div>`;
-  }
+  // SONIDO UNIFORME - El mismo tono para todos (sin revelar si es impostor o no)
+  playSound('reveal');
+
+  card.style.display = '';
+  card.innerHTML = `
+    <div class="role-card role-card-${player.isImpostor ? 'impostor' : 'human'} anim-scale" style="animation:${player.isImpostor ? 'pulse-red' : 'pulse-green'} 2s infinite;">
+      <div style="font-size:52px;margin-bottom:16px;${player.isImpostor ? 'animation:glitch 0.5s infinite;' : ''}">${player.isImpostor ? '💀' : '✅'}</div>
+      <div class="badge badge-${player.isImpostor ? 'impostor' : 'human'}" style="margin-bottom:12px;">${player.isImpostor ? 'IMPOSTOR' : 'HUMANO'}</div>
+      <div class="title-xl glow-${player.isImpostor ? 'red' : 'green'}" style="margin-bottom:8px;">
+        ${player.isImpostor ? 'ERES EL<br>IMPOSTOR' : g.secretWord}
+      </div>
+      <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+        ${player.isImpostor
+          ? 'Nadie conoce la palabra.<br>Finge que la sabes.'
+          : 'Esta es la palabra secreta.<br>¡No dejes que el impostor la adivine!'}
+      </div>
+      ${player.isImpostor && g.currentHint ? `
+      <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);">
+        <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para ti</div>
+        <div class="title-md glow-red">${g.currentHint}</div>
+      </div>` : ''}
+      ${!player.isImpostor ? `
+      <div style="margin-top:12px;">
+        <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
+        <div class="body-md" style="color:var(--cyan);">${g.category}</div>
+      </div>` : ''}
+    </div>`;
 }
 
 function nextReveal() {
@@ -2534,11 +2761,16 @@ function renderVotingScreen() {
     </div>`;
   }).join('');
 
+  // Indicador de modalidad
+  const modoTexto = g.bullets === Infinity
+    ? 'Modo: 1 impostor + 1 humano = gana impostor'
+    : 'Modo: Balas =imps ganan cuando se acaban';
+
   screen.innerHTML = `
     <div class="screen-header">
       <div style="flex:1;">
         <div class="title-lg">Votación</div>
-        <div class="caption">Elimina al sospechoso</div>
+        <div class="caption">${modoTexto}</div>
       </div>
     </div>
 
@@ -2570,6 +2802,7 @@ function confirmVote(playerId) {
   const p = STATE.game.players.find(x => x.id === playerId);
   if (!p) return;
 
+  playSound('tap');
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:40px;margin-bottom:12px;">${p.avatar}</div>
@@ -2600,7 +2833,8 @@ function executeVote(playerId) {
     if (g.bullets !== Infinity) g.bullets--;
   }
 
-  // Verificar condiciones de victoria
+  playSound('eliminate');
+
   const result = checkVictory();
   if (result) {
     renderVictoryScreen(result);
@@ -2614,22 +2848,31 @@ function executeVote(playerId) {
 function checkVictory() {
   const g = STATE.game;
 
-  if (g.impostorsAlive <= 0) {
-    return { winner: 'humans', reason: 'Todos los impostores fueron eliminados' };
-  }
+  // CON BALAS: Los impostores solo ganan si se acaban las balas
+  // SIN BALAS (Infinity): Los impostores ganan si queda 1 impostor y 1 humano, o si se eliminan todos los humanos
 
   if (g.bullets !== Infinity && g.bullets <= 0) {
+    // CON BALAS: Se acabaron las balas = impostores ganan
     return { winner: 'impostors', reason: 'Se agotaron todas las balas' };
   }
 
-  if (g.impostorsAlive >= g.humansAlive) {
-    return { winner: 'impostors', reason: 'Los impostores superaron en número a los humanos' };
+  if (g.impostorsAlive <= 0) {
+    // No quedan impostores = humanos ganan
+    return { winner: 'humans', reason: 'Todos los impostores fueron eliminados' };
+  }
+
+  if (g.bullets === Infinity) {
+    // MODO SIN BALAS: Impostores ganan si queda 1 impostor + 1 humano, o todos los humanos eliminados
+    if (g.impostorsAlive >= g.humansAlive) {
+      return { winner: 'impostors', reason: 'Los impostores igualaron o superaron a los humanos' };
+    }
   }
 
   return null;
 }
 
 function confirmCancelGame() {
+  playSound('tap');
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
@@ -2666,6 +2909,13 @@ function renderVictoryScreen(result) {
   const emoji = humansWin ? '🏆' : '👿';
   const title = humansWin ? '¡HUMANOS GANAN!' : '¡IMPOSTORES GANAN!';
 
+  // Sonido diferente segun victoria
+  if (humansWin) {
+    playSound('victory');
+  } else {
+    playSound('impostorWin');
+  }
+
   const impostors = g.players.filter(p => p.isImpostor);
   const impostorList = impostors.map(p => `
     <div class="player-item" style="border-color:${humansWin ? 'rgba(57,255,20,0.2)' : 'rgba(255,49,49,0.2)'};">
@@ -2678,7 +2928,6 @@ function renderVictoryScreen(result) {
     </div>
   `).join('');
 
-  // Generate particles
   const particleColor = humansWin ? 'var(--green)' : 'var(--red)';
   const particles = Array.from({length: 20}, (_, i) => `
     <div class="victory-particle" style="
@@ -2719,7 +2968,6 @@ function renderVictoryScreen(result) {
 }
 
 function playAgain() {
-  // Conservar nombres y config
   navigate('screen-config');
   syncConfigUI();
 }
@@ -2731,7 +2979,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderApp();
 });
 
-// Prevenir zoom en doble tap iOS
 let lastTouch = 0;
 document.addEventListener('touchend', e => {
   const now = Date.now();
@@ -2739,12 +2986,491 @@ document.addEventListener('touchend', e => {
   lastTouch = now;
 }, { passive: false });
 
-// Prevenir scroll bounce
 document.addEventListener('touchmove', e => {
   if (!e.target.closest('.scroll-area')) {
     e.preventDefault();
   }
 }, { passive: false });
+
+// Inicializar audio en primer interaction
+document.addEventListener('touchstart', () => initAudio(), { once: true });
+document.addEventListener('click', () => initAudio(), { once: true });
+</script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
 </script>
 </body>
 </html>
