@@ -11,8 +11,8 @@
 <meta name="description" content="El Impostor Chazey Panas - Juego de roles para grupos">
 <title>El Impostor · Chazey Panas</title>
 
-<!-- PWA Manifest inline via link -->
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22El%20Impostor%20Chazey%20Panas%22%2C%22short_name%22%3A%22Impostor%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23000000%22%2C%22orientation%22%3A%22portrait%22%7D">
+<!-- Manifest mínimo de respaldo; el manifest completo (con íconos generados) se inyecta al iniciar -->
+<link rel="manifest" id="manifest-link" href="data:application/manifest+json,%7B%22name%22%3A%22El%20Impostor%20Chazey%20Panas%22%2C%22short_name%22%3A%22Impostor%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23000000%22%7D">
 
 <style>
 /* ================================================================
@@ -25,6 +25,7 @@
   --violet:   #A855F7;
   --cyan:     #00F5FF;
   --yellow:   #FFD600;
+  --orange:   #FF6B35;
   --bg:       #000000;
   --surface:  #0A0A0F;
   --surface2: #111118;
@@ -35,7 +36,7 @@
   --safe-bot: env(safe-area-inset-bottom, 20px);
   --radius:   16px;
   --radius-sm:10px;
-  --font:     'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif;
+  --font:     'SF Pro Display', -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif;
   --trans:    0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -73,6 +74,7 @@ html, body {
   flex-direction: column;
   padding-top: max(44px, var(--safe-top));
   padding-bottom: max(20px, var(--safe-bot));
+  background: var(--bg);
   opacity: 0;
   pointer-events: none;
   transform: translateX(100%);
@@ -98,605 +100,20 @@ html, body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 0 20px;
+  scrollbar-width: none;
 }
-
 .scroll-area::-webkit-scrollbar { display: none; }
 
-/* ================================================================
-   TYPOGRAPHY
-   ================================================================ */
-.title-xl {
-  font-size: clamp(28px, 8vw, 36px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-}
-.title-lg {
-  font-size: clamp(22px, 6vw, 28px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-.title-md {
-  font-size: clamp(18px, 5vw, 22px);
-  font-weight: 600;
-}
-.body-lg { font-size: 17px; line-height: 1.5; }
-.body-md { font-size: 15px; line-height: 1.5; }
-.caption  { font-size: 13px; color: var(--muted); }
-
-/* ================================================================
-   GLOW EFFECTS
-   ================================================================ */
-.glow-green { text-shadow: 0 0 20px var(--green), 0 0 40px rgba(57,255,20,0.3); color: var(--green); }
-.glow-red   { text-shadow: 0 0 20px var(--red),   0 0 40px rgba(255,49,49,0.3);  color: var(--red); }
-.glow-blue  { text-shadow: 0 0 20px var(--blue),  0 0 40px rgba(77,159,255,0.3); color: var(--blue); }
-.glow-violet{ text-shadow: 0 0 20px var(--violet),0 0 40px rgba(168,85,247,0.3); color: var(--violet); }
-.glow-cyan  { text-shadow: 0 0 20px var(--cyan),  0 0 40px rgba(0,245,255,0.3);  color: var(--cyan); }
-/* ================================================================
-   BUTTONS
-   ================================================================ */
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 18px 24px;
-  border: none;
-  border-radius: var(--radius);
-  font-family: var(--font);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
-  position: relative;
-  overflow: hidden;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.btn:active {
-  transform: scale(0.96);
-  opacity: 0.9;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
-  color: #fff;
-  box-shadow: 0 4px 24px rgba(168,85,247,0.35), 0 0 0 1px rgba(255,255,255,0.08);
-}
-.btn-primary:active {
-  box-shadow: 0 2px 12px rgba(168,85,247,0.5);
-}
-
-.btn-green {
-  background: var(--bg);
-  color: var(--green);
-  border: 1.5px solid var(--green);
-  box-shadow: 0 0 16px rgba(57,255,20,0.2), inset 0 0 24px rgba(57,255,20,0.04);
-}
-
-.btn-red {
-  background: var(--bg);
-  color: var(--red);
-  border: 1.5px solid var(--red);
-  box-shadow: 0 0 16px rgba(255,49,49,0.2), inset 0 0 24px rgba(255,49,49,0.04);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--muted);
-  border: 1.5px solid var(--border);
-}
-
-.btn-sm {
-  padding: 12px 20px;
-  font-size: 15px;
-  border-radius: var(--radius-sm);
-}
-
-.btn-hold {
-  background: linear-gradient(135deg, #1a0030 0%, #000820 100%);
-  color: var(--violet);
-  border: 1.5px solid var(--violet);
-  box-shadow: 0 0 24px rgba(168,85,247,0.25);
-  padding: 22px 24px;
-  font-size: 17px;
-}
-
-/* ================================================================
-   CARDS & SURFACES
-   ================================================================ */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-
-.card-glass {
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--radius);
-  padding: 20px;
-}
-
-/* ================================================================
-   FORM ELEMENTS
-   ================================================================ */
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.form-input {
-  width: 100%;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 16px;
-  outline: none;
-  transition: border-color var(--trans);
-}
-
-.form-input:focus {
-  border-color: var(--violet);
-  box-shadow: 0 0 12px rgba(168,85,247,0.2);
-}
-
-/* Stepper */
-.stepper {
-  display: flex;
-  align-items: center;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.stepper-btn {
-  width: 52px;
-  height: 52px;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-size: 22px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-
-.stepper-btn:active {
-  background: rgba(255,255,255,0.08);
-}
-
-.stepper-val {
-  flex: 1;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-/* Toggle */
-.toggle-group {
-  display: flex;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.toggle-option {
-  flex: 1;
-  padding: 14px 8px;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--trans), color var(--trans);
-  text-align: center;
-}
-
-.toggle-option.active {
-  background: linear-gradient(135deg, var(--violet), var(--blue));
-  color: #fff;
-}
-
-/* Select */
-.form-select {
-  width: 100%;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 16px;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-}
-
-/* Checkbox toggle */
-.switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.switch {
-  position: relative;
-  width: 52px;
-  height: 30px;
-  flex-shrink: 0;
-}
-
-.switch input { display: none; }
-
-.switch-track {
-  position: absolute;
-  inset: 0;
-  border-radius: 15px;
-  background: rgba(255,255,255,0.1);
-  cursor: pointer;
-  transition: background var(--trans);
-}
-
-.switch input:checked + .switch-track {
-  background: var(--violet);
-}
-
-.switch-track::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform var(--trans);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-}
-
-.switch input:checked + .switch-track::after {
-  transform: translateX(22px);
-}
-
-/* ================================================================
-   MODALS
-   ================================================================ */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: max(20px, var(--safe-bot));
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--trans);
-}
-
-.modal-overlay.open {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.modal-sheet {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px 24px 0 0;
-  padding: 24px 20px;
-  width: 100%;
-  max-width: 480px;
-  transform: translateY(100%);
-  transition: transform var(--trans);
-}
-
-.modal-overlay.open .modal-sheet {
-  transform: translateY(0);
-}
-
-.modal-handle {
-  width: 36px;
-  height: 4px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 2px;
-  margin: 0 auto 20px;
-}
-
-/* ================================================================
-   PLAYER LIST WITH REORDER
-   ================================================================ */
-.player-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-}
-
-.player-item.dragging {
-  opacity: 0.5;
-  transform: scale(0.98);
-}
-
-.player-item.drag-over {
-  border-color: var(--violet);
-  box-shadow: 0 0 12px rgba(168,85,247,0.3);
-}
-
-.player-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.player-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 16px;
-  font-weight: 600;
-  outline: none;
-}
-
-.player-drag-handle {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  cursor: grab;
-  flex-shrink: 0;
-}
-
-.player-drag-handle:active {
-  cursor: grabbing;
-}
-
-.player-move-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.player-move-btn {
-  width: 24px;
-  height: 20px;
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.15s;
-}
-
-.player-move-btn:active {
-  background: rgba(255,255,255,0.1);
-  color: var(--text);
-}
-
-.player-move-btn.disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-/* Vote list */
-.vote-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  margin-bottom: 8px;
-  transition: opacity 0.3s;
-}
-
-.vote-item.eliminated {
-  opacity: 0.4;
-}
-
-/* ================================================================
-   STATUS INDICATORS
-   ================================================================ */
-.stat-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.stat-chip-red {
-  background: rgba(255,49,49,0.12);
-  border: 1px solid rgba(255,49,49,0.3);
-  color: var(--red);
-}
-
-.stat-chip-blue {
-  background: rgba(77,159,255,0.12);
-  border: 1px solid rgba(77,159,255,0.3);
-  color: var(--blue);
-}
-
-/* ================================================================
-   ROLE REVEAL CARD
-   ================================================================ */
-.role-card {
-  border-radius: 24px;
-  padding: 36px 24px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.role-card-human {
-  background: linear-gradient(160deg, #000d00 0%, #001a00 50%, #000000 100%);
-  border: 2px solid rgba(57,255,20,0.4);
-  box-shadow: 0 0 60px rgba(57,255,20,0.15), inset 0 0 60px rgba(57,255,20,0.03);
-}
-
-.role-card-impostor {
-  background: linear-gradient(160deg, #1a0000 0%, #2a0000 50%, #000000 100%);
-  border: 2px solid rgba(255,49,49,0.4);
-  box-shadow: 0 0 60px rgba(255,49,49,0.15), inset 0 0 60px rgba(255,49,49,0.03);
-}
-
-.role-card::before {
-  content: '';
-  position: absolute;
-  inset: -50%;
-  opacity: 0.03;
-  background: radial-gradient(circle, white 0%, transparent 70%);
-  pointer-events: none;
-}
-
-/* ================================================================
-   ANIMATIONS
-   ================================================================ */
-@keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 20px rgba(57,255,20,0.3); }
-  50%       { box-shadow: 0 0 40px rgba(57,255,20,0.6), 0 0 80px rgba(57,255,20,0.2); }
-}
-
-@keyframes pulse-red {
-  0%, 100% { box-shadow: 0 0 20px rgba(255,49,49,0.3); }
-  50%       { box-shadow: 0 0 40px rgba(255,49,49,0.6), 0 0 80px rgba(255,49,49,0.2); }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes glitch {
-  0%   { transform: translate(0); }
-  20%  { transform: translate(-3px, 2px); }
-  40%  { transform: translate(3px,-2px); }
-  60%  { transform: translate(-2px, 3px); }
-  80%  { transform: translate(2px,-3px); }
-  100% { transform: translate(0); }
-}
-
-@keyframes countdown {
-  from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: 220; }
-}
-
-@keyframes float-up {
-  from { transform: translateY(100vh) scale(1); opacity: 1; }
-  to   { transform: translateY(-20px) scale(0); opacity: 0; }
-}
-
-.anim-fade-up { animation: fadeInUp 0.4s ease both; }
-.anim-scale   { animation: scaleIn 0.35s ease both; }
-.anim-fade    { animation: fadeIn  0.3s ease both; }
-
-.delay-1 { animation-delay: 0.1s; }
-.delay-2 { animation-delay: 0.2s; }
-.delay-3 { animation-delay: 0.3s; }
-.delay-4 { animation-delay: 0.4s; }
-.delay-5 { animation-delay: 0.5s; }
-
-/* ================================================================
-   HEADER
-   ================================================================ */
 .screen-header {
-  padding: 12px 20px 8px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px 20px;
   flex-shrink: 0;
 }
 
-.back-btn {
-  width: 40px;
-  height: 40px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s;
-}
-
-.back-btn:active { background: var(--surface2); }
-
-/* ================================================================
-   FOOTER ACTIONS
-   ================================================================ */
 .screen-footer {
-  padding: 12px 20px;
+  padding: 16px 20px max(16px, var(--safe-bot));
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -704,64 +121,534 @@ html, body {
 }
 
 /* ================================================================
-   DIVIDER
+   TIPOGRAFÍA
    ================================================================ */
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 20px 0;
-}
+.title-xl { font-size: 34px; font-weight: 800; line-height: 1.1; }
+.title-lg { font-size: 26px; font-weight: 800; line-height: 1.15; }
+.title-md { font-size: 19px; font-weight: 700; line-height: 1.2; }
+.body-md  { font-size: 15px; line-height: 1.45; }
+.caption  { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+
+.glow-violet { color: var(--violet); text-shadow: 0 0 24px rgba(168,85,247,0.5); }
+.glow-red    { color: var(--red);    text-shadow: 0 0 24px rgba(255,49,49,0.5); }
+.glow-green  { color: var(--green);  text-shadow: 0 0 24px rgba(57,255,20,0.45); }
+.glow-cyan   { color: var(--cyan);   text-shadow: 0 0 24px rgba(0,245,255,0.5); }
+.glow-yellow { color: var(--yellow); text-shadow: 0 0 24px rgba(255,214,0,0.5); }
 
 /* ================================================================
-   EMPTY / SECTION LABELS
+   BOTONES
    ================================================================ */
+.btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--violet), #7C3AED);
+  box-shadow: 0 8px 28px rgba(168,85,247,0.35);
+}
+.btn-red {
+  background: linear-gradient(135deg, var(--red), #B91C1C);
+  box-shadow: 0 8px 28px rgba(255,49,49,0.3);
+}
+.btn-green {
+  background: linear-gradient(135deg, var(--green), #16A34A);
+  box-shadow: 0 8px 28px rgba(57,255,20,0.3);
+  color: #03210b;
+}
+.btn-ghost {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-sm { padding: 10px 16px; font-size: 13.5px; border-radius: var(--radius-sm); }
+
+.btn-danger-ghost {
+  background: rgba(255,49,49,0.07);
+  border: 1px solid rgba(255,49,49,0.3);
+  color: rgba(255,120,120,0.9);
+}
+
+.btn-hold {
+  position: relative;
+  z-index: 1;
+  background: var(--surface2);
+  border: 2px solid rgba(168,85,247,0.5);
+  color: var(--text);
+  padding: 18px 20px;
+  font-size: 16px;
+}
+
+.icon-btn {
+  width: 42px; height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 19px;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s;
+}
+.icon-btn:active { transform: scale(0.9); }
+
+/* Fila de controles rápidos (partida en curso) */
+.controls-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.controls-row .btn { width: auto; flex: 1 1 auto; white-space: nowrap; }
+
+/* ================================================================
+   TARJETAS & SECCIONES
+   ================================================================ */
+.card-glass {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.form-group { margin-bottom: 22px; }
+.form-label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
 .section-label {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 10px;
-  padding-left: 4px;
+  margin: 18px 0 10px;
+}
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ================================================================
+   STEPPER
+   ================================================================ */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px;
+}
+.stepper-btn {
+  width: 48px; height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.stepper-btn:active { transform: scale(0.92); background: rgba(168,85,247,0.25); }
+.stepper-val {
+  font-size: 24px;
+  font-weight: 800;
+  min-width: 64px;
+  text-align: center;
+}
+.stepper.disabled { opacity: 0.4; pointer-events: none; }
+
+/* ================================================================
+   SWITCH
+   ================================================================ */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  min-height: 44px;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px; height: 30px;
+  flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch-track {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.12);
+  border-radius: 30px;
+  transition: background 0.25s;
+  cursor: pointer;
+}
+.switch-track::before {
+  content: '';
+  position: absolute;
+  width: 24px; height: 24px;
+  left: 3px; top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s;
+}
+.switch input:checked + .switch-track { background: var(--violet); }
+.switch input:checked + .switch-track::before { transform: translateX(22px); }
+
+/* ================================================================
+   TOGGLE GROUP (segmented)
+   ================================================================ */
+.toggle-group {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  gap: 4px;
+}
+.toggle-option {
+  flex: 1;
+  padding: 12px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.toggle-option.active {
+  background: rgba(168,85,247,0.25);
+  color: var(--text);
 }
 
 /* ================================================================
-   PROGRESS / ROUND INDICATOR
+   LISTA DE JUGADORES (config)
    ================================================================ */
-.round-indicator {
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.player-avatar {
+  width: 40px; height: 40px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 20px;
+  border-radius: 50%;
+  font-size: 19px;
+}
+.player-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+}
+.player-input::placeholder { color: var(--muted); }
+.player-move-btns { display: flex; flex-direction: column; gap: 2px; }
+.player-move-btn {
+  width: 30px; height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+}
+.player-move-btn:active { background: rgba(168,85,247,0.3); color: #fff; }
+.player-move-btn.disabled { opacity: 0.25; pointer-events: none; }
+
+/* ================================================================
+   CHIPS & BADGES
+   ================================================================ */
+.stat-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 20px 12px;
   flex-shrink: 0;
 }
-
-.round-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--border);
-  transition: background var(--trans), transform var(--trans);
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--surface2);
+  border: 1px solid var(--border);
 }
+.stat-chip-red   { background: rgba(255,49,49,0.1);  border-color: rgba(255,49,49,0.3);  color: var(--red); }
+.stat-chip-blue  { background: rgba(77,159,255,0.1); border-color: rgba(77,159,255,0.3); color: var(--blue); }
+.stat-chip-green { background: rgba(57,255,20,0.1);  border-color: rgba(57,255,20,0.3);  color: var(--green); }
+.stat-chip-cyan  { background: rgba(0,245,255,0.1);  border-color: rgba(0,245,255,0.3);  color: var(--cyan); }
+.stat-chip-violet{ background: rgba(168,85,247,0.12);border-color: rgba(168,85,247,0.35);color: var(--violet); }
 
-.round-dot.active {
-  background: var(--violet);
-  transform: scale(1.3);
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
 }
-
-.round-dot.done {
-  background: rgba(168,85,247,0.4);
+.badge-impostor {
+  background: rgba(255,49,49,0.15);
+  border-color: rgba(255,49,49,0.4);
+  color: var(--red);
+}
+.badge-human {
+  background: rgba(57,255,20,0.15);
+  border-color: rgba(57,255,20,0.4);
+  color: var(--green);
+}
+.badge-undercover {
+  background: rgba(0,245,255,0.15);
+  border-color: rgba(0,245,255,0.4);
+  color: var(--cyan);
+}
+.badge-left {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border);
+  color: var(--muted);
 }
 
 /* ================================================================
-   LOGO / SPLASH
+   VOTACIÓN
    ================================================================ */
-.logo-mark {
-  font-size: 48px;
-  line-height: 1;
-  filter: drop-shadow(0 0 20px var(--violet));
+.vote-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
 }
+
+/* ================================================================
+   PODERES
+   ================================================================ */
+.power-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.power-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.power-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.power-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.btn-power {
+  border: 1px solid rgba(255,214,0,0.4);
+  background: rgba(255,214,0,0.08);
+  color: var(--yellow);
+}
+.btn-power:active { transform: scale(0.97); }
+.btn-power.btn-shield {
+  border-color: rgba(77,159,255,0.4);
+  background: rgba(77,159,255,0.08);
+  color: var(--blue);
+}
+.btn-power.btn-oracle {
+  border-color: rgba(168,85,247,0.4);
+  background: rgba(168,85,247,0.08);
+  color: var(--violet);
+}
+
+/* ================================================================
+   MODAL
+   ================================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 24px 20px;
+  transform: translateY(24px) scale(0.97);
+  transition: transform 0.25s;
+  scrollbar-width: none;
+}
+.modal-card::-webkit-scrollbar { display: none; }
+.modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
+
+.pick-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.pick-item:active { background: rgba(168,85,247,0.2); }
+
+/* ================================================================
+   ROLE CARD (revelar)
+   ================================================================ */
+.role-card {
+  padding: 28px 20px;
+  border-radius: 20px;
+  text-align: center;
+  background: linear-gradient(160deg, #0a0020 0%, #001520 50%, #000000 100%);
+  border: 2px solid var(--border);
+}
+.role-card-impostor {
+  border-color: rgba(255,49,49,0.5);
+  box-shadow: 0 0 60px rgba(255,49,49,0.15), inset 0 0 60px rgba(255,49,49,0.03);
+}
+.role-card-human {
+  border-color: rgba(57,255,20,0.45);
+  box-shadow: 0 0 60px rgba(57,255,20,0.12), inset 0 0 60px rgba(57,255,20,0.03);
+}
+
+/* ================================================================
+   ANIMACIONES
+   ================================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse-green {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.3); }
+}
+@keyframes float-up {
+  from { transform: translateY(110vh); opacity: 0.8; }
+  to   { transform: translateY(-10vh); opacity: 0; }
+}
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 40px rgba(255,49,49,0.15); }
+  50%      { box-shadow: 0 0 70px rgba(255,49,49,0.35); }
+}
+@keyframes pulse-glow-green {
+  0%, 100% { box-shadow: 0 0 40px rgba(57,255,20,0.12); }
+  50%      { box-shadow: 0 0 70px rgba(57,255,20,0.3); }
+}
+@keyframes glitch {
+  0%, 89%, 100% { transform: translate(0,0); }
+  90% { transform: translate(-2px,1px); }
+  92% { transform: translate(2px,-1px); }
+  94% { transform: translate(-1px,-1px); }
+  96% { transform: translate(1px,1px); }
+}
+@keyframes explosion {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+@keyframes roll-in {
+  from { opacity: 0; transform: scale(0.5) rotate(-12deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.anim-fade-up { animation: fadeUp 0.5s cubic-bezier(0.2,0.8,0.3,1) both; }
+.anim-scale   { animation: scaleIn 0.45s cubic-bezier(0.2,0.8,0.3,1) both; }
+.anim-fade    { animation: fadeUp 0.6s ease both; }
+.delay-1 { animation-delay: 0.12s; }
+.delay-2 { animation-delay: 0.24s; }
+.delay-3 { animation-delay: 0.36s; }
+.delay-4 { animation-delay: 0.48s; }
 
 /* ================================================================
    VICTORY SCREEN
@@ -772,16 +659,41 @@ html, body {
   overflow: hidden;
   pointer-events: none;
 }
-
 .victory-particle {
   position: absolute;
+  top: 0;
   width: 3px;
   height: 3px;
   border-radius: 50%;
   animation: float-up linear infinite;
 }
 
-/* Scanline overlay */
+/* ================================================================
+   HOLD BUTTON PROGRESS
+   ================================================================ */
+.hold-container {
+  position: relative;
+  user-select: none;
+}
+.hold-progress {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  pointer-events: none;
+}
+.hold-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  opacity: 0.3;
+  transition: width 0.05s linear;
+}
+
+/* ================================================================
+   OTROS
+   ================================================================ */
 .scanlines {
   position: fixed;
   inset: 0;
@@ -796,60 +708,6 @@ html, body {
   );
 }
 
-/* ================================================================
-   HOLD BUTTON PROGRESS
-   ================================================================ */
-.hold-container {
-  position: relative;
-  user-select: none;
-}
-
-.hold-progress {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.hold-fill {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 0%;
-  background: linear-gradient(90deg, var(--violet), var(--cyan));
-  opacity: 0.3;
-  transition: width 0.05s linear;
-}
-
-/* ================================================================
-   BADGE
-   ================================================================ */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.badge-impostor {
-  background: rgba(255,49,49,0.15);
-  border: 1px solid rgba(255,49,49,0.4);
-  color: var(--red);
-}
-
-.badge-human {
-  background: rgba(57,255,20,0.15);
-  border: 1px solid rgba(57,255,20,0.4);
-  color: var(--green);
-}
-
-/* ================================================================
-   SOUND TOGGLE
-   ================================================================ */
 .sound-toggle {
   position: fixed;
   top: max(12px, var(--safe-top));
@@ -867,13 +725,27 @@ html, body {
   font-size: 18px;
   transition: all 0.2s;
 }
+.sound-toggle:active { transform: scale(0.9); }
+.sound-toggle.muted { opacity: 0.5; }
 
-.sound-toggle:active {
-  transform: scale(0.9);
+.explosion-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255,214,0,0.9), rgba(255,107,53,0.7) 40%, rgba(0,0,0,0) 75%);
+  animation: explosion 0.8s ease-out both;
 }
+.shake { animation: shake 0.5s ease; }
 
-.sound-toggle.muted {
-  opacity: 0.5;
+.info-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 </style>
 </head>
@@ -883,14 +755,9 @@ html, body {
 <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()">🔊</button>
 <div id="app"></div>
 
-<!-- ================================================================
-     MODAL GLOBAL
-     ================================================================ -->
+<!-- MODAL GLOBAL -->
 <div id="modal" class="modal-overlay" onclick="closeModalOnBg(event)">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div id="modal-content"></div>
-  </div>
+  <div class="modal-card" id="modal-content" onclick="event.stopPropagation()"></div>
 </div>
 
 <script>
@@ -911,101 +778,9 @@ function initAudio() {
 
 function toggleSound() {
   soundEnabled = !soundEnabled;
-  const btn = $('sound-toggle');
+  const btn = document.getElementById('sound-toggle');
   btn.textContent = soundEnabled ? '🔊' : '🔇';
   btn.classList.toggle('muted', !soundEnabled);
-}
-
-function playSound(type) {
-  if (!soundEnabled) return;
-  initAudio();
-  if (!audioCtx) return;
-
-  const now = audioCtx.currentTime;
-
-  switch(type) {
-    case 'tap':
-      // Sonido suave de toque
-      playTone(800, 0.1, 'sine', 0.15);
-      break;
-
-    case 'hold':
-      // Sonido ascendente mientras sostienes
-      playTone(400, 0.15, 'sine', 0.1);
-      break;
-
-    case 'reveal':
-      // Sonido dramático de revelacion
-      playTone(523, 0.15, 'sine', 0.25);
-      setTimeout(() => playTone(659, 0.15, 'sine', 0.25), 100);
-      setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 200);
-      break;
-
-    case 'victory':
-      // Fanfarria de victoria
-      playTone(523, 0.15, 'sine', 0.3);
-      setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 150);
-      setTimeout(() => playTone(784, 0.15, 'sine', 0.3), 300);
-      setTimeout(() => playTone(1047, 0.4, 'sine', 0.35), 450);
-      break;
-
-    case 'defeat':
-      // Sonido triste de derrota
-      playTone(400, 0.3, 'sawtooth', 0.2);
-      setTimeout(() => playTone(300, 0.3, 'sawtooth', 0.2), 200);
-      setTimeout(() => playTone(200, 0.5, 'sawtooth', 0.25), 400);
-      break;
-
-    case 'eliminate':
-      // Sonido de eliminacion
-      playTone(200, 0.1, 'square', 0.2);
-      setTimeout(() => playTone(150, 0.2, 'square', 0.15), 100);
-      setTimeout(() => playTone(100, 0.3, 'square', 0.1), 250);
-      break;
-
-    case 'countdown':
-      // Sonido de cuenta regresiva
-      playTone(600, 0.08, 'sine', 0.2);
-      break;
-
-    case 'tick':
-      // Sonido de reloj/tick
-      playTone(1000, 0.05, 'sine', 0.1);
-      break;
-
-    case 'success':
-      // Sonido de success
-      playTone(880, 0.1, 'sine', 0.2);
-      setTimeout(() => playTone(1100, 0.15, 'sine', 0.25), 80);
-      break;
-
-    case 'error':
-      // Sonido de error
-      playTone(200, 0.2, 'square', 0.15);
-      setTimeout(() => playTone(150, 0.2, 'square', 0.12), 150);
-      break;
-
-    case 'whoosh':
-      // Sonido de transicion
-      playTone(300, 0.15, 'sine', 0.08);
-      setTimeout(() => playTone(400, 0.1, 'sine', 0.05), 50);
-      break;
-
-    case 'start':
-      // Sonido de inicio de juego
-      playTone(440, 0.1, 'sine', 0.2);
-      setTimeout(() => playTone(554, 0.1, 'sine', 0.2), 100);
-      setTimeout(() => playTone(659, 0.15, 'sine', 0.25), 200);
-      setTimeout(() => playTone(880, 0.2, 'sine', 0.3), 300);
-      break;
-
-    case 'impostorWin':
-      // Sonido misterioso/oscuro para victoria impostor
-      playTone(150, 0.4, 'sawtooth', 0.15);
-      setTimeout(() => playTone(200, 0.3, 'sawtooth', 0.12), 300);
-      setTimeout(() => playTone(250, 0.5, 'sawtooth', 0.1), 500);
-      break;
-  }
 }
 
 function playTone(frequency, duration, type = 'sine', volume = 0.2) {
@@ -1027,9 +802,218 @@ function playTone(frequency, duration, type = 'sine', volume = 0.2) {
   oscillator.stop(audioCtx.currentTime + duration);
 }
 
+function playSound(type) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  switch(type) {
+    case 'tap':
+      playTone(800, 0.1, 'sine', 0.15);
+      break;
+    case 'hold':
+      playTone(400, 0.15, 'sine', 0.1);
+      break;
+    case 'reveal':
+      playTone(523, 0.15, 'sine', 0.25);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.25), 100);
+      setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 200);
+      break;
+    case 'victory':
+      playTone(523, 0.15, 'sine', 0.3);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 150);
+      setTimeout(() => playTone(784, 0.15, 'sine', 0.3), 300);
+      setTimeout(() => playTone(1047, 0.4, 'sine', 0.35), 450);
+      break;
+    case 'eliminate':
+      playTone(200, 0.1, 'square', 0.2);
+      setTimeout(() => playTone(150, 0.2, 'square', 0.15), 100);
+      setTimeout(() => playTone(100, 0.3, 'square', 0.1), 250);
+      break;
+    case 'whoosh':
+      playTone(300, 0.15, 'sine', 0.08);
+      setTimeout(() => playTone(400, 0.1, 'sine', 0.05), 50);
+      break;
+    case 'start':
+      playTone(440, 0.1, 'sine', 0.2);
+      setTimeout(() => playTone(554, 0.1, 'sine', 0.2), 100);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.25), 200);
+      setTimeout(() => playTone(880, 0.2, 'sine', 0.3), 300);
+      break;
+    case 'impostorWin':
+      playTone(150, 0.4, 'sawtooth', 0.15);
+      setTimeout(() => playTone(200, 0.3, 'sawtooth', 0.12), 300);
+      setTimeout(() => playTone(250, 0.5, 'sawtooth', 0.1), 500);
+      break;
+    case 'explosion':
+      playTone(90, 0.5, 'sawtooth', 0.4);
+      playTone(60, 0.7, 'square', 0.3);
+      setTimeout(() => playTone(45, 0.6, 'sawtooth', 0.25), 120);
+      break;
+    case 'shield':
+      playTone(660, 0.12, 'sine', 0.2);
+      setTimeout(() => playTone(880, 0.2, 'sine', 0.25), 90);
+      break;
+    case 'oracle':
+      playTone(740, 0.18, 'sine', 0.18);
+      setTimeout(() => playTone(554, 0.25, 'sine', 0.18), 140);
+      setTimeout(() => playTone(880, 0.3, 'sine', 0.2), 300);
+      break;
+  }
+}
+
 /* ================================================================
-   BASE DE DATOS
+   PWA - MANIFEST DINÁMICO + ÍCONOS + INSTALACIÓN + SERVICE WORKER
    ================================================================ */
+const SW_SOURCE =
+  "const CACHE='el-impostor-v3';" +
+  "const ASSETS=['./','./index.html'];" +
+  "self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});" +
+  "self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});" +
+  "self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{if(res.ok&&res.type==='basic'){const cp=res.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));}return res;}).catch(()=>caches.match('./index.html'))))});";
+
+function generatePwaIcon(size, maskable) {
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  if (!ctx) return null;
+
+  const g = ctx.createRadialGradient(size/2, size*0.42, size*0.05, size/2, size/2, size*0.8);
+  g.addColorStop(0, '#26043c');
+  g.addColorStop(0.55, '#0a0014');
+  g.addColorStop(1, '#000000');
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+
+  const ringR = size * (maskable ? 0.34 : 0.40);
+  ctx.strokeStyle = 'rgba(168,85,247,0.95)';
+  ctx.lineWidth = size * 0.035;
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(0,245,255,0.55)';
+  ctx.lineWidth = size * 0.016;
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, ringR * 1.13, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.font = Math.round(size * (maskable ? 0.38 : 0.44)) + 'px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('👁️', size/2, size/2 + size*0.01);
+
+  try { return c.toDataURL('image/png'); } catch(e) { return null; }
+}
+
+function setupPwaManifest() {
+  try {
+    const startUrl = location.href.split('#')[0];
+    const scope = startUrl.replace(/[^/]*$/, '');
+    const icon192 = generatePwaIcon(192, false);
+    const icon512 = generatePwaIcon(512, false);
+    const iconMask = generatePwaIcon(512, true);
+
+    const manifest = {
+      name: 'El Impostor · Chazey Panas',
+      short_name: 'Impostor',
+      description: 'Juego de fiesta: encontrá al impostor con la palabra secreta.',
+      start_url: startUrl,
+      scope: scope,
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#000000',
+      theme_color: '#000000',
+      icons: []
+    };
+    if (icon192) manifest.icons.push({ src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any' });
+    if (icon512) manifest.icons.push({ src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any' });
+    if (iconMask) manifest.icons.push({ src: iconMask, sizes: '512x512', type: 'image/png', purpose: 'maskable' });
+
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    const link = document.getElementById('manifest-link');
+    if (link) link.href = URL.createObjectURL(blob);
+  } catch(e) {}
+}
+
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.querySelectorAll('.install-btn').forEach(b => b.style.display = 'flex');
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  document.querySelectorAll('.install-btn').forEach(b => b.style.display = 'none');
+});
+
+async function handleInstallClick() {
+  playSound('tap');
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    try {
+      const choice = await deferredPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') deferredPrompt = null;
+    } catch(e) {}
+  } else {
+    openPwaInfo();
+  }
+}
+
+function openPwaInfo() {
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">📲</div>
+      <div class="title-md" style="margin-bottom:8px;">Instalar como App</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
+        Jugá a pantalla completa, sin la barra del navegador.
+      </div>
+      <div style="text-align:left;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;">
+        <div class="info-note"><strong style="color:var(--cyan);">📱 Android (Chrome):</strong><br>Menú ⋮ → <em>Instalar aplicación</em> / <em>Agregar a pantalla de inicio</em>.</div>
+        <div class="info-note"><strong style="color:var(--violet);">🍎 iPhone (Safari):</strong><br>Botón Compartir ⬆️ → <em>Agregar a pantalla de inicio</em>.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="downloadSw()">⬇️ Descargar sw.js (modo offline)</button>
+        <button class="btn btn-primary btn-sm" onclick="closeModal()">Entendido</button>
+      </div>
+      <div class="caption" style="margin-top:14px;">
+        El sw.js es opcional: copialo junto a index.html en tu repositorio para poder jugar sin internet.
+      </div>
+    </div>
+  `);
+}
+
+function downloadSw() {
+  try {
+    const blob = new Blob([SW_SOURCE], { type: 'text/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'sw.js';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch(e) {}
+}
+
+function tryRegisterServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
+  fetch('sw.js', { method: 'HEAD' })
+    .then(r => {
+      if (r.ok && (r.headers.get('content-type') || '').toLowerCase().includes('javascript')) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
+    })
+    .catch(() => {});
+}
+
+function vibrate(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+}
 const BASE_DE_DATOS = [
   {
     "categoria": "⚽ Deportes",
@@ -9012,40 +8996,54 @@ const BASE_DE_DATOS = [
     ]
   }
 ];
- 
 
 /* ================================================================
-   ESTADO GLOBAL
+   ESTADO & CONSTANTES
    ================================================================ */
 const STATE = {
   config: {
     numPlayers: 5,
     numImpostors: 1,
+    randomImpostors: false,
+    numUndercovers: 0,
     numBullets: 3,
     infiniteBullets: false,
-    category: "aleatorio",
     withHints: true,
-    playerNames: [],
     selectedCategories: [],
-    gameMode: 'clasico'
+    playerNames: [],
+    powers: { grenade: false, shield: false, oracle: false }
   },
-  game: {
-    players: [],
-    secretWord: null,
-    undercoverWord: null,
-    undercoverAlive: 0,
-    currentHint: null,
-    usedHints: [],
-    currentPlayerIndex: 0,
-    revealPhase: true,
-    bullets: 0,
-    impostorsAlive: 0,
-    humansAlive: 0,
-    eliminated: [],
-    starter: null,
-    category: null
-  },
+  game: null,
   currentScreen: 'splash'
+};
+
+// Pool grande de íconos y colores: se ciclan con módulo, así nunca se
+// agotan sin importar la cantidad de jugadores.
+const AVATARS = ['👾','🤖','👽','🦾','🧠','💀','🎭','🔮','⚡','🌀','🐉','🦄','🐸','🐙','🦈','🐺','🦊','🦁','🐯','🐼','🐨','🐷','🐵','🦉','🐝','🦋','🐢','🐍','🦖','🐬','🐳','🦩','🐧','🦚','🌵','🌴','🍕','🍔','🌮','🍩','🍪','🎂','🍿','🍺','🎳','🎯','🎲','🚀','🛸','🚗','🚲','⚽','🏀','🎾','🎱','🎮','🎸','🥁','🎤','🎧','🏰','🏝️','🌋','🎡','🎠','🧨','💣','🗡️','🛡️','🏆','👑','🎩','👻','🎃','🧙'];
+const PLAYER_COLORS = ['#A855F7','#4D9FFF','#39FF14','#FF3131','#FFD600','#00F5FF','#FF6B35','#FF85A1','#5EFF8B','#B8C0FF','#E879F9','#FCA5A5','#86EFAC','#93C5FD','#FDE68A','#67E8F9','#D8B4FE','#FDBA74','#A7F3D0','#F9A8D4','#C4B5FD','#A3E635','#FB7185','#38BDF8'];
+
+const MAX_PLAYERS = 40;
+const MIN_PLAYERS = 3;
+
+const avatarOf = i => AVATARS[i % AVATARS.length];
+const colorOf  = i => PLAYER_COLORS[i % PLAYER_COLORS.length];
+
+const POWERS_INFO = {
+  grenade: {
+    emoji: '💥',
+    name: 'Granada',
+    desc: 'Alto riesgo, pura suerte: 50% mata 2 inocentes + 1 impostor/undercover · 49% mata 3 inocentes · 1% mata 2 impostores. Objetivos al azar.'
+  },
+  shield: {
+    emoji: '🛡️',
+    name: 'Chaleco Antibalas',
+    desc: 'Una vez por partida, al confirmar una votación pueden anularla: nadie muere y no se gasta bala. Si salvaron a un impostor… mala suerte.'
+  },
+  oracle: {
+    emoji: '🔮',
+    name: 'El Oráculo',
+    desc: 'Revela una pista extra de la palabra secreta para toda la sala. Ojo: el impostor también la escucha.'
+  }
 };
 
 /* ================================================================
@@ -9053,39 +9051,63 @@ const STATE = {
    ================================================================ */
 const $ = id => document.getElementById(id);
 const rand = arr => arr[Math.floor(Math.random() * arr.length)];
-const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+const randInt = n => Math.floor(Math.random() * n);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-const PLAYER_COLORS = [
-  '#A855F7','#4D9FFF','#39FF14','#FF3131','#FFD600',
-  '#00F5FF','#FF6B35','#FF85A1','#5EFF8B','#B8C0FF'
-];
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-const AVATARS = ['👾','🤖','👽','🦾','🧠','💀','🎭','🔮','⚡','🌀'];
+function pickRandom(arr, k) {
+  return shuffle(arr).slice(0, Math.max(0, Math.min(k, arr.length)));
+}
+
+function wordPool() {
+  const selected = STATE.config.selectedCategories || [];
+  let cats = selected.length > 0
+    ? BASE_DE_DATOS.filter(c => selected.includes(c.categoria))
+    : BASE_DE_DATOS;
+  if (cats.length === 0) cats = BASE_DE_DATOS;
+  return cats.flatMap(c => c.palabras);
+}
 
 function saveToStorage() {
   try {
-    localStorage.setItem('chazey_config_v2', JSON.stringify({
-      numPlayers:    STATE.config.numPlayers,
-      numImpostors:  STATE.config.numImpostors,
-      numBullets:    STATE.config.numBullets,
-      infiniteBullets: STATE.config.infiniteBullets,
-      category:      STATE.config.category,
-      withHints:     STATE.config.withHints,
-      playerNames:   STATE.config.playerNames,
+    localStorage.setItem('chazey_config_v3', JSON.stringify({
+      numPlayers:       STATE.config.numPlayers,
+      numImpostors:     STATE.config.numImpostors,
+      randomImpostors:  STATE.config.randomImpostors,
+      numUndercovers:   STATE.config.numUndercovers,
+      numBullets:       STATE.config.numBullets,
+      infiniteBullets:  STATE.config.infiniteBullets,
+      withHints:        STATE.config.withHints,
       selectedCategories: STATE.config.selectedCategories,
-      gameMode: STATE.config.gameMode
+      playerNames:      STATE.config.playerNames,
+      powers:           STATE.config.powers
     }));
   } catch(e) {}
 }
 
 function loadFromStorage() {
   try {
-    const saved = localStorage.getItem('chazey_config_v2');
+    const saved = localStorage.getItem('chazey_config_v3');
     if (saved) {
       const d = JSON.parse(saved);
+      const powers = d.powers;
+      delete d.powers;
       Object.assign(STATE.config, d);
-      if (!STATE.config.selectedCategories) {
-        STATE.config.selectedCategories = [];
+      if (powers && typeof powers === 'object') {
+        STATE.config.powers = Object.assign(STATE.config.powers, powers);
+      }
+      if (!Array.isArray(STATE.config.selectedCategories)) STATE.config.selectedCategories = [];
+      if (!Array.isArray(STATE.config.playerNames)) STATE.config.playerNames = [];
+      if (!STATE.config.powers || typeof STATE.config.powers !== 'object') {
+        STATE.config.powers = { grenade: false, shield: false, oracle: false };
       }
     }
   } catch(e) {}
@@ -9095,19 +9117,32 @@ function loadFromStorage() {
    NAVEGACIÓN SPA
    ================================================================ */
 function navigate(toId, back = false) {
-  const current = document.querySelector('.screen.active');
   const next = $(toId);
   if (!next) return;
 
-  if (current && current !== next) {
-    current.classList.add(back ? 'exit-left' : 'exit-left');
+  // Salir siempre desde la pantalla que la SPA considera actual (no un querySelector,
+  // que puede devolver una pantalla equivocada si dos quedaron activas)
+  const prevId = STATE.currentScreen;
+  const current = (prevId && prevId !== toId) ? $(prevId) : null;
+
+  if (current) {
+    current.classList.add('exit-left');
     setTimeout(() => {
-      current.classList.remove('active', 'exit-left');
+      // Solo si sigue en salida (no fue reactivada por otra navegación)
+      if (current.classList.contains('exit-left')) {
+        current.classList.remove('active', 'exit-left');
+      }
     }, 350);
   }
 
+  // Higiene: ninguna otra pantalla debe quedar activa
+  document.querySelectorAll('.screen.active').forEach(sc => {
+    if (sc !== next && sc !== current) sc.classList.remove('active', 'exit-left');
+  });
+
   requestAnimationFrame(() => {
     next.style.transform = back ? 'translateX(-100%)' : 'translateX(100%)';
+    next.classList.remove('exit-left');
     next.classList.add('active');
     requestAnimationFrame(() => {
       next.style.transition = '';
@@ -9142,23 +9177,16 @@ function renderApp() {
   $('app').innerHTML = `
     ${renderSplash()}
     ${renderConfig()}
-    ${renderReveal()}
-    ${renderDiscussion()}
-    ${renderVoting()}
-    ${renderVictory()}
+    ${renderRevealShell()}
+    ${renderDiscussionShell()}
+    ${renderVotingShell()}
+    ${renderVictoryShell()}
   `;
-
   $('screen-splash').classList.add('active');
-
-  bindConfigEvents();
-  bindRevealEvents();
-  bindVotingEvents();
-
+  syncConfigUI();
   setTimeout(() => {
-    loadFromStorage();
-    syncConfigUI();
-    navigate('screen-config');
-  }, 2200);
+    if (STATE.currentScreen === 'splash') navigate('screen-config');
+  }, 1800);
 }
 
 /* ================================================================
@@ -9168,16 +9196,17 @@ function renderSplash() {
   return `
   <div class="screen" id="screen-splash" style="align-items:center;justify-content:center;text-align:center;background:var(--bg);">
     <div class="anim-scale" style="margin-bottom:24px;">
-      <div style="font-size:72px;filter:drop-shadow(0 0 30px var(--violet));line-height:1;">👁</div>
+      <div style="font-size:72px;filter:drop-shadow(0 0 30px var(--violet));line-height:1;">👁️</div>
     </div>
     <div class="anim-fade-up delay-1">
       <div class="title-xl" style="letter-spacing:-0.04em;">
         El <span class="glow-violet">Impostor</span>
       </div>
       <div style="color:var(--muted);font-size:15px;margin-top:8px;letter-spacing:0.06em;text-transform:uppercase;">
-        Chazey Panas Edition <span style="color:var(--cyan);">v2.0</span>
+        Chazey Panas Edition <span style="color:var(--cyan);">v3.0</span>
       </div>
     </div>
+    <button class="btn btn-ghost btn-sm install-btn anim-fade-up delay-3" style="display:none;width:auto;margin-top:36px;" onclick="handleInstallClick()">📲 Instalar App</button>
     <div class="anim-fade delay-4" style="position:absolute;bottom:60px;display:flex;gap:6px;">
       <div style="width:6px;height:6px;border-radius:50%;background:var(--violet);animation:pulse-green 1.2s infinite;"></div>
       <div style="width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse-green 1.2s 0.2s infinite;"></div>
@@ -9189,30 +9218,59 @@ function renderSplash() {
 /* ================================================================
    2. CONFIGURACIÓN
    ================================================================ */
+function maxImpostorsFor(n) {
+  return Math.max(1, n - 1); // caos permitido: hasta n-1 impostores
+}
+
+function maxUndercoversFor(n) {
+  const imp = STATE.config.randomImpostors ? 1 : STATE.config.numImpostors;
+  return Math.max(0, n - imp - 1); // siempre queda al menos 1 inocente puro
+}
+
 function renderConfig() {
-  const playerInputs = Array.from({length: STATE.config.numPlayers}, (_, i) => {
-    const name = STATE.config.playerNames[i] || `Jugador ${i+1}`;
-    const canMoveUp = i > 0;
-    const canMoveDown = i < STATE.config.numPlayers - 1;
+  const p = STATE.config;
+
+  const catRows = BASE_DE_DATOS.map(c => `
+    <div class="switch-row" onclick="toggleCategory('${c.categoria.replace(/'/g, "\\'")}')">
+      <span class="body-md">${c.categoria}</span>
+      <label class="switch" onclick="event.stopPropagation()">
+        <input type="checkbox" value="${esc(c.categoria)}"
+          ${(p.selectedCategories || []).includes(c.categoria) ? 'checked' : ''}
+          onchange="toggleCategory('${c.categoria.replace(/'/g, "\\'")}')">
+        <div class="switch-track"></div>
+      </label>
+    </div>
+  `).join('');
+
+  const powerCards = Object.keys(POWERS_INFO).map(key => {
+    const info = POWERS_INFO[key];
+    const on = p.powers[key];
     return `
-    <div class="player-item anim-fade-up" style="animation-delay:${i*0.05}s" id="player-row-${i}" data-index="${i}">
-      <div class="player-avatar" style="background:${PLAYER_COLORS[i]}22;color:${PLAYER_COLORS[i]};font-size:20px;">${AVATARS[i]}</div>
-      <input class="player-input" type="text" id="player-name-${i}" value="${name}" maxlength="18" placeholder="Jugador ${i+1}">
-      <div class="player-move-btns">
-        <button class="player-move-btn ${canMoveUp ? '' : 'disabled'}" onclick="movePlayer(${i}, -1)" ${canMoveUp ? '' : 'disabled'}>↑</button>
-        <button class="player-move-btn ${canMoveDown ? '' : 'disabled'}" onclick="movePlayer(${i}, 1)" ${canMoveDown ? '' : 'disabled'}>↓</button>
+    <div class="power-card">
+      <div class="power-card-head">
+        <div class="power-name"><span style="font-size:22px;">${info.emoji}</span> ${info.name}</div>
+        <label class="switch" style="margin:0;">
+          <input type="checkbox" id="power-${key}" ${on ? 'checked' : ''} onchange="setPower('${key}', this.checked)">
+          <div class="switch-track"></div>
+        </label>
       </div>
+      <div class="power-desc">${info.desc}</div>
     </div>`;
   }).join('');
+
+  const ucDesc = `
+    <div class="info-note" id="uc-desc" style="margin-top:10px;${p.numUndercovers > 0 ? '' : 'display:none;'}">
+      <strong style="color:var(--cyan);">🎭 Undercover:</strong> inocentes con una palabra <em>diferente</em> de la misma categoría. Deben fingir que la saben y, si los eliminan, tienen una última oportunidad de adivinar la palabra real para ganar.
+    </div>`;
 
   return `
   <div class="screen" id="screen-config">
     <div class="screen-header">
       <div style="flex:1;">
         <div class="title-lg">Configurar <span class="glow-violet">Partida</span></div>
-        <div class="caption">Personaliza tu experiencia</div>
+        <div class="caption">Personalizá tu experiencia</div>
       </div>
-      <div style="font-size:28px;">⚙️</div>
+      <button class="icon-btn install-btn" style="display:none;" onclick="handleInstallClick()" title="Instalar app">📲</button>
     </div>
 
     <div class="scroll-area" id="config-scroll">
@@ -9221,99 +9279,108 @@ function renderConfig() {
         <div class="form-label">👥 Jugadores</div>
         <div class="stepper">
           <button class="stepper-btn" onclick="stepPlayers(-1)">−</button>
-          <div class="stepper-val" id="display-players">${STATE.config.numPlayers}</div>
+          <div class="stepper-val" id="display-players">${p.numPlayers}</div>
           <button class="stepper-btn" onclick="stepPlayers(1)">+</button>
         </div>
+        <div class="caption" style="margin-top:8px;">De ${MIN_PLAYERS} a ${MAX_PLAYERS} · íconos ilimitados</div>
       </div>
 
       <!-- Impostores -->
       <div class="form-group">
         <div class="form-label">🕵️ Impostores</div>
-        <div class="stepper">
+        <div class="stepper" id="stepper-impostors">
           <button class="stepper-btn" onclick="stepImpostors(-1)">−</button>
-          <div class="stepper-val" id="display-impostors">${STATE.config.numImpostors}</div>
+          <div class="stepper-val" id="display-impostors">${p.randomImpostors ? '🎲' : p.numImpostors}</div>
           <button class="stepper-btn" onclick="stepImpostors(1)">+</button>
         </div>
+        <div class="switch-row">
+          <span class="body-md">🎲 Cantidad aleatoria cada ronda</span>
+          <label class="switch" style="margin:0;">
+            <input type="checkbox" id="toggle-random-imp" ${p.randomImpostors ? 'checked' : ''} onchange="toggleRandomImpostors(this)">
+            <div class="switch-track"></div>
+          </label>
+        </div>
+        <div class="caption">⚖️ Quien fue impostor la ronda anterior tiene menos probabilidades de repetir (usá nombres reales para que funcione)</div>
+      </div>
+
+      <!-- Undercovers -->
+      <div class="form-group">
+        <div class="form-label">🎭 Undercovers</div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="stepUndercovers(-1)">−</button>
+          <div class="stepper-val" id="display-undercovers">${p.numUndercovers}</div>
+          <button class="stepper-btn" onclick="stepUndercovers(1)">+</button>
+        </div>
+        <div class="caption" style="margin-top:8px;">0 = modo clásico · solo inocentes e impostores</div>
+        ${ucDesc}
       </div>
 
       <!-- Balas -->
       <div class="form-group">
         <div class="form-label">🔫 Balas / Intentos</div>
-        <div class="stepper" id="stepper-bullets" style="${STATE.config.infiniteBullets?'opacity:0.4;pointer-events:none':''}">
+        <div class="stepper" id="stepper-bullets" style="${p.infiniteBullets ? 'opacity:0.4;pointer-events:none;' : ''}">
           <button class="stepper-btn" onclick="stepBullets(-1)">−</button>
-          <div class="stepper-val" id="display-bullets">${STATE.config.infiniteBullets ? '∞' : STATE.config.numBullets}</div>
+          <div class="stepper-val" id="display-bullets">${p.infiniteBullets ? '∞' : p.numBullets}</div>
           <button class="stepper-btn" onclick="stepBullets(1)">+</button>
         </div>
-        <div style="margin-top:8px;">
-          <div class="switch-row">
-            <span class="body-md">Sin límite de balas</span>
-            <label class="switch">
-              <input type="checkbox" id="toggle-infinite" ${STATE.config.infiniteBullets?'checked':''} onchange="toggleInfinite(this)">
-              <div class="switch-track"></div>
-            </label>
-          </div>
+        <div class="switch-row">
+          <span class="body-md">Sin límite de balas</span>
+          <label class="switch" style="margin:0;">
+            <input type="checkbox" id="toggle-infinite" ${p.infiniteBullets ? 'checked' : ''} onchange="toggleInfinite(this)">
+            <div class="switch-track"></div>
+          </label>
         </div>
+        <div class="caption">Cada inocente eliminado por votación gasta 1 bala</div>
       </div>
 
-      <!-- Categoría -->
+      <!-- Poderes -->
+      <div class="form-group">
+        <div class="form-label">⚡ Poderes de los inocentes</div>
+        <div class="caption" style="margin-bottom:10px;">Opcionales · cada poder se usa una vez por partida</div>
+        ${powerCards}
+      </div>
+
+      <!-- Pistas -->
+      <div class="form-group">
+        <div class="form-label">💡 Pista para el impostor</div>
+        <div class="toggle-group">
+          <button class="toggle-option ${p.withHints ? 'active' : ''}" id="mode-hints" onclick="setHints(true)">Con Pista</button>
+          <button class="toggle-option ${!p.withHints ? 'active' : ''}" id="mode-nohints" onclick="setHints(false)">Sin Pista</button>
+        </div>
+        <div class="caption" style="margin-top:8px;">La pista ayuda al impostor a fingir que conoce la palabra</div>
+      </div>
+
+      <!-- Categorías -->
       <div class="form-group">
         <div class="form-label">📦 Categorías</div>
-        <div style="display:flex;flex-direction:column;gap:8px;" id="cat-checkboxes">
-          ${BASE_DE_DATOS.map(c => `
-            <div class="switch-row" onclick="toggleCategory('${c.categoria}')">
-              <span class="body-md">${c.categoria}</span>
-              <label class="switch" onclick="event.stopPropagation()">
-                <input type="checkbox" value="${c.categoria}"
-                  ${(STATE.config.selectedCategories||[]).includes(c.categoria) ? 'checked' : ''}
-                  onchange="toggleCategory('${c.categoria}')">
-                <div class="switch-track"></div>
-              </label>
-            </div>
-          `).join('')}
-        </div>
-        <div style="margin-top:8px;">
-          <div class="switch-row" onclick="toggleAllCategories()">
-            <span class="body-md" style="color:var(--violet);">🎲 Todas</span>
-            <label class="switch" onclick="event.stopPropagation()">
-              <input type="checkbox" id="toggle-all-cats"
-                ${(STATE.config.selectedCategories||[]).length === BASE_DE_DATOS.length ? 'checked' : ''}
-                onchange="toggleAllCategories()">
-              <div class="switch-track"></div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modalidad -->
-      <div class="form-group">
-        <div class="form-label">💡 Modalidad</div>
-        <div class="toggle-group">
-          <button class="toggle-option ${STATE.config.withHints?'active':''}" id="mode-hints" onclick="setMode(true)">Con Pistas</button>
-          <button class="toggle-option ${!STATE.config.withHints?'active':''}" id="mode-nohints" onclick="setMode(false)">Sin Pistas</button>
-        </div>
-      </div>
-
-      <!-- Modo de Juego -->
-      <div class="form-group">
-        <div class="form-label">🎮 Modo de Juego</div>
-        <div class="toggle-group">
-          <button class="toggle-option ${!STATE.config.gameMode||STATE.config.gameMode==='clasico'?'active':''}" id="gamemode-clasico" onclick="setGameMode('clasico')">⚔️ Clásico</button>
-          <button class="toggle-option ${STATE.config.gameMode==='undercover'?'active':''}" id="gamemode-undercover" onclick="setGameMode('undercover')">🎭 Undercover</button>
-        </div>
-        <div id="undercover-desc" style="margin-top:10px;${!STATE.config.gameMode||STATE.config.gameMode==='clasico'?'display:none':''}">
-          <div class="card-glass" style="padding:12px 14px;border-color:rgba(0,245,255,0.25);">
-            <div style="font-size:13px;color:var(--muted);line-height:1.5;">
-              <span style="color:var(--cyan);font-weight:700;">🎭 Undercover:</span> Además del impostor, un humano recibe una palabra <em>diferente pero de la misma categoría</em>. Debe deducir la palabra real escuchando, sin que lo descubran. Si lo eliminan, tiene <strong style="color:var(--yellow)">una última oportunidad</strong> de adivinar — si acierta, ¡el Undercover gana!
-            </div>
-          </div>
+        <div class="caption" style="margin-bottom:8px;">Si no elegís ninguna, se usan todas</div>
+        <div style="display:flex;flex-direction:column;" id="cat-checkboxes">${catRows}</div>
+        <div class="switch-row">
+          <span class="body-md" style="color:var(--violet);">🎲 Todas</span>
+          <label class="switch" style="margin:0;">
+            <input type="checkbox" id="toggle-all-cats"
+              ${(p.selectedCategories || []).length === BASE_DE_DATOS.length ? 'checked' : ''}
+              onchange="toggleAllCategories()">
+            <div class="switch-track"></div>
+          </label>
         </div>
       </div>
 
       <!-- Nombres -->
       <div class="form-group">
         <div class="form-label">✏️ Nombres de Jugadores</div>
-        <div class="caption" style="margin-bottom:8px;">Usa las flechas ↕ para reordenar</div>
-        <div id="player-names-list">${playerInputs}</div>
+        <div class="caption" style="margin-bottom:8px;">Usá las flechas ↕ para ordenar el pasamanos</div>
+        <div id="player-names-list"></div>
+      </div>
+
+      <!-- Reglas -->
+      <div class="form-group">
+        <div class="form-label">🏆 Cómo se gana</div>
+        <div class="info-note" style="display:flex;flex-direction:column;gap:8px;">
+          <span><strong style="color:var(--red);">🕵️ Impostores:</strong> ganan si se acaban las balas <em>o</em> si no queda ningún inocente.</span>
+          <span><strong style="color:var(--green);">✅ Inocentes:</strong> ganan eliminando a <em>todos</em> los impostores.</span>
+          <span><strong style="color:var(--cyan);">🎭 Undercover:</strong> gana si lo eliminan y adivina la palabra secreta.</span>
+        </div>
       </div>
 
       <div style="height:16px;"></div>
@@ -9327,17 +9394,157 @@ function renderConfig() {
   </div>`;
 }
 
+function updateConfigDisplays() {
+  const p = STATE.config;
+  const dp = $('display-players');
+  const di = $('display-impostors');
+  const du = $('display-undercovers');
+  const db = $('display-bullets');
+  if (dp) dp.textContent = p.numPlayers;
+  if (di) di.textContent = p.randomImpostors ? '🎲' : p.numImpostors;
+  if (du) du.textContent = p.numUndercovers;
+  if (db) db.textContent = p.infiniteBullets ? '∞' : p.numBullets;
+
+  const si = $('stepper-impostors');
+  if (si) si.classList.toggle('disabled', p.randomImpostors);
+
+  const sd = $('uc-desc');
+  if (sd) sd.style.display = p.numUndercovers > 0 ? '' : 'none';
+}
+
+function rebuildPlayerList() {
+  const list = $('player-names-list');
+  if (!list) return;
+  const n = STATE.config.numPlayers;
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const name = STATE.config.playerNames[i] || `Jugador ${i + 1}`;
+    const canUp = i > 0;
+    const canDown = i < n - 1;
+    html += `
+    <div class="player-item" data-index="${i}">
+      <div class="player-avatar" style="background:${colorOf(i)}22;color:${colorOf(i)};font-size:20px;">${avatarOf(i)}</div>
+      <input class="player-input" type="text" value="${esc(name)}" maxlength="18" placeholder="Jugador ${i + 1}"
+        oninput="updatePlayerName(${i}, this.value)">
+      <div class="player-move-btns">
+        <button class="player-move-btn ${canUp ? '' : 'disabled'}" onclick="movePlayer(${i}, -1)" ${canUp ? '' : 'disabled'}>↑</button>
+        <button class="player-move-btn ${canDown ? '' : 'disabled'}" onclick="movePlayer(${i}, 1)" ${canDown ? '' : 'disabled'}>↓</button>
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+
+function syncConfigUI() {
+  updateConfigDisplays();
+  rebuildPlayerList();
+
+  const h = $('mode-hints');
+  const nh = $('mode-nohints');
+  if (h) h.classList.toggle('active', STATE.config.withHints);
+  if (nh) nh.classList.toggle('active', !STATE.config.withHints);
+
+  const inf = $('toggle-infinite');
+  if (inf) inf.checked = STATE.config.infiniteBullets;
+  const sb = $('stepper-bullets');
+  if (sb) {
+    sb.style.opacity = STATE.config.infiniteBullets ? '0.4' : '1';
+    sb.style.pointerEvents = STATE.config.infiniteBullets ? 'none' : '';
+  }
+
+  const rimp = $('toggle-random-imp');
+  if (rimp) rimp.checked = STATE.config.randomImpostors;
+
+  document.querySelectorAll('#cat-checkboxes input[type="checkbox"]').forEach(input => {
+    input.checked = (STATE.config.selectedCategories || []).includes(input.value);
+  });
+  const allBtn = $('toggle-all-cats');
+  if (allBtn) allBtn.checked = (STATE.config.selectedCategories || []).length === BASE_DE_DATOS.length;
+
+  Object.keys(POWERS_INFO).forEach(key => {
+    const cb = $('power-' + key);
+    if (cb) cb.checked = !!STATE.config.powers[key];
+  });
+}
+
+/* ---- Handlers de configuración ---- */
+
+function stepPlayers(d) {
+  const n = Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, STATE.config.numPlayers + d));
+  STATE.config.numPlayers = n;
+  if (!STATE.config.randomImpostors) {
+    STATE.config.numImpostors = Math.min(STATE.config.numImpostors, maxImpostorsFor(n));
+  }
+  STATE.config.numUndercovers = Math.min(STATE.config.numUndercovers, maxUndercoversFor(n));
+  updateConfigDisplays();
+  rebuildPlayerList();
+  playSound('tap');
+}
+
+function stepImpostors(d) {
+  if (STATE.config.randomImpostors) return;
+  STATE.config.numImpostors = Math.min(maxImpostorsFor(STATE.config.numPlayers), Math.max(1, STATE.config.numImpostors + d));
+  STATE.config.numUndercovers = Math.min(STATE.config.numUndercovers, maxUndercoversFor(STATE.config.numPlayers));
+  updateConfigDisplays();
+  playSound('tap');
+}
+
+function toggleRandomImpostors(cb) {
+  STATE.config.randomImpostors = cb.checked;
+  updateConfigDisplays();
+  playSound('tap');
+}
+
+function stepUndercovers(d) {
+  STATE.config.numUndercovers = Math.min(maxUndercoversFor(STATE.config.numPlayers), Math.max(0, STATE.config.numUndercovers + d));
+  updateConfigDisplays();
+  playSound('tap');
+}
+
+function stepBullets(d) {
+  STATE.config.numBullets = Math.min(20, Math.max(1, STATE.config.numBullets + d));
+  updateConfigDisplays();
+  playSound('tap');
+}
+
+function toggleInfinite(cb) {
+  STATE.config.infiniteBullets = cb.checked;
+  const stepper = $('stepper-bullets');
+  if (stepper) {
+    stepper.style.opacity = cb.checked ? '0.4' : '1';
+    stepper.style.pointerEvents = cb.checked ? 'none' : '';
+  }
+  updateConfigDisplays();
+  playSound('tap');
+}
+
+function setPower(key, checked) {
+  STATE.config.powers[key] = checked;
+  playSound('tap');
+}
+
+function setHints(withHints) {
+  STATE.config.withHints = withHints;
+  const h = $('mode-hints');
+  const nh = $('mode-nohints');
+  if (h) h.classList.toggle('active', withHints);
+  if (nh) nh.classList.toggle('active', !withHints);
+  playSound('tap');
+}
+
 function movePlayer(index, direction) {
   const newIndex = index + direction;
   if (newIndex < 0 || newIndex >= STATE.config.numPlayers) return;
-
-  // Intercambiar nombres
-  const tempName = STATE.config.playerNames[index];
-  STATE.config.playerNames[index] = STATE.config.playerNames[newIndex];
-  STATE.config.playerNames[newIndex] = tempName;
-
+  const names = STATE.config.playerNames;
+  const temp = names[index];
+  names[index] = names[newIndex];
+  names[newIndex] = temp;
   playSound('tap');
   rebuildPlayerList();
+}
+
+function updatePlayerName(i, val) {
+  STATE.config.playerNames[i] = val;
 }
 
 function toggleCategory(cat) {
@@ -9347,6 +9554,9 @@ function toggleCategory(cat) {
   else sel.splice(idx, 1);
   STATE.config.selectedCategories = sel;
 
+  document.querySelectorAll('#cat-checkboxes input[type="checkbox"]').forEach(input => {
+    input.checked = STATE.config.selectedCategories.includes(input.value);
+  });
   const allBtn = $('toggle-all-cats');
   if (allBtn) allBtn.checked = sel.length === BASE_DE_DATOS.length;
   playSound('tap');
@@ -9359,206 +9569,139 @@ function toggleAllCategories() {
   document.querySelectorAll('#cat-checkboxes input[type="checkbox"]').forEach(input => {
     input.checked = STATE.config.selectedCategories.includes(input.value);
   });
-
   const allBtn = $('toggle-all-cats');
   if (allBtn) allBtn.checked = !allChecked;
-  playSound('tap');
-}
-
-function bindConfigEvents() {
-  $('select-category') && ($('select-category').value = STATE.config.category);
-}
-
-function syncConfigUI() {
-  const disp_p = $('display-players');
-  const disp_i = $('display-impostors');
-  const disp_b = $('display-bullets');
-  if (disp_p) disp_p.textContent = STATE.config.numPlayers;
-  if (disp_i) disp_i.textContent = STATE.config.numImpostors;
-  if (disp_b) disp_b.textContent = STATE.config.infiniteBullets ? '∞' : STATE.config.numBullets;
-
-  // Sync game mode toggle
-  const gm = STATE.config.gameMode || 'clasico';
-  const c = $('gamemode-clasico');
-  const u = $('gamemode-undercover');
-  if (c) c.classList.toggle('active', gm === 'clasico');
-  if (u) u.classList.toggle('active', gm === 'undercover');
-  const desc = $('undercover-desc');
-  if (desc) desc.style.display = gm === 'undercover' ? '' : 'none';
-
-  rebuildPlayerList();
-}
-
-function rebuildPlayerList() {
-  const list = $('player-names-list');
-  if (!list) return;
-  const n = STATE.config.numPlayers;
-  let html = '';
-  for (let i = 0; i < n; i++) {
-    const name = STATE.config.playerNames[i] || `Jugador ${i+1}`;
-    const canMoveUp = i > 0;
-    const canMoveDown = i < n - 1;
-    html += `
-    <div class="player-item" id="player-row-${i}" data-index="${i}">
-      <div class="player-avatar" style="background:${PLAYER_COLORS[i]}22;color:${PLAYER_COLORS[i]};font-size:20px;">${AVATARS[i]}</div>
-      <input class="player-input" type="text" id="player-name-${i}" value="${name}" maxlength="18" placeholder="Jugador ${i+1}" onchange="updatePlayerName(${i}, this.value)" oninput="updatePlayerName(${i}, this.value)">
-      <div class="player-move-btns">
-        <button class="player-move-btn ${canMoveUp ? '' : 'disabled'}" onclick="movePlayer(${i}, -1)" ${canMoveUp ? '' : 'disabled'}>↑</button>
-        <button class="player-move-btn ${canMoveDown ? '' : 'disabled'}" onclick="movePlayer(${i}, 1)" ${canMoveDown ? '' : 'disabled'}>↓</button>
-      </div>
-    </div>`;
-  }
-  list.innerHTML = html;
-}
-
-function updatePlayerName(i, val) {
-  STATE.config.playerNames[i] = val;
-}
-
-function stepPlayers(d) {
-  const n = Math.min(12, Math.max(3, STATE.config.numPlayers + d));
-  STATE.config.numPlayers = n;
-  const maxImp = Math.floor(n / 2);
-  if (STATE.config.numImpostors > maxImp) STATE.config.numImpostors = maxImp;
-  const disp_p = $('display-players');
-  const disp_i = $('display-impostors');
-  if (disp_p) disp_p.textContent = n;
-  if (disp_i) disp_i.textContent = STATE.config.numImpostors;
-  rebuildPlayerList();
-  playSound('tap');
-}
-
-function stepImpostors(d) {
-  const max = Math.floor(STATE.config.numPlayers / 2);
-  STATE.config.numImpostors = Math.min(max, Math.max(1, STATE.config.numImpostors + d));
-  const el = $('display-impostors');
-  if (el) el.textContent = STATE.config.numImpostors;
-  playSound('tap');
-}
-
-function stepBullets(d) {
-  STATE.config.numBullets = Math.min(20, Math.max(1, STATE.config.numBullets + d));
-  const el = $('display-bullets');
-  if (el) el.textContent = STATE.config.numBullets;
-  playSound('tap');
-}
-
-function toggleInfinite(cb) {
-  STATE.config.infiniteBullets = cb.checked;
-  const stepper = $('stepper-bullets');
-  const disp = $('display-bullets');
-  if (stepper) {
-    stepper.style.opacity = cb.checked ? '0.4' : '1';
-    stepper.style.pointerEvents = cb.checked ? 'none' : '';
-  }
-  if (disp) disp.textContent = cb.checked ? '∞' : STATE.config.numBullets;
-  playSound('tap');
-}
-
-function setMode(withHints) {
-  STATE.config.withHints = withHints;
-  const h = $('mode-hints');
-  const nh = $('mode-nohints');
-  if (h) h.classList.toggle('active', withHints);
-  if (nh) nh.classList.toggle('active', !withHints);
-  playSound('tap');
-}
-
-function setGameMode(mode) {
-  STATE.config.gameMode = mode;
-  const c = $('gamemode-clasico');
-  const u = $('gamemode-undercover');
-  if (c) c.classList.toggle('active', mode === 'clasico');
-  if (u) u.classList.toggle('active', mode === 'undercover');
-  const desc = $('undercover-desc');
-  if (desc) desc.style.display = mode === 'undercover' ? '' : 'none';
   playSound('tap');
 }
 
 /* ================================================================
    INICIO DE PARTIDA
    ================================================================ */
+// Peso de repetir como impostor: 0.35 ≈ 3 veces menos probable que el resto
+const IMPOSTOR_COOLDOWN_WEIGHT = 0.35;
+
+function loadLastImpostors() {
+  try {
+    return JSON.parse(localStorage.getItem('chazey_last_impostors') || '[]');
+  } catch(e) { return []; }
+}
+
+function saveLastImpostors(players) {
+  try {
+    localStorage.setItem('chazey_last_impostors', JSON.stringify(
+      players.filter(pl => pl.isImpostor).map(pl => pl.name.trim().toLowerCase())
+    ));
+  } catch(e) {}
+}
+
+// Sorteo con peso y sin reemplazo: peso 1 para todos, 0.35 para quien
+// fue impostor en la ronda anterior (identificado por su nombre).
+function pickImpostorsBalanced(n, numImp, lastImpostors, names) {
+  const lastSet = new Set((lastImpostors || []).map(s => String(s).trim().toLowerCase()));
+  let pool = [...Array(n).keys()].map(i => {
+    const nm = String(names[i] || '').trim().toLowerCase();
+    return { i, w: lastSet.has(nm) ? IMPOSTOR_COOLDOWN_WEIGHT : 1 };
+  });
+  const picked = [];
+  while (picked.length < numImp && pool.length > 0) {
+    const total = pool.reduce((a, e) => a + e.w, 0);
+    let r = Math.random() * total;
+    let chosen = pool[pool.length - 1];
+    for (const e of pool) { r -= e.w; if (r <= 0) { chosen = e; break; } }
+    picked.push(chosen.i);
+    pool = pool.filter(e => e !== chosen);
+  }
+  return picked;
+}
+
 function startGame() {
-  for (let i = 0; i < STATE.config.numPlayers; i++) {
+  const cfg = STATE.config;
+
+  for (let i = 0; i < cfg.numPlayers; i++) {
     const input = $(`player-name-${i}`);
-    if (input) STATE.config.playerNames[i] = input.value || `Jugador ${i+1}`;
+    if (input && input.value) cfg.playerNames[i] = input.value;
   }
 
-  const selected = STATE.config.selectedCategories || [];
-  let pool;
-  if (selected.length === 0) {
-    pool = BASE_DE_DATOS.flatMap(c => c.palabras);
+  const n = cfg.numPlayers;
+
+  // Cantidad de impostores: fija o aleatoria (siempre dejando lugar a los undercovers)
+  const ucWanted = Math.min(cfg.numUndercovers, n - 2);
+  let numImp;
+  if (cfg.randomImpostors) {
+    const R = Math.max(1, Math.min(n - 1, n - ucWanted - 1));
+    numImp = 1 + randInt(R);
   } else {
-    pool = BASE_DE_DATOS
-      .filter(c => selected.includes(c.categoria))
-      .flatMap(c => c.palabras);
+    numImp = Math.min(cfg.numImpostors, n - ucWanted - 1);
+    numImp = Math.max(1, numImp);
   }
+  const numUC = Math.min(ucWanted, n - numImp - 1);
 
+  // Palabra secreta
+  const pool = wordPool();
   const chosen = rand(pool);
-  const catName = BASE_DE_DATOS.find(c => c.palabras.includes(chosen))?.categoria || '?';
+  const catName = (BASE_DE_DATOS.find(c => c.palabras.includes(chosen)) || {}).categoria || '?';
 
+  const allHints = [chosen.pista1, chosen.pista2].filter(Boolean);
   let hint = null;
-  if (STATE.config.withHints) {
-    const hints = [chosen.pista1, chosen.pista2, chosen.pista3].filter(Boolean);
-    hint = rand(hints);
-  }
+  if (cfg.withHints && allHints.length > 0) hint = rand(allHints);
 
-  const n = STATE.config.numPlayers;
-  const impostorIndices = new Set();
-  while (impostorIndices.size < STATE.config.numImpostors) {
-    impostorIndices.add(Math.floor(Math.random() * n));
-  }
+  // Roles: reparto equilibrado. Quien fue impostor en la ronda anterior
+  // conserva la misma probabilidad dividida (peso 0.35 vs 1), así puede
+  // repetir pero es mucho menos probable. Siempre salen exactamente numImp.
+  const lastImpostors = loadLastImpostors();
+  const impostorIdx = pickImpostorsBalanced(n, numImp, lastImpostors, cfg.playerNames);
+  const impostorSet = new Set(impostorIdx);
+  const restOrder = shuffle([...Array(n).keys()].filter(i => !impostorSet.has(i)));
+  const ucSet = new Set(restOrder.slice(0, numUC));
 
-  const shuffledOrder = [...Array(n).keys()];
-
-  const players = Array.from({length: n}, (_, i) => ({
+  const players = Array.from({ length: n }, (_, i) => ({
     id: i,
-    name: STATE.config.playerNames[i] || `Jugador ${i+1}`,
-    role: impostorIndices.has(i) ? 'impostor' : 'human',
-    isImpostor: impostorIndices.has(i),
+    name: (cfg.playerNames[i] || `Jugador ${i + 1}`).trim() || `Jugador ${i + 1}`,
+    role: impostorSet.has(i) ? 'impostor' : (ucSet.has(i) ? 'undercover' : 'human'),
+    isImpostor: impostorSet.has(i),
+    isUndercover: ucSet.has(i),
     alive: true,
-    color: PLAYER_COLORS[i],
-    avatar: AVATARS[i]
+    leftEarly: false,
+    color: colorOf(i),
+    avatar: avatarOf(i)
   }));
+
+  saveLastImpostors(players);
+
+  // Palabras de los undercovers (distintas entre sí, misma categoría)
+  const undercoverWords = {};
+  if (numUC > 0) {
+    const catData = BASE_DE_DATOS.find(c => c.categoria === catName);
+    let otherWords = catData
+      ? catData.palabras.filter(w => w.palabra !== chosen.palabra).map(w => w.palabra)
+      : [];
+    if (otherWords.length === 0) otherWords = [chosen.palabra];
+    const picks = [];
+    for (let i = 0; i < numUC; i++) picks.push(otherWords[i % otherWords.length]);
+    const ucPlayers = players.filter(pl => pl.isUndercover);
+    ucPlayers.forEach((pl, i) => { undercoverWords[pl.id] = picks[i]; });
+  }
 
   STATE.game = {
     players,
     secretWord: chosen.palabra,
-    undercoverWord: null,
-    undercoverAlive: 0,
+    category: catName,
+    allHints,
     currentHint: hint,
     usedHints: hint ? [hint] : [],
-    currentPlayerIndex: 0,
-    revealPhase: true,
-    bullets: STATE.config.infiniteBullets ? Infinity : STATE.config.numBullets,
-    impostorsAlive: STATE.config.numImpostors,
-    humansAlive: n - STATE.config.numImpostors,
-    eliminated: [],
-    starter: null,
-    category: catName,
-    revealOrder: shuffledOrder,
+    undercoverWords,
+    revealOrder: [...Array(n).keys()], // respeta el orden configurado
     revealCount: 0,
-    gameMode: STATE.config.gameMode || 'clasico'
+    bullets: cfg.infiniteBullets ? Infinity : cfg.numBullets,
+    eliminated: [],
+    powersEnabled: {
+      grenade: !!cfg.powers.grenade,
+      shield: !!cfg.powers.shield,
+      oracle: !!cfg.powers.oracle
+    },
+    powersUsed: { grenade: false, shield: false, oracle: false },
+    starter: null
   };
-
-  // Modo Undercover: asignar un humano como Undercover con palabra diferente
-  if (STATE.game.gameMode === 'undercover') {
-    const catData = BASE_DE_DATOS.find(c => c.categoria === catName);
-    const otherWords = catData ? catData.palabras.filter(w => w.palabra !== chosen.palabra) : [];
-    const ucWordObj = otherWords.length > 0 ? rand(otherWords) : null;
-
-    if (ucWordObj) {
-      const humanPlayers = players.filter(p => !p.isImpostor);
-      if (humanPlayers.length > 0) {
-        const ucPlayer = rand(humanPlayers);
-        ucPlayer.role = 'undercover';
-        ucPlayer.isUndercover = true;
-        STATE.game.undercoverWord = ucWordObj.palabra;
-        STATE.game.undercoverAlive = 1;
-        STATE.game.humansAlive--; // el undercover ya no cuenta como humano inocente
-      }
-    }
-  }
 
   saveToStorage();
   playSound('start');
@@ -9567,46 +9710,48 @@ function startGame() {
 }
 
 /* ================================================================
-   3. PANTALLA PASS & PLAY (REVELAR ROL)
+   3. REVELAR ROLES (pasamanos)
    ================================================================ */
-function renderReveal() {
+function renderRevealShell() {
   return `<div class="screen" id="screen-reveal"></div>`;
 }
-
-function bindRevealEvents() {}
 
 function renderRevealScreen() {
   const screen = $('screen-reveal');
   if (!screen) return;
-
   const g = STATE.game;
-  const orderIdx = g.revealCount;
+  if (!g) return;
 
-  if (orderIdx >= g.players.length) {
+  // Saltear jugadores que se fueron antes de ver su rol
+  while (g.revealCount < g.players.length && !g.players[g.revealOrder[g.revealCount]].alive) {
+    g.revealCount++;
+  }
+
+  if (g.revealCount >= g.players.length) {
     renderDiscussionScreen();
     navigate('screen-discussion');
     return;
   }
 
-  const playerIdx = g.revealOrder[orderIdx];
-  const player = g.players[playerIdx];
+  const player = g.players[g.revealOrder[g.revealCount]];
+  const turn = `${g.revealCount + 1} / ${g.players.filter(pl => pl.alive).length}`;
 
   screen.innerHTML = `
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 20px;text-align:center;">
       <div class="anim-fade-up" style="margin-bottom:8px;">
-        <div class="caption">Turno de</div>
+        <div class="caption">Turno de ${turn}</div>
         <div class="title-xl" style="color:${player.color};filter:drop-shadow(0 0 12px ${player.color});">
-          ${player.avatar} ${player.name}
+          ${player.avatar} ${esc(player.name)}
         </div>
       </div>
 
-      <div class="anim-fade-up delay-2" style="width:100%;margin-top:32px;">
+      <div class="anim-fade-up delay-2" style="width:100%;margin-top:28px;">
         <div id="reveal-pre" style="width:100%;">
           <div class="card-glass" style="padding:28px;border-color:rgba(168,85,247,0.3);">
             <div style="font-size:40px;margin-bottom:12px;">🔒</div>
             <div class="title-md" style="color:var(--muted);margin-bottom:8px;">Pantalla protegida</div>
             <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
-              Solo <strong style="color:${player.color}">${player.name}</strong> debe ver esto
+              Solo <strong style="color:${player.color}">${esc(player.name)}</strong> debe ver esto
             </div>
             <div class="hold-container" id="hold-container">
               <button class="btn btn-hold" id="btn-hold"
@@ -9623,28 +9768,27 @@ function renderRevealScreen() {
           </div>
         </div>
 
-        <div id="reveal-card" style="display:none;width:100%;">
-        </div>
+        <div id="reveal-card" style="display:none;width:100%;"></div>
       </div>
     </div>
 
-    <div class="screen-footer" id="reveal-footer" style="display:none;">
-      <button class="btn btn-primary" onclick="nextReveal()">
-        Ya lo vi · Pasar celular 👉
-      </button>
-    </div>
-
-    <div class="screen-footer" id="reveal-cancel-footer" style="padding-top:0;">
-      <button class="btn btn-ghost btn-sm" onclick="confirmCancelReveal()" style="color:var(--muted);font-size:13px;">
-        🔄 Palabra repetida · Nueva ronda
-      </button>
+    <div class="screen-footer">
+      <div id="reveal-footer" style="display:none;">
+        <button class="btn btn-primary" onclick="nextReveal()">
+          Ya lo vi · Pasar celular 👉
+        </button>
+      </div>
+      <div class="controls-row">
+        <button class="btn btn-ghost btn-sm" onclick="confirmNewWord()">🔄 Nueva palabra</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDeletePlayer()">🗑️ Jugador se fue</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="confirmCancelRound()">✖️ Cancelar ronda</button>
+      </div>
     </div>
   `;
 }
 
-let holdTimer = null;
-let holdProgress = 0;
 let holdInterval = null;
+let holdProgress = 0;
 const HOLD_DURATION = 800;
 
 function startHold(e) {
@@ -9652,8 +9796,8 @@ function startHold(e) {
   holdProgress = 0;
   const fill = $('hold-fill');
   if (!fill) return;
-
   playSound('hold');
+  clearInterval(holdInterval);
   holdInterval = setInterval(() => {
     holdProgress += (50 / HOLD_DURATION) * 100;
     fill.style.width = Math.min(holdProgress, 100) + '%';
@@ -9672,127 +9816,255 @@ function endHold(e) {
   if (fill) fill.style.width = '0%';
 }
 
-function confirmCancelReveal() {
+function revealRole() {
+  const g = STATE.game;
+  const player = g.players[g.revealOrder[g.revealCount]];
+
+  const pre = $('reveal-pre');
+  const card = $('reveal-card');
+  const footer = $('reveal-footer');
+  if (!pre || !card || !footer) return;
+
+  pre.style.display = 'none';
+  footer.style.display = '';
+  playSound('reveal');
+  card.style.display = '';
+
+  if (player.isUndercover) {
+    card.innerHTML = `
+      <div class="role-card anim-scale" style="border-color:rgba(0,245,255,0.4);box-shadow:0 0 60px rgba(0,245,255,0.15);">
+        <div style="font-size:52px;margin-bottom:16px;">🎭</div>
+        <div class="badge badge-undercover" style="margin-bottom:12px;">UNDERCOVER</div>
+        <div class="title-xl glow-cyan" style="margin-bottom:8px;">${esc(g.undercoverWords[player.id] || '?')}</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+          Tu palabra es <strong style="color:var(--cyan)">diferente</strong> a la del grupo.<br>
+          Descubrí la palabra real sin que te atrapen.
+        </div>
+        <div style="margin-top:20px;padding:14px 16px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:6px;">⚠️ Recuérdalo</div>
+          <div class="body-md" style="color:var(--muted);font-size:13px;">Si te eliminan, vas a poder adivinar la palabra real. Si aciertas, ¡ganás!</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
+          <div class="body-md" style="color:var(--cyan);">${esc(g.category)}</div>
+        </div>
+      </div>`;
+  } else if (player.isImpostor) {
+    card.innerHTML = `
+      <div class="role-card role-card-impostor anim-scale" style="animation:pulse-red 2s infinite;">
+        <div style="font-size:52px;margin-bottom:16px;animation:glitch 3s infinite;">💀</div>
+        <div class="badge badge-impostor" style="margin-bottom:12px;">IMPOSTOR</div>
+        <div class="title-xl glow-red" style="margin-bottom:8px;">ERES EL<br>IMPOSTOR</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+          Nadie conoce tu secreto.<br>Fingí que la sabés.
+        </div>
+        ${g.currentHint ? `
+        <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para vos</div>
+          <div class="title-md glow-red">${esc(g.currentHint)}</div>
+        </div>` : ''}
+        <div style="margin-top:12px;">
+          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
+          <div class="body-md" style="color:var(--red);">${esc(g.category)}</div>
+        </div>
+      </div>`;
+  } else {
+    card.innerHTML = `
+      <div class="role-card role-card-human anim-scale" style="animation:pulse-glow-green 2s infinite;">
+        <div style="font-size:52px;margin-bottom:16px;">✅</div>
+        <div class="badge badge-human" style="margin-bottom:12px;">INOCENTE</div>
+        <div class="title-xl glow-green" style="margin-bottom:8px;">${esc(g.secretWord)}</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+          Esta es la palabra secreta.<br>¡No dejes que el impostor la adivine!
+        </div>
+        <div style="margin-top:12px;">
+          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
+          <div class="body-md" style="color:var(--green);">${esc(g.category)}</div>
+        </div>
+      </div>`;
+  }
+}
+
+function nextReveal() {
+  const g = STATE.game;
+  g.revealCount++;
+  renderRevealScreen(); // si era el último, deriva a la discusión
+}
+
+function confirmNewWord() {
   playSound('tap');
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:40px;margin-bottom:12px;">🔄</div>
       <div class="title-md" style="margin-bottom:8px;">¿Palabra repetida?</div>
       <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
-        Se sorteará una nueva palabra y nadie habrá visto su rol todavía.
+        Se sortea una <strong>nueva palabra</strong> para la misma partida (mismos roles) y la rotación empieza de nuevo.
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn btn-primary" onclick="cancelRevealAndRestart()">🎲 Nueva Palabra</button>
+        <button class="btn btn-primary" onclick="redrawWord()">🎲 Nueva Palabra</button>
         <button class="btn btn-ghost" onclick="closeModal()">Seguir con esta</button>
       </div>
     </div>
   `);
 }
 
-function cancelRevealAndRestart() {
+function redrawWord() {
   closeModal();
-  startGame();
-}
-
-function revealRole() {
   const g = STATE.game;
-  const playerIdx = g.revealOrder[g.revealCount];
-  const player = g.players[playerIdx];
+  const pool = wordPool();
+  const chosen = rand(pool);
+  const catName = (BASE_DE_DATOS.find(c => c.palabras.includes(chosen)) || {}).categoria || '?';
 
-  const pre = $('reveal-pre');
-  const card = $('reveal-card');
-  const footer = $('reveal-footer');
-  const cancelFooter = $('reveal-cancel-footer');
+  g.secretWord = chosen.palabra;
+  g.category = catName;
+  g.allHints = [chosen.pista1, chosen.pista2].filter(Boolean);
+  g.currentHint = (STATE.config.withHints && g.allHints.length > 0) ? rand(g.allHints) : null;
+  g.usedHints = g.currentHint ? [g.currentHint] : [];
 
-  if (!pre || !card || !footer) return;
-
-  pre.style.display = 'none';
-  footer.style.display = '';
-  if (cancelFooter) cancelFooter.style.display = 'none'; // ocultar al revelar
-
-  // SONIDO UNIFORME - El mismo tono para todos (sin revelar si es impostor o no)
-  playSound('reveal');
-
-  card.style.display = '';
-
-  if (player.isUndercover) {
-    card.innerHTML = `
-      <div class="role-card anim-scale" style="
-        background: linear-gradient(160deg, #0a0020 0%, #001520 50%, #000000 100%);
-        border: 2px solid rgba(0,245,255,0.4);
-        box-shadow: 0 0 60px rgba(0,245,255,0.15), inset 0 0 60px rgba(0,245,255,0.03);
-        animation: none;
-      ">
-        <div style="font-size:52px;margin-bottom:16px;">🎭</div>
-        <div class="badge" style="background:rgba(0,245,255,0.15);border:1px solid rgba(0,245,255,0.4);color:var(--cyan);margin-bottom:12px;">UNDERCOVER</div>
-        <div class="title-xl glow-cyan" style="margin-bottom:8px;">${g.undercoverWord}</div>
-        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-          Tu palabra es <strong style="color:var(--cyan)">diferente</strong> a la del grupo.<br>
-          Descubre la palabra real sin que te atrapen.
-        </div>
-        <div style="margin-top:20px;padding:14px 16px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:var(--radius-sm);">
-          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:6px;">⚠️ Recuerda</div>
-          <div class="body-md" style="color:var(--muted);font-size:13px;">Si te eliminan, podrás adivinar la palabra real. Si aciertas, ¡ganás!</div>
-        </div>
-        <div style="margin-top:12px;">
-          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
-          <div class="body-md" style="color:var(--cyan);">${g.category}</div>
-        </div>
-      </div>`;
-  } else {
-    card.innerHTML = `
-      <div class="role-card role-card-${player.isImpostor ? 'impostor' : 'human'} anim-scale" style="animation:${player.isImpostor ? 'pulse-red' : 'pulse-green'} 2s infinite;">
-        <div style="font-size:52px;margin-bottom:16px;${player.isImpostor ? 'animation:glitch 0.5s infinite;' : ''}">${player.isImpostor ? '💀' : '✅'}</div>
-        <div class="badge badge-${player.isImpostor ? 'impostor' : 'human'}" style="margin-bottom:12px;">${player.isImpostor ? 'IMPOSTOR' : 'HUMANO'}</div>
-        <div class="title-xl glow-${player.isImpostor ? 'red' : 'green'}" style="margin-bottom:8px;">
-          ${player.isImpostor ? 'ERES EL<br>IMPOSTOR' : g.secretWord}
-        </div>
-        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-          ${player.isImpostor
-            ? 'Nadie conoce la palabra.<br>Finge que la sabes.'
-            : 'Esta es la palabra secreta.<br>¡No dejes que el impostor la adivine!'}
-        </div>
-        ${player.isImpostor && g.currentHint ? `
-        <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);">
-          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para ti</div>
-          <div class="title-md glow-red">${g.currentHint}</div>
-        </div>` : ''}
-        ${!player.isImpostor ? `
-        <div style="margin-top:12px;">
-          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
-          <div class="body-md" style="color:var(--cyan);">${g.category}</div>
-        </div>` : ''}
-      </div>`;
+  // Reasignar palabras de undercovers de la nueva categoría
+  const ucPlayers = g.players.filter(pl => pl.isUndercover);
+  if (ucPlayers.length > 0) {
+    const catData = BASE_DE_DATOS.find(c => c.categoria === catName);
+    let otherWords = catData
+      ? catData.palabras.filter(w => w.palabra !== chosen.palabra).map(w => w.palabra)
+      : [];
+    if (otherWords.length === 0) otherWords = [chosen.palabra];
+    ucPlayers.forEach((pl, i) => {
+      g.undercoverWords[pl.id] = otherWords[i % otherWords.length];
+    });
   }
+
+  g.revealCount = 0;
+  playSound('start');
+  renderRevealScreen();
 }
 
-function nextReveal() {
-  STATE.game.revealCount++;
-  if (STATE.game.revealCount >= STATE.game.players.length) {
-    renderDiscussionScreen();
-    navigate('screen-discussion');
-  } else {
-    renderRevealScreen();
-  }
+function confirmCancelRound() {
+  playSound('tap');
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">✖️</div>
+      <div class="title-md" style="margin-bottom:8px;">¿Cancelar ronda?</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+        Se corta la partida al instante y volvés a la pantalla de configuración.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-red" onclick="cancelRound()">Sí, cancelar ronda</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Seguir jugando</button>
+      </div>
+    </div>
+  `);
+}
+
+function cancelRound() {
+  closeModal();
+  navigate('screen-config');
+  syncConfigUI();
 }
 
 /* ================================================================
-   4. PANTALLA DISCUSIÓN
+   ELIMINAR JUGADOR (se fue de la partida)
    ================================================================ */
-function renderDiscussion() {
+function openDeletePlayer() {
+  const g = STATE.game;
+  const alive = g.players.filter(pl => pl.alive);
+  if (alive.length === 0) return;
+
+  openModal(`
+    <div>
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:36px;margin-bottom:8px;">👋</div>
+        <div class="title-md">¿Quién se fue?</div>
+        <div class="caption" style="margin-top:4px;">Sale de la partida sin revelar su rol ni gastar balas</div>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        ${alive.map(pl => `
+          <button class="pick-item" onclick="confirmDeletePlayer(${pl.id})">
+            <span class="player-avatar" style="background:${pl.color}22;color:${pl.color};width:34px;height:34px;font-size:16px;">${pl.avatar}</span>
+            <span style="flex:1;">${esc(pl.name)}</span>
+          </button>
+        `).join('')}
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="closeModal()">Volver</button>
+    </div>
+  `);
+}
+
+function confirmDeletePlayer(playerId) {
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || !p.alive) return;
+
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">${p.avatar}</div>
+      <div class="title-md" style="margin-bottom:8px;">¿${esc(p.name)} se va de la partida?</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+        Se lo marca como <strong>"se fue"</strong>. Su rol no se revela durante la partida.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-red" onclick="executeDeletePlayer(${playerId})">👋 Confirmar salida</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Volver</button>
+      </div>
+    </div>
+  `);
+}
+
+function executeDeletePlayer(playerId) {
+  closeModal();
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || !p.alive) return;
+
+  p.alive = false;
+  p.leftEarly = true;
+  g.eliminated.push(p);
+  playSound('eliminate');
+
+  afterPlayerRemoval();
+}
+
+function afterPlayerRemoval() {
+  const v = checkVictory();
+  if (v) {
+    renderVictoryScreen(v);
+    navigate('screen-victory');
+    return;
+  }
+  const s = STATE.currentScreen;
+  if (s === 'screen-reveal') renderRevealScreen();
+  else if (s === 'screen-discussion') renderDiscussionScreen();
+  else if (s === 'screen-voting') renderVotingScreen();
+}
+
+/* ================================================================
+   4. DISCUSIÓN
+   ================================================================ */
+function renderDiscussionShell() {
   return `<div class="screen" id="screen-discussion"></div>`;
 }
 
 function renderDiscussionScreen() {
   const screen = $('screen-discussion');
   if (!screen) return;
+  const g = STATE.game;
+  if (!g) return;
 
-  const alivePlayers = STATE.game.players.filter(p => p.alive);
+  const alivePlayers = g.players.filter(pl => pl.alive);
+  if (alivePlayers.length === 0) {
+    renderVictoryScreen({ winner: 'impostors', reason: 'No quedan jugadores en la partida' });
+    navigate('screen-victory');
+    return;
+  }
   const starter = rand(alivePlayers);
-  STATE.game.starter = starter;
+  g.starter = starter;
+
+  const oracleBtn = (g.powersEnabled.oracle && !g.powersUsed.oracle)
+    ? `<button class="btn btn-power btn-oracle" onclick="useOracle()">🔮 Poder: El Oráculo</button>`
+    : '';
 
   screen.innerHTML = `
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 20px;text-align:center;">
       <div class="anim-fade-up">
         <div style="font-size:56px;margin-bottom:16px;">🗣️</div>
         <div class="title-xl" style="margin-bottom:8px;">Todos Listos</div>
@@ -9800,20 +10072,25 @@ function renderDiscussionScreen() {
           Discutan sin revelar información obvia.<br>El impostor está entre ustedes.
         </div>
 
-        <div class="card-glass anim-scale delay-2" style="margin-bottom:0;border-color:rgba(0,245,255,0.3);">
+        <div class="card-glass anim-scale delay-2" style="border-color:rgba(0,245,255,0.3);">
           <div class="caption" style="margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">Empieza hablando</div>
           <div style="font-size:36px;margin-bottom:8px;">${starter.avatar}</div>
           <div class="title-lg" style="color:${starter.color};filter:drop-shadow(0 0 12px ${starter.color});">
-            ${starter.name}
+            ${esc(starter.name)}
           </div>
         </div>
       </div>
     </div>
 
     <div class="screen-footer">
+      ${oracleBtn}
       <button class="btn btn-primary anim-fade-up delay-3" onclick="goToVoting()">
         <span>🗳️</span> Ir a Votación
       </button>
+      <div class="controls-row">
+        <button class="btn btn-ghost btn-sm" onclick="openDeletePlayer()">🗑️ Jugador se fue</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="confirmCancelRound()">✖️ Cancelar ronda</button>
+      </div>
     </div>
   `;
 }
@@ -9824,87 +10101,96 @@ function goToVoting() {
 }
 
 /* ================================================================
-   5. PANTALLA VOTACIÓN
+   5. VOTACIÓN
    ================================================================ */
-function renderVoting() {
+function renderVotingShell() {
   return `<div class="screen" id="screen-voting"></div>`;
 }
 
-function bindVotingEvents() {}
+function aliveCount(g, filterFn) {
+  return g.players.filter(pl => pl.alive && (!filterFn || filterFn(pl))).length;
+}
 
 function renderVotingScreen() {
   const screen = $('screen-voting');
   if (!screen) return;
-
   const g = STATE.game;
-  const alivePlayers = g.players.filter(p => p.alive);
+  if (!g) return;
+
+  const alivePlayers = g.players.filter(pl => pl.alive);
 
   const bulletsDisplay = g.bullets === Infinity
     ? '<span style="color:var(--cyan)">∞</span>'
     : `<span style="${g.bullets <= 1 ? 'color:var(--red)' : 'color:var(--yellow)'}">${g.bullets}</span>`;
 
-  const playerRows = alivePlayers.map(p => `
-    <div class="vote-item anim-fade-up" id="vote-row-${p.id}">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="player-avatar" style="background:${p.color}22;color:${p.color};font-size:20px;">${p.avatar}</div>
-        <div>
-          <div class="body-md" style="font-weight:600;">${p.name}</div>
+  const ucAlive = aliveCount(g, pl => pl.isUndercover);
+  const ucChip = ucAlive > 0
+    ? `<div class="stat-chip stat-chip-cyan">🎭 ${ucAlive} undercover</div>`
+    : '';
+
+  const playerRows = alivePlayers.map(pl => `
+    <div class="vote-item anim-fade-up" id="vote-row-${pl.id}">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;">${pl.avatar}</div>
+        <div style="min-width:0;">
+          <div class="body-md" style="font-weight:600;">${esc(pl.name)}</div>
           <div class="caption">En juego</div>
         </div>
       </div>
-      <button class="btn btn-red btn-sm" style="width:auto;padding:10px 18px;" onclick="confirmVote(${p.id})">
+      <button class="btn btn-red btn-sm" style="width:auto;padding:10px 18px;flex-shrink:0;" onclick="confirmVote(${pl.id})">
         Votar
       </button>
     </div>
   `).join('');
 
-  const elimRows = g.eliminated.map(p => {
+  const elimRows = g.eliminated.map(pl => {
     let badge;
-    if (p.isImpostor) badge = `<span class="badge badge-impostor">Impostor</span>`;
-    else if (p.isUndercover) badge = `<span class="badge" style="background:rgba(0,245,255,0.15);border:1px solid rgba(0,245,255,0.4);color:var(--cyan);">Undercover</span>`;
+    if (pl.leftEarly) badge = `<span class="badge badge-left">👋 Se fue</span>`;
+    else if (pl.isImpostor) badge = `<span class="badge badge-impostor">Impostor</span>`;
+    else if (pl.isUndercover) badge = `<span class="badge badge-undercover">Undercover</span>`;
     else badge = `<span class="badge badge-human">Inocente</span>`;
     return `
     <div class="vote-item" style="opacity:0.45;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="player-avatar" style="background:${p.color}22;color:${p.color};font-size:20px;filter:grayscale(0.7);">${p.avatar}</div>
-        <div>
-          <div class="body-md" style="font-weight:600;text-decoration:line-through;">${p.name}</div>
-          ${badge}
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;filter:grayscale(0.7);">${pl.avatar}</div>
+        <div style="min-width:0;">
+          <div class="body-md" style="font-weight:600;text-decoration:line-through;">${esc(pl.name)}</div>
         </div>
       </div>
+      ${badge}
     </div>`;
   }).join('');
 
-  // Indicador de modalidad
-  const modoTexto = g.bullets === Infinity
-    ? 'Modo: 1 impostor + 1 humano = gana impostor'
-    : 'Modo: Balas =imps ganan cuando se acaban';
-
-  const undercoverChip = g.gameMode === 'undercover' && g.undercoverAlive > 0
-    ? `<div class="stat-chip" style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.3);color:var(--cyan);">🎭 Undercover suelto</div>`
+  const grenadeBtn = (g.powersEnabled.grenade && !g.powersUsed.grenade)
+    ? `<button class="btn btn-power" onclick="useGrenade()">💥 Poder: Granada</button>`
     : '';
+  const oracleBtn = (g.powersEnabled.oracle && !g.powersUsed.oracle)
+    ? `<button class="btn btn-power btn-oracle" onclick="useOracle()">🔮 Poder: El Oráculo</button>`
+    : '';
+  const hasPowers = grenadeBtn || oracleBtn;
 
   screen.innerHTML = `
     <div class="screen-header">
       <div style="flex:1;">
         <div class="title-lg">Votación</div>
-        <div class="caption">${modoTexto}</div>
+        <div class="caption">Elijan a quién sacar de la partida</div>
       </div>
     </div>
 
-    <div style="padding:0 20px 12px;display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0;">
+    <div class="stat-chips">
       <div class="stat-chip stat-chip-red">🔫 ${bulletsDisplay} balas</div>
-      <div class="stat-chip stat-chip-blue">🕵️ ${g.impostorsAlive} impostores</div>
-      ${undercoverChip}
+      <div class="stat-chip stat-chip-blue">🕵️ ${aliveCount(g, pl => pl.isImpostor)} impostores</div>
+      <div class="stat-chip stat-chip-green">✅ ${aliveCount(g, pl => !pl.isImpostor && !pl.isUndercover)} inocentes</div>
+      ${ucChip}
     </div>
 
     <div class="scroll-area">
-      <div class="section-label">Jugadores vivos</div>
+      <div class="section-label" style="margin-top:0;">Jugadores vivos</div>
       <div id="alive-list">${playerRows}</div>
 
       ${g.eliminated.length > 0 ? `
         <div class="divider"></div>
-        <div class="section-label">Eliminados</div>
+        <div class="section-label">Fuera de la partida</div>
         <div id="elim-list">${elimRows}</div>
       ` : ''}
 
@@ -9912,72 +10198,107 @@ function renderVotingScreen() {
     </div>
 
     <div class="screen-footer">
-      <button class="btn btn-ghost btn-sm" onclick="confirmCancelGame()">Cancelar partida</button>
+      ${hasPowers ? `<div class="controls-row">${grenadeBtn}${oracleBtn}</div>` : ''}
+      <div class="controls-row">
+        <button class="btn btn-ghost btn-sm" onclick="openDeletePlayer()">🗑️ Jugador se fue</button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="confirmCancelRound()">✖️ Cancelar ronda</button>
+      </div>
     </div>
   `;
 }
 
 function confirmVote(playerId) {
-  const p = STATE.game.players.find(x => x.id === playerId);
-  if (!p) return;
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || !p.alive) return;
 
   playSound('tap');
+
+  const shieldAvailable = g.powersEnabled.shield && !g.powersUsed.shield;
+  const shieldBtn = shieldAvailable
+    ? `<button class="btn btn-power btn-shield" onclick="useShield(${playerId})">🛡️ Chaleco: anular este voto</button>`
+    : '';
+
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:40px;margin-bottom:12px;">${p.avatar}</div>
       <div class="title-md" style="margin-bottom:8px;">¿Eliminar a</div>
-      <div class="title-lg" style="color:${p.color};filter:drop-shadow(0 0 12px ${p.color});margin-bottom:24px;">${p.name}?</div>
+      <div class="title-lg" style="color:${p.color};filter:drop-shadow(0 0 12px ${p.color});margin-bottom:24px;">${esc(p.name)}?</div>
       <div class="body-md" style="color:var(--muted);margin-bottom:24px;">Esta acción no se puede deshacer.</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn btn-red" onclick="executeVote(${playerId})">⚡ Confirmar Eliminación</button>
+        ${shieldBtn}
         <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       </div>
     </div>
   `);
 }
 
+function useShield(playerId) {
+  const g = STATE.game;
+  if (!g.powersEnabled.shield || g.powersUsed.shield) return;
+  g.powersUsed.shield = true;
+  playSound('shield');
+
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">🛡️</div>
+      <div class="title-md" style="color:var(--blue);text-shadow:0 0 24px rgba(77,159,255,0.5);margin-bottom:8px;">¡Chaleco activado!</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+        El voto contra <strong style="color:var(--text)">${esc(g.players.find(pl => pl.id === playerId).name)}</strong> quedó anulado.
+        Nadie muere y no se gastó bala.
+      </div>
+      <button class="btn btn-primary" onclick="closeModalAndBackToVote()">Continuar</button>
+    </div>
+  `);
+}
+
+function closeModalAndBackToVote() {
+  closeModal();
+  renderVotingScreen();
+}
+
 function executeVote(playerId) {
   closeModal();
   const g = STATE.game;
-  const p = g.players.find(x => x.id === playerId);
-  if (!p) return;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || !p.alive) return;
 
   p.alive = false;
   g.eliminated.push(p);
+  playSound('eliminate');
+  vibrate(120);
 
-  if (p.isImpostor) {
-    g.impostorsAlive--;
-  } else if (p.isUndercover) {
-    g.undercoverAlive--;
-    playSound('eliminate');
-    // El Undercover tiene una última oportunidad de adivinar la palabra
+  if (p.isUndercover) {
+    if (g.bullets !== Infinity) g.bullets--;
+    // Última oportunidad del undercover: adivinar la palabra real
     openModal(`
       <div style="text-align:center;">
         <div style="font-size:48px;margin-bottom:12px;">🎭</div>
-        <div class="title-md" style="color:var(--cyan);margin-bottom:8px;">${p.name} era el Undercover</div>
-        <div class="body-md" style="color:var(--muted);margin-bottom:6px;">Su palabra era: <strong style="color:var(--cyan)">${g.undercoverWord}</strong></div>
+        <div class="title-md" style="color:var(--cyan);margin-bottom:8px;">${esc(p.name)} era el Undercover</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:6px;">Su palabra era: <strong style="color:var(--cyan)">${esc(g.undercoverWords[p.id] || '?')}</strong></div>
         <div class="body-md" style="margin-bottom:20px;">¿Puede adivinar la palabra real antes de caer?</div>
         <div style="padding:16px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:var(--radius-sm);margin-bottom:24px;">
           <div class="caption" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">Categoría</div>
-          <div class="body-md" style="color:var(--cyan);font-weight:700;">${g.category}</div>
+          <div class="body-md" style="color:var(--cyan);font-weight:700;">${esc(g.category)}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <button class="btn btn-primary" onclick="undercoverGuessResult(true, ${playerId})" style="background:linear-gradient(135deg,var(--cyan),var(--blue));">✅ ¡Adivinó la palabra!</button>
-          <button class="btn btn-red" onclick="undercoverGuessResult(false, ${playerId})">❌ No adivinó</button>
+          <button class="btn btn-primary" onclick="undercoverGuessResult(true, ${p.id})" style="background:linear-gradient(135deg,var(--cyan),var(--blue));">✅ ¡Adivinó la palabra!</button>
+          <button class="btn btn-red" onclick="undercoverGuessResult(false, ${p.id})">❌ No adivinó</button>
         </div>
       </div>
     `);
-    return; // Esperar resultado del guess antes de continuar
-  } else {
-    g.humansAlive--;
+    return;
+  }
+
+  if (!p.isImpostor) {
+    // Inocente eliminado por votación: se gasta una bala
     if (g.bullets !== Infinity) g.bullets--;
   }
 
-  playSound('eliminate');
-
-  const result = checkVictory();
-  if (result) {
-    renderVictoryScreen(result);
+  const v = checkVictory();
+  if (v) {
+    renderVictoryScreen(v);
     navigate('screen-victory');
     return;
   }
@@ -9988,178 +10309,333 @@ function executeVote(playerId) {
 function undercoverGuessResult(guessed, playerId) {
   closeModal();
   const g = STATE.game;
-  playSound(guessed ? 'victory' : 'eliminate');
+  const guesser = g.players.find(pl => pl.id === playerId);
 
   if (guessed) {
-    renderVictoryScreen({ winner: 'undercover', reason: `¡Adivinó la palabra secreta!`, guesser: g.players.find(x=>x.id===playerId) });
+    playSound('victory');
+    renderVictoryScreen({
+      winner: 'undercover',
+      reason: '¡Adivinó la palabra secreta al ser eliminado!',
+      guesser
+    });
     navigate('screen-victory');
     return;
   }
 
-  // No adivinó — verificar victoria normal
-  const result = checkVictory();
-  if (result) {
-    renderVictoryScreen(result);
+  playSound('eliminate');
+  const v = checkVictory();
+  if (v) {
+    renderVictoryScreen(v);
     navigate('screen-victory');
     return;
   }
   renderVotingScreen();
 }
 
-function checkVictory() {
+/* ================================================================
+   PODERES (una vez por partida)
+   ================================================================ */
+function useGrenade() {
   const g = STATE.game;
-
-  // CON BALAS: Los impostores solo ganan si se acaban las balas
-  // SIN BALAS (Infinity): Los impostores ganan si queda 1 impostor y 1 humano, o si se eliminan todos los humanos
-
-  if (g.bullets !== Infinity && g.bullets <= 0) {
-    return { winner: 'impostors', reason: 'Se agotaron todas las balas' };
-  }
-
-  if (g.impostorsAlive <= 0 && g.undercoverAlive <= 0) {
-    // Todos los malos eliminados = humanos ganan
-    return { winner: 'humans', reason: 'Todos los impostores fueron eliminados' };
-  }
-
-  if (g.impostorsAlive <= 0 && g.gameMode !== 'undercover') {
-    return { winner: 'humans', reason: 'Todos los impostores fueron eliminados' };
-  }
-
-  if (g.bullets === Infinity) {
-    if (g.impostorsAlive >= g.humansAlive && g.humansAlive <= 0) {
-      return { winner: 'impostors', reason: 'Los impostores igualaron o superaron a los humanos' };
-    }
-    if (g.humansAlive <= 0 && g.undercoverAlive > 0) {
-      return { winner: 'impostors', reason: 'No quedan humanos inocentes' };
-    }
-    if (g.impostorsAlive >= g.humansAlive && g.impostorsAlive > 0) {
-      return { winner: 'impostors', reason: 'Los impostores igualaron o superaron a los humanos' };
-    }
-  }
-
-  return null;
-}
-
-function confirmCancelGame() {
+  if (!g.powersEnabled.grenade || g.powersUsed.grenade) return;
   playSound('tap');
+
   openModal(`
     <div style="text-align:center;">
-      <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
-      <div class="title-md" style="margin-bottom:8px;">¿Cancelar partida?</div>
-      <div class="body-md" style="color:var(--muted);margin-bottom:24px;">Se perderá el progreso actual.</div>
+      <div style="font-size:48px;margin-bottom:12px;">💥</div>
+      <div class="title-md" style="margin-bottom:8px;">¿Lanzar la Granada?</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
+        Resultado totalmente aleatorio. Solo se puede usar <strong>una vez</strong> en toda la partida.
+      </div>
+      <div class="info-note" style="text-align:left;margin-bottom:24px;">
+        💣 50% · 2 inocentes + 1 impostor/undercover<br>
+        😬 49% · 3 inocentes<br>
+        🍀 1% · 2 impostores
+      </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn btn-red" onclick="cancelGame()">Cancelar Partida</button>
-        <button class="btn btn-ghost" onclick="closeModal()">Volver al juego</button>
+        <button class="btn btn-red" onclick="launchGrenade()">💥 Lanzar</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Mejor no</button>
       </div>
     </div>
   `);
 }
 
-function cancelGame() {
+function launchGrenade() {
+  const g = STATE.game;
+  g.powersUsed.grenade = true;
+
+  const roll = Math.random() * 100;
+  const aliveInnocents = g.players.filter(pl => pl.alive && !pl.isImpostor);
+  const aliveImpostors = g.players.filter(pl => pl.alive && pl.isImpostor);
+  const impSide = g.players.filter(pl => pl.alive && (pl.isImpostor || pl.isUndercover));
+
+  let victims = [];
+  let title, subtitle, emoji;
+
+  if (roll < 1) {
+    emoji = '🍀';
+    title = '¡MILAGRO!';
+    subtitle = 'La granada cayó del lado bueno…';
+    victims = pickRandom(aliveImpostors, 2);
+  } else if (roll < 50) {
+    emoji = '😬';
+    title = 'KA-BOOM';
+    subtitle = 'La explosión alcanzó solo a inocentes…';
+    victims = pickRandom(aliveInnocents, 3);
+  } else {
+    emoji = '💥';
+    title = 'KA-BOOM';
+    subtitle = 'La explosión alcanzó a inocentes y a un infiltrado.';
+    victims = [
+      ...pickRandom(aliveInnocents, 2),
+      ...pickRandom(impSide, 1)
+    ];
+    // Seguridad: evitar duplicados (poco probable pero posible en grupos chicos)
+    const seen = new Set();
+    victims = victims.filter(v => !seen.has(v.id) && seen.add(v.id));
+  }
+
+  victims.forEach(v => {
+    v.alive = false;
+    g.eliminated.push(v);
+  });
+
+  playSound('explosion');
+  vibrate([120, 60, 220]);
+
+  const flash = document.createElement('div');
+  flash.className = 'explosion-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 900);
+  document.body.classList.add('shake');
+  setTimeout(() => document.body.classList.remove('shake'), 600);
+
+  const victimRows = victims.length > 0
+    ? victims.map(pl => {
+        let badge;
+        if (pl.isImpostor) badge = `<span class="badge badge-impostor">Impostor</span>`;
+        else if (pl.isUndercover) badge = `<span class="badge badge-undercover">Undercover</span>`;
+        else badge = `<span class="badge badge-human">Inocente</span>`;
+        return `
+        <div class="vote-item" style="opacity:0.85;">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+            <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;filter:grayscale(0.7);">${pl.avatar}</div>
+            <div class="body-md" style="font-weight:600;">${esc(pl.name)}</div>
+          </div>
+          ${badge}
+        </div>`;
+      }).join('')
+    : `<div class="body-md" style="color:var(--muted);padding:12px;">Nadie… de pura suerte.</div>`;
+
+  openModal(`
+    <div style="text-align:center;">
+      <div class="anim-scale" style="font-size:64px;margin-bottom:12px;">${emoji}</div>
+      <div class="title-xl glow-red" style="margin-bottom:8px;">${title}</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">${subtitle}</div>
+      <div style="text-align:left;margin-bottom:24px;">${victimRows}</div>
+      <button class="btn btn-primary" onclick="grenadeDone()">Continuar</button>
+    </div>
+  `);
+}
+
+function grenadeDone() {
   closeModal();
-  navigate('screen-config');
+  const v = checkVictory();
+  if (v) {
+    renderVictoryScreen(v);
+    navigate('screen-victory');
+    return;
+  }
+  renderVotingScreen();
+}
+
+function useOracle() {
+  const g = STATE.game;
+  if (!g.powersEnabled.oracle || g.powersUsed.oracle) return;
+  g.powersUsed.oracle = true;
+  playSound('oracle');
+
+  const remaining = g.allHints.filter(h => !g.usedHints.includes(h));
+  let revealText;
+  if (remaining.length > 0) {
+    const hint = rand(remaining);
+    g.usedHints.push(hint);
+    revealText = esc(hint);
+  } else {
+    const w = g.secretWord;
+    revealText = `Empieza con <strong style="color:var(--violet)">"${esc(w[0])}"</strong> y tiene <strong style="color:var(--violet)">${w.length} letras</strong>`;
+  }
+
+  openModal(`
+    <div style="text-align:center;">
+      <div class="anim-scale" style="font-size:56px;margin-bottom:12px;">🔮</div>
+      <div class="title-md glow-violet" style="margin-bottom:8px;">El Oráculo habla</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:16px;">Pista extra sobre la palabra secreta:</div>
+      <div class="card-glass" style="border-color:rgba(168,85,247,0.4);margin-bottom:16px;">
+        <div class="title-lg glow-violet">${revealText}</div>
+        <div class="caption" style="margin-top:8px;">Categoría: ${esc(g.category)}</div>
+      </div>
+      <div class="info-note" style="margin-bottom:20px;">Toda la sala escucha esta pista… incluido el impostor.</div>
+      <button class="btn btn-primary" onclick="closeModal()">Continuar</button>
+    </div>
+  `);
 }
 
 /* ================================================================
-   6. PANTALLA VICTORIA
+   CONDICIONES DE VICTORIA (simplificadas)
    ================================================================ */
-function renderVictory() {
+function checkVictory() {
+  const g = STATE.game;
+  if (!g) return null;
+
+  // 1) Sin balas: ganan los impostores
+  if (g.bullets !== Infinity && g.bullets <= 0) {
+    return { winner: 'impostors', reason: 'Se agotaron todas las balas 🔫' };
+  }
+
+  // 2) Sin inocentes vivos: ganan los impostores
+  const innocentsAlive = g.players.filter(pl => pl.alive && !pl.isImpostor).length;
+  if (innocentsAlive === 0) {
+    return { winner: 'impostors', reason: 'No queda ningún inocente con vida 😈' };
+  }
+
+  // 3) Sin impostores vivos: ganan los inocentes
+  const impostorsAlive = g.players.filter(pl => pl.alive && pl.isImpostor).length;
+  if (impostorsAlive === 0) {
+    return { winner: 'humans', reason: 'Eliminaron a todos los impostores 🎯' };
+  }
+
+  return null;
+}
+
+/* ================================================================
+   6. VICTORIA
+   ================================================================ */
+function renderVictoryShell() {
   return `<div class="screen" id="screen-victory"></div>`;
 }
 
 function renderVictoryScreen(result) {
   const screen = $('screen-victory');
   if (!screen) return;
-
   const g = STATE.game;
+
   const undercoverWin = result.winner === 'undercover';
   const humansWin = result.winner === 'humans';
 
-  let color, glow, emoji, title;
+  let color, glow, emoji, title, btnClass;
   if (undercoverWin) {
     color = 'var(--cyan)'; glow = 'glow-cyan'; emoji = '🎭'; title = '¡UNDERCOVER GANA!';
+    btnClass = '';
   } else if (humansWin) {
-    color = 'var(--green)'; glow = 'glow-green'; emoji = '🏆'; title = '¡HUMANOS GANAN!';
+    color = 'var(--green)'; glow = 'glow-green'; emoji = '🏆'; title = '¡INOCENTES GANAN!';
+    btnClass = 'btn-green';
   } else {
     color = 'var(--red)'; glow = 'glow-red'; emoji = '👿'; title = '¡IMPOSTORES GANAN!';
+    btnClass = 'btn-red';
   }
 
-  // Sonido diferente segun victoria
   if (humansWin) playSound('victory');
   else if (undercoverWin) { playSound('reveal'); setTimeout(() => playSound('victory'), 300); }
   else playSound('impostorWin');
 
-  const impostors = g.players.filter(p => p.isImpostor);
-  const undercoverPlayers = g.players.filter(p => p.isUndercover);
+  const impostors = g.players.filter(pl => pl.isImpostor);
+  const undercovers = g.players.filter(pl => pl.isUndercover);
+  const leftEarly = g.players.filter(pl => pl.leftEarly);
 
-  const impostorList = impostors.map(p => `
+  const impostorList = impostors.map(pl => `
     <div class="player-item" style="border-color:${humansWin ? 'rgba(57,255,20,0.2)' : 'rgba(255,49,49,0.2)'};">
-      <div class="player-avatar" style="background:${p.color}22;color:${p.color};font-size:20px;">${p.avatar}</div>
-      <div style="flex:1;">
-        <div class="body-md" style="font-weight:700;">${p.name}</div>
-        <div class="caption">El impostor</div>
+      <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;">${pl.avatar}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="body-md" style="font-weight:700;">${esc(pl.name)}</div>
+        <div class="caption">${pl.alive ? 'Sobrevivió' : 'Fue eliminado'}</div>
       </div>
       <span class="badge badge-impostor">IMPOSTOR</span>
     </div>
   `).join('');
 
-  const undercoverList = undercoverPlayers.map(p => `
+  const undercoverList = undercovers.map(pl => `
     <div class="player-item" style="border-color:rgba(0,245,255,0.2);">
-      <div class="player-avatar" style="background:${p.color}22;color:${p.color};font-size:20px;">${p.avatar}</div>
-      <div style="flex:1;">
-        <div class="body-md" style="font-weight:700;">${p.name}</div>
-        <div class="caption">Su palabra: <strong style="color:var(--cyan)">${g.undercoverWord}</strong></div>
+      <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;">${pl.avatar}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="body-md" style="font-weight:700;">${esc(pl.name)}</div>
+        <div class="caption">Su palabra: <strong style="color:var(--cyan)">${esc(g.undercoverWords[pl.id] || '?')}</strong></div>
       </div>
-      <span class="badge" style="background:rgba(0,245,255,0.15);border:1px solid rgba(0,245,255,0.4);color:var(--cyan);">UNDERCOVER</span>
+      <span class="badge badge-undercover">UNDERCOVER</span>
     </div>
   `).join('');
 
+  const leftList = leftEarly.map(pl => `
+    <div class="player-item" style="border-color:var(--border);opacity:0.6;">
+      <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;">${pl.avatar}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="body-md" style="font-weight:700;">${esc(pl.name)}</div>
+      </div>
+      <span class="badge badge-left">👋 ${pl.isImpostor ? 'Impostor' : pl.isUndercover ? 'Undercover' : 'Inocente'}</span>
+    </div>
+  `).join('');
+
+  const guesserNote = result.guesser
+    ? `<div class="caption" style="margin-top:8px;">🎉 Lo logró: <strong style="color:${result.guesser.color}">${esc(result.guesser.name)}</strong></div>`
+    : '';
+
   const particleColor = undercoverWin ? 'var(--cyan)' : humansWin ? 'var(--green)' : 'var(--red)';
-  const particles = Array.from({length: 20}, (_, i) => `
+  const particles = Array.from({ length: 20 }, () => `
     <div class="victory-particle" style="
-      left:${Math.random()*100}%;
+      left:${Math.random() * 100}%;
       background:${particleColor};
-      animation-duration:${2 + Math.random()*3}s;
-      animation-delay:${Math.random()*2}s;
-      width:${2+Math.random()*4}px;
-      height:${2+Math.random()*4}px;
+      animation-duration:${2 + Math.random() * 3}s;
+      animation-delay:${Math.random() * 2}s;
+      width:${2 + Math.random() * 4}px;
+      height:${2 + Math.random() * 4}px;
     "></div>
   `).join('');
 
   screen.innerHTML = `
     <div class="victory-bg">${particles}</div>
 
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;position:relative;z-index:1;">
-      <div class="anim-scale">
+    <div class="scroll-area" style="display:flex;flex-direction:column;justify-content:center;padding-top:24px;">
+      <div class="anim-scale" style="text-align:center;">
         <div style="font-size:72px;margin-bottom:16px;filter:drop-shadow(0 0 30px ${color});">${emoji}</div>
       </div>
-      <div class="anim-fade-up delay-1">
+      <div class="anim-fade-up delay-1" style="text-align:center;">
         <div class="title-xl ${glow}" style="margin-bottom:8px;">${title}</div>
-        <div class="body-md" style="color:var(--muted);margin-bottom:4px;">${result.reason}</div>
-        <div class="caption">Palabra secreta: <strong style="color:${color}">${g.secretWord}</strong></div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:4px;">${esc(result.reason)}</div>
+        <div class="caption">Palabra secreta: <strong style="color:${color}">${esc(g.secretWord)}</strong></div>
+        ${guesserNote}
       </div>
 
-      <div class="anim-fade-up delay-2" style="width:100%;margin-top:32px;">
+      <div class="anim-fade-up delay-2" style="width:100%;margin-top:28px;">
         ${impostors.length > 0 ? `
-          <div class="section-label" style="text-align:left;">Los Impostores eran</div>
+          <div class="section-label">Los Impostores eran</div>
           <div>${impostorList}</div>
         ` : ''}
-        ${undercoverPlayers.length > 0 ? `
-          <div class="section-label" style="text-align:left;margin-top:12px;">El Undercover era</div>
+        ${undercovers.length > 0 ? `
+          <div class="section-label">Los Undercovers eran</div>
           <div>${undercoverList}</div>
         ` : ''}
+        ${leftEarly.length > 0 ? `
+          <div class="section-label">Se fueron de la partida</div>
+          <div>${leftList}</div>
+        ` : ''}
       </div>
+      <div style="height:16px;"></div>
     </div>
 
     <div class="screen-footer">
-      <button class="btn ${undercoverWin ? '' : humansWin ? 'btn-green' : 'btn-red'} anim-fade-up delay-3" style="${undercoverWin ? 'background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;' : ''}" onclick="playAgain()">
-        🔄 Jugar Otra Vez
+      <button class="btn ${btnClass} anim-fade-up delay-3" onclick="playAgain()">
+        🔄 Otra Partida
       </button>
+      <button class="btn btn-ghost btn-sm" onclick="backToConfig()">⚙️ Configuración</button>
     </div>
   `;
 }
 
 function playAgain() {
+  startGame();
+}
+
+function backToConfig() {
   navigate('screen-config');
   syncConfigUI();
 }
@@ -10168,7 +10644,10 @@ function playAgain() {
    INIT
    ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
   renderApp();
+  setupPwaManifest();
+  tryRegisterServiceWorker();
 });
 
 let lastTouch = 0;
@@ -10184,484 +10663,8 @@ document.addEventListener('touchmove', e => {
   }
 }, { passive: false });
 
-// Inicializar audio en primer interaction
 document.addEventListener('touchstart', () => initAudio(), { once: true });
 document.addEventListener('click', () => initAudio(), { once: true });
-</script>
-
-<script>
-/**
- * Iframe 元素高亮注入脚本
- * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
- *
- * 使用方法：
- * 1. 将此脚本添加到目标网站的 HTML 中
- * 2. 或通过浏览器扩展、用户脚本等方式注入
- */
-
-(function () {
-  "use strict";
-
-  // 检查是否在 iframe 中
-  if (window.self === window.top) {
-    return; // 不在 iframe 中，不执行
-  }
-
-  // 检查是否已经初始化过
-  if (window.__iframeHighlightInitialized) {
-    return;
-  }
-  window.__iframeHighlightInitialized = true;
-  console.log("Iframe 高亮脚本已加载");
-
-  // 创建高亮覆盖层
-  var overlay = document.createElement("div");
-  overlay.id = "iframe-highlight-overlay";
-  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
-
-  // 创建悬停高亮框（虚线边框）
-  var highlightBox = document.createElement("div");
-  highlightBox.id = "iframe-highlight-box";
-  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
-
-  // 创建选中节点的常驻高亮框（实线边框）
-  var selectedBox = document.createElement("div");
-  selectedBox.id = "iframe-selected-box";
-  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
-
-  // 创建悬停标签显示
-  var tagLabel = document.createElement("div");
-  tagLabel.id = "iframe-tag-label";
-  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
-
-  // 创建选中节点标签
-  var selectedLabel = document.createElement("div");
-  selectedLabel.id = "iframe-selected-label";
-  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
-  overlay.appendChild(highlightBox);
-  overlay.appendChild(selectedBox);
-  overlay.appendChild(tagLabel);
-  overlay.appendChild(selectedLabel);
-  document.body.appendChild(overlay);
-
-  // 存储当前选中的元素
-  var selectedElement = null;
-  var highlightEnabled = false;
-
-  // 更新选中元素的高亮显示
-  function updateSelectedHighlight(element) {
-    console.log("updateSelectedHighlight called with:", element);
-    if (!element) {
-      selectedBox.style.display = "none";
-      selectedLabel.style.display = "none";
-      selectedElement = null;
-      console.log("Cleared selected highlight");
-      return;
-    }
-    selectedElement = element;
-    var rect = element.getBoundingClientRect();
-    console.log("Selected element rect:", rect);
-
-    // 更新选中高亮框位置
-    selectedBox.style.display = "block";
-    selectedBox.style.left = "".concat(rect.left - 2, "px");
-    selectedBox.style.top = "".concat(rect.top - 2, "px");
-    selectedBox.style.width = "".concat(rect.width + 4, "px");
-    selectedBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新选中标签位置和内容
-    selectedLabel.style.display = "block";
-    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 28;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 5) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
-    if (labelLeft + labelWidth > window.innerWidth - 10) {
-      labelLeft = window.innerWidth - labelWidth - 10;
-    }
-    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
-    selectedLabel.style.top = "".concat(labelTop, "px");
-    console.log("Selected highlight positioned at:", {
-      left: selectedBox.style.left,
-      top: selectedBox.style.top,
-      width: selectedBox.style.width,
-      height: selectedBox.style.height
-    });
-  }
-  function getElementSelector(element) {
-    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
-    var segments = [];
-    var current = element;
-    while (current !== document.documentElement) {
-      var selector = '';
-      // 优先检查唯一ID
-      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
-        segments.unshift("#".concat(current.id));
-        break; // ID唯一，无需继续向上
-      }
-
-      // 生成类名选择器（取第一个有效类名）
-      var classes = Array.from(current.classList).filter(function (c) {
-        return !c.startsWith('js-');
-      });
-      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
-
-      // 生成位置索引（nth-child）
-      var tag = current.tagName.toLowerCase();
-      if (!className) {
-        var siblings = Array.from(current.parentNode.children);
-        var index = siblings.findIndex(function (el) {
-          return el === current;
-        }) + 1;
-        selector = "".concat(tag, ":nth-child(").concat(index, ")");
-      } else {
-        selector = className;
-      }
-      segments.unshift(selector);
-      current = current.parentElement;
-    }
-
-    // 处理根元素
-    if (current === document.documentElement) {
-      segments.unshift('html');
-    }
-    return segments.join(' > ');
-  }
-
-  // 获取元素文本内容
-  function getElementText(element) {
-    var _element$textContent;
-    if (element.tagName === "INPUT") {
-      return element.value || element.placeholder || "";
-    }
-    if (element.tagName === "TEXTAREA") {
-      return element.value || element.placeholder || "";
-    }
-    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
-    return text.length > 50 ? text.substring(0, 50) + "..." : text;
-  }
-
-  // 获取元素属性信息
-  function getElementAttributes(element) {
-    var attrs = {};
-    for (var i = 0; i < element.attributes.length; i++) {
-      var attr = element.attributes[i];
-      attrs[attr.name] = attr.value;
-    }
-    return attrs;
-  }
-
-  // 鼠标悬停事件处理
-  function handleMouseOver(e) {
-    if (!highlightEnabled) return;
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免高亮 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 如果是已选中的元素，不显示悬停高亮
-    if (target === selectedElement) {
-      highlightBox.style.display = "none";
-      tagLabel.style.display = "none";
-      return;
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-
-    // 更新悬停高亮框位置
-    highlightBox.style.display = "block";
-    highlightBox.style.left = "".concat(rect.left - 2, "px");
-    highlightBox.style.top = "".concat(rect.top - 2, "px");
-    highlightBox.style.width = "".concat(rect.width + 4, "px");
-    highlightBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新标签位置和内容
-    tagLabel.style.display = "block";
-    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 22;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 0) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
-      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
-    }
-    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
-    tagLabel.style.top = "".concat(labelTop, "px");
-
-    // 发送消息到父窗口
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 鼠标离开事件处理
-  function handleMouseOut(e) {
-    if (!highlightEnabled) return;
-    var relatedTarget = e.relatedTarget;
-
-    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
-    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
-      return;
-    }
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: null,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 点击事件处理
-  function handleClick(e) {
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免处理 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 检查是否是交互元素，这些元素需要保留默认行为
-    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
-
-    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
-    if (highlightEnabled) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-    console.log("Element clicked:", {
-      tagName: target.tagName,
-      selector: selector,
-      rect: rect
-    });
-
-    // 立即更新选中高亮
-    updateSelectedHighlight(target);
-
-    // 隐藏悬停高亮，因为现在是选中状态
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-click",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 监听来自父窗口的消息
-  function handleParentMessage(event) {
-    console.log("Received message from parent:", event.data);
-    if (event.data.type === "iframe-highlight-toggle") {
-      var enabled = event.data.enabled;
-      console.log("Highlight toggle:", enabled);
-      if (enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "enable-iframe-highlight") {
-      console.log("Enable iframe highlight");
-      enableHighlight();
-    } else if (event.data.type === "disable-iframe-highlight") {
-      console.log("Disable iframe highlight");
-      disableHighlight();
-    } else if (event.data.type === "toggle-iframe-highlight") {
-      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
-      console.log("Toggle iframe highlight to:", _enabled);
-      if (_enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "update-selected-element") {
-      var selector = event.data.selector;
-      console.log("Update selected element with selector:", selector);
-      if (selector) {
-        try {
-          var element = document.querySelector(selector);
-          console.log("Found element by selector:", element);
-          updateSelectedHighlight(element);
-        } catch (error) {
-          console.warn("Failed to select element:", error);
-          updateSelectedHighlight(null);
-        }
-      } else {
-        updateSelectedHighlight(null);
-      }
-    } else if (event.data.type === "clear-selected-element") {
-      console.log("Clear selected element");
-      updateSelectedHighlight(null);
-    }
-  }
-
-  // 启用高亮功能
-  function enableHighlight() {
-    console.log("Enabling highlight");
-    document.addEventListener("mouseover", handleMouseOver, true);
-    document.addEventListener("mouseout", handleMouseOut, true);
-    document.addEventListener("click", handleClick, true);
-    highlightEnabled = true;
-    overlay.style.display = "block";
-  }
-
-  // 禁用高亮功能
-  function disableHighlight() {
-    console.log("Disabling highlight");
-    highlightEnabled = false;
-    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
-    // 这样可以保留选中状态的显示
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
-  }
-
-  // 完全禁用高亮功能（移除所有监听器）
-  function fullyDisableHighlight() {
-    console.log("Fully disabling highlight");
-    highlightEnabled = false;
-    document.removeEventListener("mouseover", handleMouseOver, true);
-    document.removeEventListener("mouseout", handleMouseOut, true);
-    document.removeEventListener("click", handleClick, true);
-    overlay.style.display = "none";
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    selectedBox.style.display = "none";
-    selectedLabel.style.display = "none";
-  }
-
-  // 添加事件监听
-  enableHighlight();
-  window.addEventListener("message", handleParentMessage);
-
-  // 暴露全局函数供外部调用
-  window.__iframeHighlightControl = {
-    enable: enableHighlight,
-    disable: disableHighlight,
-    fullyDisable: fullyDisableHighlight,
-    isEnabled: function isEnabled() {
-      return highlightEnabled;
-    },
-    getSelectedElement: function getSelectedElement() {
-      return selectedElement;
-    },
-    updateSelected: updateSelectedHighlight,
-    // 通过消息发送开关控制
-    sendToggleMessage: function sendToggleMessage(enabled) {
-      window.parent.postMessage({
-        type: 'iframe-highlight-status',
-        enabled: enabled || highlightEnabled,
-        source: 'iframe-highlight-injector'
-      }, '*');
-    }
-  };
-
-  // 通知父窗口脚本已加载
-  try {
-    window.parent.postMessage({
-      type: "iframe-highlight-ready",
-      data: {
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        timestamp: Date.now()
-      },
-      source: "iframe-highlight-injector"
-    }, "*");
-  } catch (error) {
-    console.warn("无法发送就绪消息到父窗口:", error);
-  }
-
-  // 清理函数
-  window.__iframeHighlightCleanup = function () {
-    fullyDisableHighlight();
-    window.removeEventListener("message", handleParentMessage);
-    if (overlay.parentElement) {
-      overlay.parentElement.removeChild(overlay);
-    }
-    delete window.__iframeHighlightInitialized;
-    delete window.__iframeHighlightCleanup;
-  };
-})();
 
 </script>
 </body>
