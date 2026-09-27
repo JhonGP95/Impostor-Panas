@@ -191,6 +191,11 @@ html, body {
   color: var(--text);
   padding: 18px 20px;
   font-size: 16px;
+  /* Evita que el navegador intercepte el gesto (scroll / long-press) */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform 0.12s ease;
 }
 
 .icon-btn {
@@ -9722,6 +9727,9 @@ function renderRevealScreen() {
   const g = STATE.game;
   if (!g) return;
 
+  // Limpiar cualquier intento de revelación pendiente de la pantalla anterior
+  resetHoldState();
+
   // Saltear jugadores que se fueron antes de ver su rol
   while (g.revealCount < g.players.length && !g.players[g.revealOrder[g.revealCount]].alive) {
     g.revealCount++;
@@ -9755,9 +9763,11 @@ function renderRevealScreen() {
             </div>
             <div class="hold-container" id="hold-container">
               <button class="btn btn-hold" id="btn-hold"
+                      onpointerdown="startHold(event)"
+                      onpointerup="endHold(event)"
+                      onpointerleave="endHold(event)"
                       ontouchstart="startHold(event)"
                       ontouchend="endHold(event)"
-                      ontouchcancel="endHold(event)"
                       onmousedown="startHold(event)"
                       onmouseup="endHold(event)"
                       onmouseleave="endHold(event)">
@@ -9765,6 +9775,7 @@ function renderRevealScreen() {
               </button>
               <div class="hold-progress"><div class="hold-fill" id="hold-fill"></div></div>
             </div>
+            <div class="caption" style="margin-top:10px;">¿No funciona? Tocá 5 veces seguidas el botón</div>
           </div>
         </div>
 
@@ -9789,14 +9800,21 @@ function renderRevealScreen() {
 
 let holdInterval = null;
 let holdProgress = 0;
+let holdActive = false;
+let holdTaps = 0;
+let holdTapsTimer = null;
 const HOLD_DURATION = 800;
 
 function startHold(e) {
-  e.preventDefault();
-  holdProgress = 0;
+  if (e) e.preventDefault();
+  if (holdActive) return; // ignora eventos duplicados (pointer + touch + mouse)
   const fill = $('hold-fill');
   if (!fill) return;
+  holdActive = true;
+  holdProgress = 0;
   playSound('hold');
+  const btn = $('btn-hold');
+  if (btn) btn.style.transform = 'scale(0.98)';
   clearInterval(holdInterval);
   holdInterval = setInterval(() => {
     holdProgress += (50 / HOLD_DURATION) * 100;
@@ -9809,11 +9827,36 @@ function startHold(e) {
 }
 
 function endHold(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
+  if (!holdActive) return; // ignora eventos duplicados o tardíos
+  holdActive = false;
   clearInterval(holdInterval);
+  const completed = holdProgress >= 100;
   holdProgress = 0;
   const fill = $('hold-fill');
   if (fill) fill.style.width = '0%';
+  const btn = $('btn-hold');
+  if (btn) btn.style.transform = '';
+  if (completed) return;
+
+  // Plan B anti-bloqueo: si en algún dispositivo mantener no llega a completar,
+  // 5 toques cortos seguidos también revelan.
+  clearTimeout(holdTapsTimer);
+  holdTaps++;
+  if (holdTaps >= 5) {
+    holdTaps = 0;
+    revealRole();
+  } else {
+    holdTapsTimer = setTimeout(() => { holdTaps = 0; }, 1600);
+  }
+}
+
+function resetHoldState() {
+  holdActive = false;
+  holdProgress = 0;
+  holdTaps = 0;
+  clearInterval(holdInterval);
+  clearTimeout(holdTapsTimer);
 }
 
 function revealRole() {
@@ -10662,6 +10705,10 @@ document.addEventListener('touchmove', e => {
     e.preventDefault();
   }
 }, { passive: false });
+
+// En Android, el long-press abre el menú contextual y cancela el gesto de
+// "mantener para revelar". Es un juego: nunca queremos ese menú.
+document.addEventListener('contextmenu', e => e.preventDefault());
 
 document.addEventListener('touchstart', () => initAudio(), { once: true });
 document.addEventListener('click', () => initAudio(), { once: true });
