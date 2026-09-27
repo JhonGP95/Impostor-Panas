@@ -185,7 +185,6 @@ html, body {
 
 .btn-hold {
   position: relative;
-  z-index: 1;
   background: var(--surface2);
   border: 2px solid rgba(168,85,247,0.5);
   color: var(--text);
@@ -511,15 +510,19 @@ html, body {
   color: var(--yellow);
 }
 .btn-power:active { transform: scale(0.97); }
-.btn-power.btn-shield {
-  border-color: rgba(77,159,255,0.4);
-  background: rgba(77,159,255,0.08);
-  color: var(--blue);
-}
-.btn-power.btn-oracle {
+.btn-power.btn-sacrificio {
   border-color: rgba(168,85,247,0.4);
   background: rgba(168,85,247,0.08);
   color: var(--violet);
+}
+.btn-power.btn-revive {
+  border-color: rgba(57,255,20,0.4);
+  background: rgba(57,255,20,0.08);
+  color: var(--green);
+}
+.btn-power.btn-power-locked {
+  opacity: 0.45;
+  filter: grayscale(0.5);
 }
 
 /* ================================================================
@@ -683,6 +686,7 @@ html, body {
 .hold-progress {
   position: absolute;
   inset: 0;
+  z-index: 2; /* el relleno cubre TODO el botón, por encima del fondo */
   border-radius: var(--radius);
   overflow: hidden;
   pointer-events: none;
@@ -692,9 +696,97 @@ html, body {
   left: 0; top: 0; bottom: 0;
   width: 0%;
   background: linear-gradient(90deg, var(--violet), var(--cyan));
-  opacity: 0.3;
+  opacity: 0.55;
+  box-shadow: 0 0 22px rgba(168,85,247,0.45);
   transition: width 0.05s linear;
 }
+
+/* ================================================================
+   ANIMACIÓN DE REVELACIÓN
+   ================================================================ */
+#reveal-pre {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+#reveal-pre.leaving {
+  opacity: 0;
+  transform: scale(0.9) translateY(8px);
+}
+
+@keyframes cardRevealIn {
+  0%   { opacity: 0; transform: scale(0.55) rotateX(14deg); }
+  60%  { opacity: 1; transform: scale(1.05) rotateX(0deg); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  70%  { opacity: 1; transform: scale(1.18); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes wordIn {
+  0%   { opacity: 0; filter: blur(12px); letter-spacing: 0.3em; transform: scale(1.12); }
+  100% { opacity: 1; filter: blur(0); letter-spacing: normal; transform: scale(1); }
+}
+@keyframes flashOut {
+  0%   { opacity: 0; transform: scale(0.5); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+@keyframes cardShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes pulse-cyan {
+  0%, 100% { box-shadow: 0 0 40px rgba(0,245,255,0.15); }
+  50%      { box-shadow: 0 0 70px rgba(0,245,255,0.32); }
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+
+.reveal-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  animation: flashOut 0.75s ease-out both;
+}
+
+.lock-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* ================================================================
+   ANIMACIONES DE PODERES
+   ================================================================ */
+@keyframes riseUp {
+  0%   { opacity: 0; transform: translateY(26px) scale(0.7); }
+  60%  { opacity: 1; transform: translateY(-6px) scale(1.08); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes soulRise {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.85); filter: blur(8px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes haloGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255,214,0,0.55)); transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 18px rgba(255,214,0,0.95)); transform: scale(1.06); }
+}
+@keyframes powerIn {
+  0%   { opacity: 0; transform: scale(0.5) rotate(-8deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.anim-rise   { animation: riseUp 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+.anim-soul   { animation: soulRise 0.7s ease both; }
+.anim-halo   { animation: haloGlow 1.6s ease-in-out infinite; }
+.anim-power  { animation: powerIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
 
 /* ================================================================
    OTROS
@@ -855,14 +947,24 @@ function playSound(type) {
       playTone(60, 0.7, 'square', 0.3);
       setTimeout(() => playTone(45, 0.6, 'sawtooth', 0.25), 120);
       break;
-    case 'shield':
-      playTone(660, 0.12, 'sine', 0.2);
-      setTimeout(() => playTone(880, 0.2, 'sine', 0.25), 90);
+    case 'sacrifice':
+      // Tono oscuro y ritual para el sacrificio
+      playTone(220, 0.3, 'sawtooth', 0.2);
+      setTimeout(() => playTone(165, 0.35, 'sawtooth', 0.2), 220);
+      setTimeout(() => playTone(110, 0.6, 'sine', 0.25), 440);
       break;
-    case 'oracle':
-      playTone(740, 0.18, 'sine', 0.18);
-      setTimeout(() => playTone(554, 0.25, 'sine', 0.18), 140);
-      setTimeout(() => playTone(880, 0.3, 'sine', 0.2), 300);
+    case 'revive':
+      // Ascenso cálido y esperanzador
+      playTone(440, 0.15, 'sine', 0.2);
+      setTimeout(() => playTone(554, 0.15, 'sine', 0.22), 120);
+      setTimeout(() => playTone(659, 0.2, 'sine', 0.24), 240);
+      setTimeout(() => playTone(880, 0.35, 'sine', 0.28), 360);
+      break;
+    case 'angel':
+      // Destello brillante del Ángel Guardián
+      playTone(1175, 0.12, 'sine', 0.16);
+      setTimeout(() => playTone(1568, 0.2, 'sine', 0.18), 80);
+      setTimeout(() => playTone(2093, 0.3, 'sine', 0.14), 180);
       break;
   }
 }
@@ -871,7 +973,7 @@ function playSound(type) {
    PWA - MANIFEST DINÁMICO + ÍCONOS + INSTALACIÓN + SERVICE WORKER
    ================================================================ */
 const SW_SOURCE =
-  "const CACHE='el-impostor-v3';" +
+  "const CACHE='el-impostor-v0-4';" +
   "const ASSETS=['./','./index.html'];" +
   "self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});" +
   "self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});" +
@@ -9005,6 +9107,44 @@ const BASE_DE_DATOS = [
 /* ================================================================
    ESTADO & CONSTANTES
    ================================================================ */
+/* ================================================================
+   ⚖️ BALANCE — TODOS los parámetros de balance del juego en UN lugar.
+   Ajustá acá los porcentajes y cantidades; la UI se adapta sola.
+   ================================================================ */
+const BALANCE = {
+  // Reparto equilibrado de impostores: peso de repetir vs el resto
+  IMPOSTOR_COOLDOWN_WEIGHT: 0.35,        // 0.35 ≈ 3 veces menos probable
+
+  // 💣 Kamikaze (poder de impostores): probabilidad de que UN impostor lo tenga
+  KAMIKAZE_CHANCE: 0.15,                 // rango deseado 0.10 – 0.20
+  KAMIKAZE_COLLATERAL_CONSUMES_BULLETS: false, // las muertes colaterales gastan bala
+
+  // 😇 Ángel Guardián (poder de inocentes): probabilidad por inocente, por ronda
+  ANGEL_GUARDIAN_CHANCE: 0.10,
+
+  // 💥 Granada: resultados y cantidad de víctimas
+  GRENADE: {
+    P_ONLY_INNOCENTS: 0.50,              // mata solo inocentes
+    P_MIXED: 0.35,                       // mata mezcla (garantiza 1 impostor si hay)
+    P_ONLY_IMPOSTORS: 0.15,              // mata solo impostores
+    VICTIM_DIVISOR: 3,                   // víctimas = max(1, floor(vivos / 3))
+    MIN_VICTIMS: 1
+  },
+
+  // ⚔️ Sacrificio: grupo de sospechosos revelado
+  SACRIFICIO: {
+    GROUP_MIN: 3,                        // tamaño del grupo (entre 3 y 4)
+    GROUP_MAX: 4,
+    CONSUMES_BULLET: false               // la víctima del sacrificio gasta bala
+  },
+
+  // 🕊️ Revivir: costos y límites
+  REVIVIR: {
+    MIN_BULLETS_REQUIRED: 2,             // consume 1; con menos de 2 queda bloqueado
+    CONSUMES_BULLET: true
+  }
+};
+
 const STATE = {
   config: {
     numPlayers: 5,
@@ -9016,7 +9156,7 @@ const STATE = {
     withHints: true,
     selectedCategories: [],
     playerNames: [],
-    powers: { grenade: false, shield: false, oracle: false }
+    powers: { grenade: false, sacrificio: false, revivir: false, kamikaze: true, angel: true }
   },
   game: null,
   currentScreen: 'splash'
@@ -9037,17 +9177,29 @@ const POWERS_INFO = {
   grenade: {
     emoji: '💥',
     name: 'Granada',
-    desc: 'Alto riesgo, pura suerte: 50% mata 2 inocentes + 1 impostor/undercover · 49% mata 3 inocentes · 1% mata 2 impostores. Objetivos al azar.'
+    desc: `Alto riesgo, pura suerte: ${Math.round(BALANCE.GRENADE.P_ONLY_INNOCENTS * 100)}% mata solo inocentes · ${Math.round(BALANCE.GRENADE.P_MIXED * 100)}% mata mezcla (con al menos 1 impostor) · ${Math.round(BALANCE.GRENADE.P_ONLY_IMPOSTORS * 100)}% mata solo impostores. Víctimas según jugadores vivos.`
   },
-  shield: {
-    emoji: '🛡️',
-    name: 'Chaleco Antibalas',
-    desc: 'Una vez por partida, al confirmar una votación pueden anularla: nadie muere y no se gasta bala. Si salvaron a un impostor… mala suerte.'
+  sacrificio: {
+    emoji: '⚔️',
+    name: 'Sacrificio',
+    desc: `Elimina a 1 inocente al azar y a cambio revela un grupo de ${BALANCE.SACRIFICIO.GROUP_MIN}-${BALANCE.SACRIFICIO.GROUP_MAX} jugadores vivos entre los que hay al menos 1 impostor asegurado. Sin decir quién.`
   },
-  oracle: {
-    emoji: '🔮',
-    name: 'El Oráculo',
-    desc: 'Revela una pista extra de la palabra secreta para toda la sala. Ojo: el impostor también la escucha.'
+  revivir: {
+    emoji: '🕊️',
+    name: 'Revivir',
+    desc: `Trae de vuelta a un inocente eliminado. Cuesta 1 bala (bloqueado si queda solo 1) y el grupo debe leer en voz alta una pista extra de la palabra… que el impostor también escucha.`
+  },
+  kamikaze: {
+    emoji: '💣',
+    name: 'Kamikaze (impostores)',
+    desc: `Siempre activo: ${Math.round(BALANCE.KAMIKAZE_CHANCE * 100)}% de las rondas UN impostor lo recibe en secreto. Cuando lo votan, puede decidir eliminar a sus vecinos de la ronda… inocentes o no.`,
+    alwaysOn: true
+  },
+  angel: {
+    emoji: '😇',
+    name: 'Ángel Guardián (inocentes)',
+    desc: `Siempre activo: cada inocente tiene un ${Math.round(BALANCE.ANGEL_GUARDIAN_CHANCE * 100)}% de tener un ángel esta ronda. Si la granada o el kamikaze lo alcanzan, el ángel lo salva.`,
+    alwaysOn: true
   }
 };
 
@@ -9106,14 +9258,14 @@ function loadFromStorage() {
       const powers = d.powers;
       delete d.powers;
       Object.assign(STATE.config, d);
+      // Solo aceptar claves de poderes conocidas (ignora poderes eliminados)
       if (powers && typeof powers === 'object') {
-        STATE.config.powers = Object.assign(STATE.config.powers, powers);
+        Object.keys(STATE.config.powers).forEach(k => {
+          if (typeof powers[k] === 'boolean') STATE.config.powers[k] = powers[k];
+        });
       }
       if (!Array.isArray(STATE.config.selectedCategories)) STATE.config.selectedCategories = [];
       if (!Array.isArray(STATE.config.playerNames)) STATE.config.playerNames = [];
-      if (!STATE.config.powers || typeof STATE.config.powers !== 'object') {
-        STATE.config.powers = { grenade: false, shield: false, oracle: false };
-      }
     }
   } catch(e) {}
 }
@@ -9145,15 +9297,15 @@ function navigate(toId, back = false) {
     if (sc !== next && sc !== current) sc.classList.remove('active', 'exit-left');
   });
 
-  requestAnimationFrame(() => {
-    next.style.transform = back ? 'translateX(-100%)' : 'translateX(100%)';
-    next.classList.remove('exit-left');
-    next.classList.add('active');
-    requestAnimationFrame(() => {
-      next.style.transition = '';
-      next.style.transform = '';
-    });
-  });
+  // Entrada 100% sincrónica (sin rAF): en pestañas en segundo plano o con
+  // throttling, requestAnimationFrame puede retrasarse indefinidamente o
+  // ejecutarse tarde y reactivar una pantalla equivocada. El reflow forzado
+  // registra el punto de partida de la transición de forma determinista.
+  next.style.transform = back ? 'translateX(-100%)' : '';
+  void next.offsetWidth; // fuerza reflow
+  next.classList.remove('exit-left');
+  next.classList.add('active');
+  if (back) next.style.transform = '';
 
   STATE.currentScreen = toId;
   playSound('whoosh');
@@ -9208,7 +9360,7 @@ function renderSplash() {
         El <span class="glow-violet">Impostor</span>
       </div>
       <div style="color:var(--muted);font-size:15px;margin-top:8px;letter-spacing:0.06em;text-transform:uppercase;">
-        Chazey Panas Edition <span style="color:var(--cyan);">v3.0</span>
+        Chazey Panas Edition <span style="color:var(--cyan);">v0.4</span>
       </div>
     </div>
     <button class="btn btn-ghost btn-sm install-btn anim-fade-up delay-3" style="display:none;width:auto;margin-top:36px;" onclick="handleInstallClick()">📲 Instalar App</button>
@@ -9250,6 +9402,9 @@ function renderConfig() {
   const powerCards = Object.keys(POWERS_INFO).map(key => {
     const info = POWERS_INFO[key];
     const on = p.powers[key];
+    const tag = info.alwaysOn
+      ? `<span class="badge" style="font-size:9.5px;padding:2px 8px;background:rgba(255,255,255,0.06);">SIEMPRE ACTIVO</span>`
+      : `<span class="badge" style="font-size:9.5px;padding:2px 8px;background:rgba(255,214,0,0.08);border-color:rgba(255,214,0,0.3);color:var(--yellow);">1 USO</span>`;
     return `
     <div class="power-card">
       <div class="power-card-head">
@@ -9260,6 +9415,7 @@ function renderConfig() {
         </label>
       </div>
       <div class="power-desc">${info.desc}</div>
+      <div style="margin-top:8px;">${tag}</div>
     </div>`;
   }).join('');
 
@@ -9582,8 +9738,6 @@ function toggleAllCategories() {
 /* ================================================================
    INICIO DE PARTIDA
    ================================================================ */
-// Peso de repetir como impostor: 0.35 ≈ 3 veces menos probable que el resto
-const IMPOSTOR_COOLDOWN_WEIGHT = 0.35;
 
 function loadLastImpostors() {
   try {
@@ -9605,7 +9759,7 @@ function pickImpostorsBalanced(n, numImp, lastImpostors, names) {
   const lastSet = new Set((lastImpostors || []).map(s => String(s).trim().toLowerCase()));
   let pool = [...Array(n).keys()].map(i => {
     const nm = String(names[i] || '').trim().toLowerCase();
-    return { i, w: lastSet.has(nm) ? IMPOSTOR_COOLDOWN_WEIGHT : 1 };
+    return { i, w: lastSet.has(nm) ? BALANCE.IMPOSTOR_COOLDOWN_WEIGHT : 1 };
   });
   const picked = [];
   while (picked.length < numImp && pool.length > 0) {
@@ -9667,11 +9821,26 @@ function startGame() {
     isUndercover: ucSet.has(i),
     alive: true,
     leftEarly: false,
+    kamikaze: false,
+    angel: false,
     color: colorOf(i),
     avatar: avatarOf(i)
   }));
 
   saveLastImpostors(players);
+
+  // 💣 Kamikaze: como mucho UN impostor por ronda lo recibe (probabilidad configurable)
+  const aliveImpostors = players.filter(pl => pl.isImpostor);
+  if (cfg.powers.kamikaze && aliveImpostors.length > 0 && Math.random() < BALANCE.KAMIKAZE_CHANCE) {
+    rand(aliveImpostors).kamikaze = true;
+  }
+
+  // 😇 Ángel Guardián: cada inocente puede tenerlo con probabilidad configurable
+  if (cfg.powers.angel) {
+    players.forEach(pl => {
+      if (!pl.isImpostor && Math.random() < BALANCE.ANGEL_GUARDIAN_CHANCE) pl.angel = true;
+    });
+  }
 
   // Palabras de los undercovers (distintas entre sí, misma categoría)
   const undercoverWords = {};
@@ -9701,10 +9870,12 @@ function startGame() {
     eliminated: [],
     powersEnabled: {
       grenade: !!cfg.powers.grenade,
-      shield: !!cfg.powers.shield,
-      oracle: !!cfg.powers.oracle
+      sacrificio: !!cfg.powers.sacrificio,
+      revivir: !!cfg.powers.revivir,
+      kamikaze: !!cfg.powers.kamikaze,
+      angel: !!cfg.powers.angel
     },
-    powersUsed: { grenade: false, shield: false, oracle: false },
+    powersUsed: { grenade: false, sacrificio: false, revivir: false },
     starter: null
   };
 
@@ -9756,7 +9927,7 @@ function renderRevealScreen() {
       <div class="anim-fade-up delay-2" style="width:100%;margin-top:28px;">
         <div id="reveal-pre" style="width:100%;">
           <div class="card-glass" style="padding:28px;border-color:rgba(168,85,247,0.3);">
-            <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+            <div class="lock-breathe" style="font-size:40px;margin-bottom:12px;">🔒</div>
             <div class="title-md" style="color:var(--muted);margin-bottom:8px;">Pantalla protegida</div>
             <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
               Solo <strong style="color:${player.color}">${esc(player.name)}</strong> debe ver esto
@@ -9779,7 +9950,7 @@ function renderRevealScreen() {
           </div>
         </div>
 
-        <div id="reveal-card" style="display:none;width:100%;"></div>
+        <div id="reveal-card" style="display:none;width:100%;perspective:900px;"></div>
       </div>
     </div>
 
@@ -9868,59 +10039,101 @@ function revealRole() {
   const footer = $('reveal-footer');
   if (!pre || !card || !footer) return;
 
-  pre.style.display = 'none';
-  footer.style.display = '';
   playSound('reveal');
-  card.style.display = '';
+  vibrate(50);
 
-  if (player.isUndercover) {
+  const turnAtStart = g.revealCount;
+  const isImp = player.isImpostor;
+  const isUC = player.isUndercover;
+
+  // Secuencia: 1) el bloqueo se desvanece  2) entra la carta con destello
+  pre.classList.add('leaving');
+  setTimeout(() => {
+    // Si mientras tanto la pantalla pasó a otro turno, no tocar nada
+    if (!STATE.game || STATE.game.revealCount !== turnAtStart) return;
+
+    const preNow = $('reveal-pre');
+    const cardNow = $('reveal-card');
+    const footerNow = $('reveal-footer');
+    if (!cardNow) return;
+
+    if (preNow) preNow.style.display = 'none';
+    cardNow.style.display = '';
+    if (footerNow) {
+      footerNow.style.display = '';
+      footerNow.classList.add('anim-fade-up', 'delay-3');
+    }
+
+    // Destello del color del rol detrás de la carta
+    const flashColor = isImp ? 'rgba(255,49,49,0.4)'
+      : isUC ? 'rgba(0,245,255,0.35)'
+      : 'rgba(57,255,20,0.3)';
+    const screen = $('screen-reveal');
+    if (screen) {
+      const f = document.createElement('div');
+      f.className = 'reveal-flash';
+      f.style.background = `radial-gradient(circle at 50% 42%, ${flashColor} 0%, transparent 65%)`;
+      screen.appendChild(f);
+      setTimeout(() => f.remove(), 850);
+    }
+  }, 180);
+
+  // Animaciones combinadas: entrada + pulso de color (los delays escalonan el contenido)
+  const A_CARD = isImp
+    ? 'animation: cardRevealIn .5s cubic-bezier(.34,1.56,.64,1) both, cardShake .4s .55s ease, pulse-red 2.4s .9s infinite;'
+    : isUC
+      ? 'animation: cardRevealIn .5s cubic-bezier(.34,1.56,.64,1) both, pulse-cyan 2.4s .9s infinite;'
+      : 'animation: cardRevealIn .5s cubic-bezier(.34,1.56,.64,1) both, pulse-glow-green 2.4s .9s infinite;';
+  const A_POP  = 'animation: popIn .45s .28s cubic-bezier(.34,1.56,.64,1) both;';
+  const A_UP1  = 'animation: fadeSlideUp .4s .4s ease both;';
+  const A_UP2  = 'animation: fadeSlideUp .4s .52s ease both;';
+  const A_UP3  = 'animation: fadeSlideUp .45s .64s ease both;';
+  const A_WORD = 'animation: wordIn .65s .5s ease both;';
+
+  if (isUC) {
     card.innerHTML = `
-      <div class="role-card anim-scale" style="border-color:rgba(0,245,255,0.4);box-shadow:0 0 60px rgba(0,245,255,0.15);">
-        <div style="font-size:52px;margin-bottom:16px;">🎭</div>
-        <div class="badge badge-undercover" style="margin-bottom:12px;">UNDERCOVER</div>
-        <div class="title-xl glow-cyan" style="margin-bottom:8px;">${esc(g.undercoverWords[player.id] || '?')}</div>
-        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+      <div class="role-card" style="border-color:rgba(0,245,255,0.4);box-shadow:0 0 60px rgba(0,245,255,0.15);${A_CARD}">
+        <div style="font-size:52px;margin-bottom:16px;${A_POP}">🎭</div>
+        <div class="badge badge-undercover" style="margin-bottom:12px;${A_UP1}">UNDERCOVER</div>
+        <div class="title-xl glow-cyan" style="margin-bottom:8px;${A_WORD}">${esc(g.undercoverWords[player.id] || '?')}</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
           Tu palabra es <strong style="color:var(--cyan)">diferente</strong> a la del grupo.<br>
           Descubrí la palabra real sin que te atrapen.
         </div>
-        <div style="margin-top:20px;padding:14px 16px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:var(--radius-sm);">
+        <div style="margin-top:20px;padding:14px 16px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:var(--radius-sm);${A_UP3}">
           <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:6px;">⚠️ Recuérdalo</div>
           <div class="body-md" style="color:var(--muted);font-size:13px;">Si te eliminan, vas a poder adivinar la palabra real. Si aciertas, ¡ganás!</div>
         </div>
-        <div style="margin-top:12px;">
+        <div style="margin-top:12px;${A_UP3}">
           <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
           <div class="body-md" style="color:var(--cyan);">${esc(g.category)}</div>
         </div>
       </div>`;
-  } else if (player.isImpostor) {
+  } else if (isImp) {
     card.innerHTML = `
-      <div class="role-card role-card-impostor anim-scale" style="animation:pulse-red 2s infinite;">
-        <div style="font-size:52px;margin-bottom:16px;animation:glitch 3s infinite;">💀</div>
-        <div class="badge badge-impostor" style="margin-bottom:12px;">IMPOSTOR</div>
-        <div class="title-xl glow-red" style="margin-bottom:8px;">ERES EL<br>IMPOSTOR</div>
-        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+      <div class="role-card role-card-impostor" style="${A_CARD}">
+        <div style="font-size:52px;margin-bottom:16px;animation: popIn .45s .28s cubic-bezier(.34,1.56,.64,1) both, glitch 3s 1.4s infinite;">💀</div>
+        <div class="badge badge-impostor" style="margin-bottom:12px;${A_UP1}">IMPOSTOR</div>
+        <div class="title-xl glow-red" style="margin-bottom:8px;${A_WORD}">ERES EL<br>IMPOSTOR</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
           Nadie conoce tu secreto.<br>Fingí que la sabés.
         </div>
         ${g.currentHint ? `
-        <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);">
+        <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);${A_UP3}">
           <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para vos</div>
           <div class="title-md glow-red">${esc(g.currentHint)}</div>
         </div>` : ''}
-        <div style="margin-top:12px;">
-          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
-          <div class="body-md" style="color:var(--red);">${esc(g.category)}</div>
-        </div>
       </div>`;
   } else {
     card.innerHTML = `
-      <div class="role-card role-card-human anim-scale" style="animation:pulse-glow-green 2s infinite;">
-        <div style="font-size:52px;margin-bottom:16px;">✅</div>
-        <div class="badge badge-human" style="margin-bottom:12px;">INOCENTE</div>
-        <div class="title-xl glow-green" style="margin-bottom:8px;">${esc(g.secretWord)}</div>
-        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+      <div class="role-card role-card-human" style="${A_CARD}">
+        <div style="font-size:52px;margin-bottom:16px;${A_POP}">✅</div>
+        <div class="badge badge-human" style="margin-bottom:12px;${A_UP1}">INOCENTE</div>
+        <div class="title-xl glow-green" style="margin-bottom:8px;${A_WORD}">${esc(g.secretWord)}</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
           Esta es la palabra secreta.<br>¡No dejes que el impostor la adivine!
         </div>
-        <div style="margin-top:12px;">
+        <div style="margin-top:12px;${A_UP3}">
           <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
           <div class="body-md" style="color:var(--green);">${esc(g.category)}</div>
         </div>
@@ -10102,10 +10315,6 @@ function renderDiscussionScreen() {
   const starter = rand(alivePlayers);
   g.starter = starter;
 
-  const oracleBtn = (g.powersEnabled.oracle && !g.powersUsed.oracle)
-    ? `<button class="btn btn-power btn-oracle" onclick="useOracle()">🔮 Poder: El Oráculo</button>`
-    : '';
-
   screen.innerHTML = `
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 20px;text-align:center;">
       <div class="anim-fade-up">
@@ -10126,7 +10335,6 @@ function renderDiscussionScreen() {
     </div>
 
     <div class="screen-footer">
-      ${oracleBtn}
       <button class="btn btn-primary anim-fade-up delay-3" onclick="goToVoting()">
         <span>🗳️</span> Ir a Votación
       </button>
@@ -10205,12 +10413,17 @@ function renderVotingScreen() {
   }).join('');
 
   const grenadeBtn = (g.powersEnabled.grenade && !g.powersUsed.grenade)
-    ? `<button class="btn btn-power" onclick="useGrenade()">💥 Poder: Granada</button>`
+    ? `<button class="btn btn-power" onclick="useGrenade()">💥 Granada</button>`
     : '';
-  const oracleBtn = (g.powersEnabled.oracle && !g.powersUsed.oracle)
-    ? `<button class="btn btn-power btn-oracle" onclick="useOracle()">🔮 Poder: El Oráculo</button>`
+  const sacrificioBtn = (g.powersEnabled.sacrificio && !g.powersUsed.sacrificio)
+    ? `<button class="btn btn-power btn-sacrificio" onclick="useSacrificio()">⚔️ Sacrificio</button>`
     : '';
-  const hasPowers = grenadeBtn || oracleBtn;
+  // Revivir aparece bloqueado (con explicación al tocarlo) si no hay balas suficientes
+  const revivirLocked = revivirBlocked();
+  const revivirBtn = (g.powersEnabled.revivir && !g.powersUsed.revivir)
+    ? `<button class="btn btn-power btn-revive ${revivirLocked ? 'btn-power-locked' : ''}" onclick="useRevivir()">🕊️ Revivir${revivirLocked ? ' 🔒' : ''}</button>`
+    : '';
+  const hasPowers = grenadeBtn || sacrificioBtn || revivirBtn;
 
   screen.innerHTML = `
     <div class="screen-header">
@@ -10241,7 +10454,7 @@ function renderVotingScreen() {
     </div>
 
     <div class="screen-footer">
-      ${hasPowers ? `<div class="controls-row">${grenadeBtn}${oracleBtn}</div>` : ''}
+      ${hasPowers ? `<div class="controls-row">${grenadeBtn}${sacrificioBtn}${revivirBtn}</div>` : ''}
       <div class="controls-row">
         <button class="btn btn-ghost btn-sm" onclick="openDeletePlayer()">🗑️ Jugador se fue</button>
         <button class="btn btn-danger-ghost btn-sm" onclick="confirmCancelRound()">✖️ Cancelar ronda</button>
@@ -10257,11 +10470,6 @@ function confirmVote(playerId) {
 
   playSound('tap');
 
-  const shieldAvailable = g.powersEnabled.shield && !g.powersUsed.shield;
-  const shieldBtn = shieldAvailable
-    ? `<button class="btn btn-power btn-shield" onclick="useShield(${playerId})">🛡️ Chaleco: anular este voto</button>`
-    : '';
-
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:40px;margin-bottom:12px;">${p.avatar}</div>
@@ -10270,35 +10478,10 @@ function confirmVote(playerId) {
       <div class="body-md" style="color:var(--muted);margin-bottom:24px;">Esta acción no se puede deshacer.</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn btn-red" onclick="executeVote(${playerId})">⚡ Confirmar Eliminación</button>
-        ${shieldBtn}
         <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       </div>
     </div>
   `);
-}
-
-function useShield(playerId) {
-  const g = STATE.game;
-  if (!g.powersEnabled.shield || g.powersUsed.shield) return;
-  g.powersUsed.shield = true;
-  playSound('shield');
-
-  openModal(`
-    <div style="text-align:center;">
-      <div style="font-size:48px;margin-bottom:12px;">🛡️</div>
-      <div class="title-md" style="color:var(--blue);text-shadow:0 0 24px rgba(77,159,255,0.5);margin-bottom:8px;">¡Chaleco activado!</div>
-      <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
-        El voto contra <strong style="color:var(--text)">${esc(g.players.find(pl => pl.id === playerId).name)}</strong> quedó anulado.
-        Nadie muere y no se gastó bala.
-      </div>
-      <button class="btn btn-primary" onclick="closeModalAndBackToVote()">Continuar</button>
-    </div>
-  `);
-}
-
-function closeModalAndBackToVote() {
-  closeModal();
-  renderVotingScreen();
 }
 
 function executeVote(playerId) {
@@ -10314,17 +10497,15 @@ function executeVote(playerId) {
 
   if (p.isUndercover) {
     if (g.bullets !== Infinity) g.bullets--;
-    // Última oportunidad del undercover: adivinar la palabra real
+    // Última oportunidad del undercover: adivinar la palabra real.
+    // Sin categoría en pantalla: el undercover ya la conoce y mostrarla
+    // públicamente le filtraría información al impostor.
     openModal(`
       <div style="text-align:center;">
         <div style="font-size:48px;margin-bottom:12px;">🎭</div>
         <div class="title-md" style="color:var(--cyan);margin-bottom:8px;">${esc(p.name)} era el Undercover</div>
         <div class="body-md" style="color:var(--muted);margin-bottom:6px;">Su palabra era: <strong style="color:var(--cyan)">${esc(g.undercoverWords[p.id] || '?')}</strong></div>
         <div class="body-md" style="margin-bottom:20px;">¿Puede adivinar la palabra real antes de caer?</div>
-        <div style="padding:16px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:var(--radius-sm);margin-bottom:24px;">
-          <div class="caption" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">Categoría</div>
-          <div class="body-md" style="color:var(--cyan);font-weight:700;">${esc(g.category)}</div>
-        </div>
         <div style="display:flex;flex-direction:column;gap:10px;">
           <button class="btn btn-primary" onclick="undercoverGuessResult(true, ${p.id})" style="background:linear-gradient(135deg,var(--cyan),var(--blue));">✅ ¡Adivinó la palabra!</button>
           <button class="btn btn-red" onclick="undercoverGuessResult(false, ${p.id})">❌ No adivinó</button>
@@ -10337,6 +10518,12 @@ function executeVote(playerId) {
   if (!p.isImpostor) {
     // Inocente eliminado por votación: se gasta una bala
     if (g.bullets !== Infinity) g.bullets--;
+  }
+
+  // 💣 Kamikaze: si el impostor eliminado lo tenía, decide si activarlo
+  if (p.isImpostor && p.kamikaze && g.powersEnabled.kamikaze) {
+    openKamikazeModal(p);
+    return;
   }
 
   const v = checkVictory();
@@ -10383,6 +10570,7 @@ function useGrenade() {
   if (!g.powersEnabled.grenade || g.powersUsed.grenade) return;
   playSound('tap');
 
+  const GB = BALANCE.GRENADE;
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:48px;margin-bottom:12px;">💥</div>
@@ -10391,9 +10579,9 @@ function useGrenade() {
         Resultado totalmente aleatorio. Solo se puede usar <strong>una vez</strong> en toda la partida.
       </div>
       <div class="info-note" style="text-align:left;margin-bottom:24px;">
-        💣 50% · 2 inocentes + 1 impostor/undercover<br>
-        😬 49% · 3 inocentes<br>
-        🍀 1% · 2 impostores
+        😬 ${Math.round(GB.P_ONLY_INNOCENTS * 100)}% · solo inocentes<br>
+        💥 ${Math.round(GB.P_MIXED * 100)}% · mezcla, con al menos 1 impostor<br>
+        🍀 ${Math.round(GB.P_ONLY_IMPOSTORS * 100)}% · solo impostores
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn btn-red" onclick="launchGrenade()">💥 Lanzar</button>
@@ -10407,81 +10595,120 @@ function launchGrenade() {
   const g = STATE.game;
   g.powersUsed.grenade = true;
 
-  const roll = Math.random() * 100;
-  const aliveInnocents = g.players.filter(pl => pl.alive && !pl.isImpostor);
-  const aliveImpostors = g.players.filter(pl => pl.alive && pl.isImpostor);
-  const impSide = g.players.filter(pl => pl.alive && (pl.isImpostor || pl.isUndercover));
+  const GB = BALANCE.GRENADE;
+  const alive = g.players.filter(pl => pl.alive);
+  const innocents = alive.filter(pl => !pl.isImpostor); // incluye undercover
+  const impostors = alive.filter(pl => pl.isImpostor);
 
-  let victims = [];
+  // Víctimas escaladas a los jugadores vivos
+  const wanted = Math.max(GB.MIN_VICTIMS, Math.floor(alive.length / GB.VICTIM_DIVISOR));
+  const victimCount = Math.min(wanted, alive.length);
+
+  const roll = Math.random() * 100;
+  let targets = [];
   let title, subtitle, emoji;
 
-  if (roll < 1) {
+  if (roll < GB.P_ONLY_IMPOSTORS * 100) {
+    // 🍀 Solo impostores; si no alcanzan, completar con inocentes
     emoji = '🍀';
-    title = '¡MILAGRO!';
-    subtitle = 'La granada cayó del lado bueno…';
-    victims = pickRandom(aliveImpostors, 2);
-  } else if (roll < 50) {
-    emoji = '😬';
-    title = 'KA-BOOM';
-    subtitle = 'La explosión alcanzó solo a inocentes…';
-    victims = pickRandom(aliveInnocents, 3);
-  } else {
+    title = '¡GOLPE DE SUERTE!';
+    subtitle = 'La explosión alcanzó solo al lado impostor.';
+    const imps = pickRandom(impostors, victimCount);
+    targets = imps.concat(pickRandom(innocents, victimCount - imps.length));
+  } else if (roll < (GB.P_ONLY_IMPOSTORS + GB.P_MIXED) * 100) {
+    // 💥 Mixto: garantiza al menos 1 impostor si hay alguno vivo
     emoji = '💥';
     title = 'KA-BOOM';
     subtitle = 'La explosión alcanzó a inocentes y a un infiltrado.';
-    victims = [
-      ...pickRandom(aliveInnocents, 2),
-      ...pickRandom(impSide, 1)
-    ];
-    // Seguridad: evitar duplicados (poco probable pero posible en grupos chicos)
-    const seen = new Set();
-    victims = victims.filter(v => !seen.has(v.id) && seen.add(v.id));
+    const imps = impostors.length > 0 ? pickRandom(impostors, 1) : [];
+    targets = imps.concat(pickRandom(innocents, victimCount - imps.length));
+    if (targets.length < victimCount) {
+      // Muy pocos vivos: completar con impostores restantes
+      targets = targets.concat(pickRandom(
+        impostors.filter(x => !targets.includes(x)),
+        victimCount - targets.length
+      ));
+    }
+  } else {
+    // 😬 Solo inocentes; si no alcanzan, completar con impostores
+    emoji = '😬';
+    title = 'KA-BOOM';
+    subtitle = 'La explosión alcanzó solo a inocentes…';
+    const innos = pickRandom(innocents, victimCount);
+    targets = innos.concat(pickRandom(impostors, victimCount - innos.length));
   }
 
-  victims.forEach(v => {
-    v.alive = false;
-    g.eliminated.push(v);
-  });
-
-  playSound('explosion');
-  vibrate([120, 60, 220]);
-
-  const flash = document.createElement('div');
-  flash.className = 'explosion-flash';
-  document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 900);
-  document.body.classList.add('shake');
-  setTimeout(() => document.body.classList.remove('shake'), 600);
-
-  const victimRows = victims.length > 0
-    ? victims.map(pl => {
-        let badge;
-        if (pl.isImpostor) badge = `<span class="badge badge-impostor">Impostor</span>`;
-        else if (pl.isUndercover) badge = `<span class="badge badge-undercover">Undercover</span>`;
-        else badge = `<span class="badge badge-human">Inocente</span>`;
-        return `
-        <div class="vote-item" style="opacity:0.85;">
-          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-            <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;filter:grayscale(0.7);">${pl.avatar}</div>
-            <div class="body-md" style="font-weight:600;">${esc(pl.name)}</div>
-          </div>
-          ${badge}
-        </div>`;
-      }).join('')
-    : `<div class="body-md" style="color:var(--muted);padding:12px;">Nadie… de pura suerte.</div>`;
-
-  openModal(`
-    <div style="text-align:center;">
-      <div class="anim-scale" style="font-size:64px;margin-bottom:12px;">${emoji}</div>
-      <div class="title-xl glow-red" style="margin-bottom:8px;">${title}</div>
-      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">${subtitle}</div>
-      <div style="text-align:left;margin-bottom:24px;">${victimRows}</div>
-      <button class="btn btn-primary" onclick="grenadeDone()">Continuar</button>
-    </div>
-  `);
+  const { dead, saved } = applyChaosDeaths(targets);
+  showCasualtiesModal({ emoji, title, subtitle, dead, saved });
 }
 
-function grenadeDone() {
+// Aplica muertes de poderes caóticos (granada / kamikaze). El Ángel Guardián
+// salva a los alcanzados que lo tengan; devuelve quién murió y quién fue salvado.
+function applyChaosDeaths(targets) {
+  const g = STATE.game;
+  const dead = [];
+  const saved = [];
+  const seen = new Set();
+  targets.forEach(pl => {
+    if (seen.has(pl.id)) return;
+    seen.add(pl.id);
+    if (!pl.alive) return;
+    if (pl.angel) {
+      pl.angel = false; // el ángel se consumió al salvarlo
+      saved.push(pl);
+    } else {
+      pl.alive = false;
+      g.eliminated.push(pl);
+      dead.push(pl);
+    }
+  });
+  return { dead, saved };
+}
+
+function roleBadgeFor(pl) {
+  if (pl.isImpostor) return `<span class="badge badge-impostor">Impostor</span>`;
+  if (pl.isUndercover) return `<span class="badge badge-undercover">Undercover</span>`;
+  return `<span class="badge badge-human">Inocente</span>`;
+}
+
+function casualtyRows(dead) {
+  if (dead.length === 0) return `<div class="body-md" style="color:var(--muted);padding:8px;">Nadie murió…</div>`;
+  return dead.map(pl => `
+    <div class="vote-item" style="opacity:0.85;">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;filter:grayscale(0.7);">${pl.avatar}</div>
+        <div class="body-md" style="font-weight:600;">${esc(pl.name)}</div>
+      </div>
+      ${roleBadgeFor(pl)}
+    </div>`).join('');
+}
+
+function savedRows(saved) {
+  if (saved.length === 0) return '';
+  return `
+    <div class="section-label" style="margin-top:16px;">😇 Salvados por su Ángel Guardián</div>
+    ${saved.map(pl => `
+    <div class="vote-item" style="border-color:rgba(255,214,0,0.35);">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+        <div class="player-avatar anim-halo" style="background:${pl.color}22;color:${pl.color};font-size:20px;">${pl.avatar}</div>
+        <div class="body-md" style="font-weight:600;">${esc(pl.name)}</div>
+      </div>
+      <span class="badge" style="background:rgba(255,214,0,0.15);border-color:rgba(255,214,0,0.4);color:var(--yellow);">😇 SALVADO</span>
+    </div>`).join('')}`;
+}
+
+function showPowerFlash(color) {
+  const screen = $('screen-voting');
+  if (!screen) return;
+  const f = document.createElement('div');
+  f.className = 'reveal-flash';
+  f.style.background = `radial-gradient(circle at 50% 42%, ${color} 0%, transparent 65%)`;
+  screen.appendChild(f);
+  setTimeout(() => f.remove(), 850);
+}
+
+// Cierre común de todos los poderes: reevaluar victoria y volver a la votación
+function finishPowerAction() {
   closeModal();
   const v = checkVictory();
   if (v) {
@@ -10492,34 +10719,335 @@ function grenadeDone() {
   renderVotingScreen();
 }
 
-function useOracle() {
-  const g = STATE.game;
-  if (!g.powersEnabled.oracle || g.powersUsed.oracle) return;
-  g.powersUsed.oracle = true;
-  playSound('oracle');
+function showCasualtiesModal({ emoji, title, subtitle, dead, saved, accent }) {
+  if (saved.length > 0) playSound('angel');
+  openModal(`
+    <div style="text-align:center;">
+      <div class="anim-scale" style="font-size:64px;margin-bottom:12px;">${emoji}</div>
+      <div class="title-xl glow-red" style="margin-bottom:8px;${accent ? `color:${accent};text-shadow:0 0 24px ${accent}80;` : ''}">${title}</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">${subtitle}</div>
+      <div style="text-align:left;margin-bottom:8px;">${casualtyRows(dead)}</div>
+      ${savedRows(saved)}
+      <div style="height:16px;"></div>
+      <button class="btn btn-primary" onclick="finishPowerAction()">Continuar</button>
+    </div>
+  `);
+}
 
-  const remaining = g.allHints.filter(h => !g.usedHints.includes(h));
-  let revealText;
-  if (remaining.length > 0) {
-    const hint = rand(remaining);
-    g.usedHints.push(hint);
-    revealText = esc(hint);
-  } else {
-    const w = g.secretWord;
-    revealText = `Empieza con <strong style="color:var(--violet)">"${esc(w[0])}"</strong> y tiene <strong style="color:var(--violet)">${w.length} letras</strong>`;
+/* ================================================================
+   💣 KAMIKAZE (poder exclusivo de impostores)
+   ================================================================ */
+function openKamikazeModal(p) {
+  playSound('tap');
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">💣</div>
+      <div class="title-md glow-red" style="margin-bottom:8px;">${esc(p.name)}, tenés Kamikaze</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
+        Te eliminaron por votación. ¿Querés activarlo?<br>
+        Explotarás y te llevarás a tus <strong style="color:var(--text)">vecinos de la ronda</strong>…
+        inocentes, Undercover o tu propio compañero. Es tu decisión.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-red" onclick="kamikazeActivate(${p.id})">💥 ¡Sí, activar Kamikaze!</button>
+        <button class="btn btn-ghost" onclick="kamikazeDecline()">🙅 No, me marcho tranquilo</button>
+      </div>
+    </div>
+  `);
+}
+
+// Vecinos vivos más cercanos en el orden de la ronda (circular, izquierda y derecha)
+function kamikazeNeighbors(p) {
+  const g = STATE.game;
+  const order = g.revealOrder;
+  const n = order.length;
+  const idx = order.indexOf(p.id);
+  const targets = [];
+  for (const dir of [-1, 1]) {
+    for (let step = 1; step <= n; step++) {
+      const cand = g.players[order[((idx + dir * step) % n + n) % n]];
+      if (cand.alive && cand.id !== p.id) { targets.push(cand); break; }
+    }
+  }
+  return targets.filter((v, i, a) => a.findIndex(x => x.id === v.id) === i);
+}
+
+function kamikazeActivate(playerId) {
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p) { renderVotingScreen(); return; }
+  closeModal();
+
+  const targets = kamikazeNeighbors(p);
+  const { dead, saved } = applyChaosDeaths(targets);
+
+  playSound('explosion');
+  vibrate([120, 60, 220]);
+  showPowerFlash('rgba(255,49,49,0.5)');
+  document.body.classList.add('shake');
+  setTimeout(() => document.body.classList.remove('shake'), 600);
+
+  showCasualtiesModal({
+    emoji: '💣',
+    title: '¡KAMIKAZE!',
+    subtitle: `${esc(p.name)} explotó y se llevó a sus vecinos.`,
+    dead,
+    saved
+  });
+}
+
+function kamikazeDecline() {
+  closeModal();
+  playSound('eliminate');
+  const v = checkVictory();
+  if (v) {
+    renderVictoryScreen(v);
+    navigate('screen-victory');
+    return;
+  }
+  renderVotingScreen();
+}
+
+/* ================================================================
+   ⚔️ SACRIFICIO (poder de inocentes)
+   ================================================================ */
+function useSacrificio() {
+  const g = STATE.game;
+  if (!g.powersEnabled.sacrificio || g.powersUsed.sacrificio) return;
+  playSound('tap');
+
+  const SB = BALANCE.SACRIFICIO;
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">⚔️</div>
+      <div class="title-md" style="margin-bottom:8px;">¿Ofrecer un Sacrificio?</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
+        Un <strong style="color:var(--text)">inocente al azar</strong> será eliminado y, a cambio,
+        se revelará un grupo de ${SB.GROUP_MIN}-${SB.GROUP_MAX} jugadores vivos
+        entre los que hay <strong style="color:var(--violet)">al menos 1 impostor asegurado</strong>.
+        Solo se puede usar <strong>una vez</strong>.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-primary" onclick="executeSacrificio()">⚔️ Sacrificar</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Mejor no</button>
+      </div>
+    </div>
+  `);
+}
+
+function executeSacrificio() {
+  const g = STATE.game;
+  g.powersUsed.sacrificio = true;
+  closeModal();
+
+  const SB = BALANCE.SACRIFICIO;
+  const alive = g.players.filter(pl => pl.alive);
+  const innocents = alive.filter(pl => !pl.isImpostor);
+  const impostors = alive.filter(pl => pl.isImpostor);
+
+  // 1) Víctima inocente al azar (el ángel no protege del sacrificio)
+  const victim = rand(innocents);
+  victim.alive = false;
+  g.eliminated.push(victim);
+  if (SB.CONSUMES_BULLET && g.bullets !== Infinity) g.bullets--;
+
+  // 2) Grupo de sospechosos con al menos 1 impostor vivo garantizado,
+  //    sin incluir a la víctima
+  const pool = alive.filter(pl => pl.id !== victim.id);
+  const groupSize = Math.min(pool.length, SB.GROUP_MIN + randInt(SB.GROUP_MAX - SB.GROUP_MIN + 1));
+  const group = [];
+  if (impostors.length > 0) group.push(rand(impostors));
+  pickRandom(pool.filter(pl => !group.includes(pl)), groupSize - group.length)
+    .forEach(pl => group.push(pl));
+  const groupShown = shuffle(group); // el orden no delata al impostor
+
+  playSound('sacrifice');
+  vibrate([80, 40, 160]);
+  showPowerFlash('rgba(168,85,247,0.45)');
+
+  openModal(`
+    <div style="text-align:center;">
+      <div class="anim-soul" style="font-size:56px;margin-bottom:10px;">⚔️</div>
+      <div class="title-xl glow-violet" style="margin-bottom:4px;">SACRIFICIO</div>
+      <div class="vote-item" style="margin:16px 0;">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+          <div class="player-avatar" style="background:${victim.color}22;color:${victim.color};font-size:20px;filter:grayscale(0.7);">${victim.avatar}</div>
+          <div class="body-md" style="font-weight:700;">${esc(victim.name)} ha caído</div>
+        </div>
+        ${roleBadgeFor(victim)}
+      </div>
+      <div class="card-glass" style="border-color:rgba(168,85,247,0.45);margin-bottom:8px;padding:18px;">
+        <div class="caption" style="margin-bottom:12px;letter-spacing:0.1em;text-transform:uppercase;">Entre estos jugadores hay por lo menos 1 impostor</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+          ${groupShown.map(pl => `
+            <div class="anim-scale" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 12px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.35);border-radius:var(--radius-sm);min-width:72px;">
+              <div style="font-size:24px;">${pl.avatar}</div>
+              <div style="font-size:12px;font-weight:700;">${esc(pl.name)}</div>
+            </div>`).join('')}
+        </div>
+        <div class="caption" style="margin-top:12px;">Puede haber más de uno… o ninguno de los demás. Ustedes averiguan.</div>
+      </div>
+      <div style="height:8px;"></div>
+      <button class="btn btn-primary" onclick="finishPowerAction()">Continuar</button>
+    </div>
+  `);
+}
+
+/* ================================================================
+   🕊️ REVIVIR (poder de inocentes)
+   ================================================================ */
+function revivirBlocked() {
+  const g = STATE.game;
+  return g.bullets !== Infinity && g.bullets < BALANCE.REVIVIR.MIN_BULLETS_REQUIRED;
+}
+
+function useRevivir() {
+  const g = STATE.game;
+  if (!g.powersEnabled.revivir || g.powersUsed.revivir) return;
+  playSound('tap');
+
+  // Bloqueado: quedarse con 0 balas es derrota
+  if (revivirBlocked()) {
+    openModal(`
+      <div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+        <div class="title-md" style="margin-bottom:8px;">Revivir bloqueado</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+          Revivir consume <strong style="color:var(--red)">1 bala</strong> y solo quedan
+          <strong style="color:var(--red)">${g.bullets}</strong>.
+          Quedarse sin balas es derrota de los inocentes.
+        </div>
+        <button class="btn btn-ghost" onclick="closeModal()">Entendido</button>
+      </div>
+    `);
+    return;
+  }
+
+  // Lista de eliminados: los inocentes se pueden revivir; intentar con un
+  // impostor o undercover muestra un mensaje gracioso (sin gastar el poder)
+  const list = g.eliminated.filter(pl => !pl.leftEarly);
+  if (list.length === 0) {
+    openModal(`
+      <div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">🕊️</div>
+        <div class="title-md" style="margin-bottom:8px;">Nadie para revivir</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:24px;">Todavía no cayó ningún jugador.</div>
+        <button class="btn btn-ghost" onclick="closeModal()">Volver</button>
+      </div>
+    `);
+    return;
+  }
+
+  openModal(`
+    <div>
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:36px;margin-bottom:8px;">🕊️</div>
+        <div class="title-md">¿A quién revivir?</div>
+        <div class="caption" style="margin-top:4px;">Cuesta 1 bala y el grupo leerá una pista extra en voz alta</div>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        ${list.map(pl => `
+          <button class="pick-item" onclick="attemptRevive(${pl.id})" style="${(pl.isImpostor || pl.isUndercover) ? 'opacity:0.7;' : ''}">
+            <span class="player-avatar" style="background:${pl.color}22;color:${pl.color};width:34px;height:34px;font-size:16px;filter:grayscale(0.7);">${pl.avatar}</span>
+            <span style="flex:1;">${esc(pl.name)}</span>
+            ${roleBadgeFor(pl)}
+          </button>
+        `).join('')}
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="closeModal()">Volver</button>
+    </div>
+  `);
+}
+
+function attemptRevive(playerId) {
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || p.alive || p.leftEarly) return;
+
+  // Un impostor o undercover no puede ser revivido: mensaje gracioso
+  if (p.isImpostor || p.isUndercover) {
+    playSound('error');
+    vibrate(80);
+    const joke = p.isImpostor
+      ? rand([
+          '😅 ¿Revivir al impostor? Tampoco es por ahí…',
+          '🤡 Buenísimo: revivir problemas. Pasamos.',
+          '👻 Ya cumplió su misión. Que descanse en paz.',
+          '💰 No hay suficiente plata para el rescate de un criminal.'
+        ])
+      : rand([
+          '🎭 El Undercover ya gastó su última oportunidad…',
+          '🎤 No hay encore para el Undercover. A casa.',
+          '😅 Revivir al Undercover… ¿para que adivine de nuevo? No.'
+        ]);
+    openModal(`
+      <div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">🚫</div>
+        <div class="title-md" style="margin-bottom:8px;">${joke}</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+          Solo se puede revivir a <strong style="color:var(--green)">inocentes</strong>.
+        </div>
+        <button class="btn btn-ghost" onclick="useRevivir()">Volver a la lista</button>
+      </div>
+    `);
+    return;
   }
 
   openModal(`
     <div style="text-align:center;">
-      <div class="anim-scale" style="font-size:56px;margin-bottom:12px;">🔮</div>
-      <div class="title-md glow-violet" style="margin-bottom:8px;">El Oráculo habla</div>
-      <div class="body-md" style="color:var(--muted);margin-bottom:16px;">Pista extra sobre la palabra secreta:</div>
-      <div class="card-glass" style="border-color:rgba(168,85,247,0.4);margin-bottom:16px;">
-        <div class="title-lg glow-violet">${revealText}</div>
-        <div class="caption" style="margin-top:8px;">Categoría: ${esc(g.category)}</div>
+      <div style="font-size:44px;margin-bottom:10px;">${p.avatar}</div>
+      <div class="title-md" style="margin-bottom:8px;">¿Revivir a ${esc(p.name)}?</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
+        Costo: <strong style="color:var(--red)">1 bala</strong>
+        ${g.bullets !== Infinity ? `(quedarán ${g.bullets - 1})` : ''} y el grupo deberá leer en voz
+        alta una pista extra de la palabra… que el impostor también escucha.
       </div>
-      <div class="info-note" style="margin-bottom:20px;">Toda la sala escucha esta pista… incluido el impostor.</div>
-      <button class="btn btn-primary" onclick="closeModal()">Continuar</button>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-green" onclick="executeRevivir(${p.id})">🕊️ Revivir</button>
+        <button class="btn btn-ghost" onclick="useRevivir()">Volver</button>
+      </div>
+    </div>
+  `);
+}
+
+function executeRevivir(playerId) {
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || p.alive || g.powersUsed.revivir || revivirBlocked()) { renderVotingScreen(); return; }
+  g.powersUsed.revivir = true;
+
+  if (BALANCE.REVIVIR.CONSUMES_BULLET && g.bullets !== Infinity) g.bullets--;
+  p.alive = true;
+  g.eliminated = g.eliminated.filter(pl => pl.id !== p.id);
+
+  // Pista extra pública: NUNCA la pista original del impostor ni una ya dicha.
+  // Si está libre, se prefiere la segunda pista de la palabra.
+  const used = new Set(g.usedHints);
+  const remaining = g.allHints.filter(h => !used.has(h));
+  const extraHint = remaining.includes(g.allHints[1]) ? g.allHints[1]
+    : (remaining.length > 0 ? rand(remaining) : null);
+  if (extraHint) g.usedHints.push(extraHint);
+
+  playSound('revive');
+  vibrate([60, 40, 120]);
+  showPowerFlash('rgba(57,255,20,0.3)');
+
+  openModal(`
+    <div style="text-align:center;">
+      <div class="anim-rise" style="font-size:64px;margin-bottom:10px;">${p.avatar}</div>
+      <div class="title-xl glow-green" style="margin-bottom:4px;">¡HA VUELTO!</div>
+      <div class="title-md" style="color:var(--green);margin-bottom:16px;">${esc(p.name)} vuelve al juego</div>
+      ${extraHint ? `
+      <div class="card-glass" style="border-color:rgba(57,255,20,0.4);margin-bottom:12px;">
+        <div class="caption" style="margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase;">📢 Lean en voz alta para toda la sala</div>
+        <div class="title-lg glow-green">"${esc(extraHint)}"</div>
+      </div>
+      <div class="info-note" style="margin-bottom:12px;">
+        Ojo: esta pista ayuda al impostor a encontrar la palabra. Es el precio del milagro.
+      </div>` : `
+      <div class="info-note" style="margin-bottom:12px;">No quedan pistas extra disponibles para revelar.</div>`}
+      <div class="caption" style="margin-bottom:16px;">${g.bullets !== Infinity ? `Costo: 1 bala · quedan ${g.bullets}` : 'Modo sin balas'}</div>
+      <button class="btn btn-primary" onclick="finishPowerAction()">Continuar</button>
     </div>
   `);
 }
