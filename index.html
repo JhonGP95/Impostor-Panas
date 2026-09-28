@@ -9112,8 +9112,17 @@ const BASE_DE_DATOS = [
    Ajustá acá los porcentajes y cantidades; la UI se adapta sola.
    ================================================================ */
 const BALANCE = {
-  // Reparto equilibrado de impostores: peso de repetir vs el resto
-  IMPOSTOR_COOLDOWN_WEIGHT: 0.35,        // 0.35 ≈ 3 veces menos probable
+  // 🎲 Selección de impostores — Pseudo-Random Distribution (PRD):
+  // el peso de cada jugador arranca en BASE justo después de ser impostor y
+  // crece GROWTH por ronda sin serlo (con techo MAX_WEIGHT). Difícil repetir
+  // dos veces seguidas, imposible caer en sequías largas, y el azar sigue siendo
+  // azar (no hay turnos fijos). A largo plazo el reparto queda igualado.
+  IMPOSTOR_PRD: {
+    BASE: 1.0,             // peso justo después de ser impostor
+    GROWTH: 0.3,           // cuánto sube el peso por ronda sin ser impostor
+    MAX_WEIGHT: 3.0,       // techo del peso
+    DEFAULT_PITY: 2        // "rondas sin ser impostor" para jugadores sin historial
+  },
 
   // 💣 Kamikaze (poder de impostores): probabilidad de que UN impostor lo tenga
   KAMIKAZE_CHANCE: 0.15,                 // rango deseado 0.10 – 0.20
@@ -9461,7 +9470,7 @@ function renderConfig() {
             <div class="switch-track"></div>
           </label>
         </div>
-        <div class="caption">⚖️ Quien fue impostor la ronda anterior tiene menos probabilidades de repetir (usá nombres reales para que funcione)</div>
+        <div class="caption">⚖️ Reparto PRD: a quien fue impostor le cuesta repetir, y las sequías largas aumentan sus chances. Nadie queda afuera (usá nombres reales)</div>
       </div>
 
       <!-- Undercovers -->
@@ -9739,27 +9748,37 @@ function toggleAllCategories() {
    INICIO DE PARTIDA
    ================================================================ */
 
-function loadLastImpostors() {
+// 🎲 PRD (Pseudo-Random Distribution) con lástima por jugador:
+// cada jugador acumula "pity" (rondas sin ser impostor). Su peso de sorteo es
+// BASE + GROWTH × pity (con techo). Ser impostor resetea el pity a 0.
+// Resultado: repetir es raro (peso mínimo) pero las sequías largas se
+// auto-compensan, y a largo plazo el reparto queda igualado para todos.
+function loadPity() {
   try {
-    return JSON.parse(localStorage.getItem('chazey_last_impostors') || '[]');
-  } catch(e) { return []; }
+    const d = JSON.parse(localStorage.getItem('chazey_impostor_pity') || '{}');
+    return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+  } catch(e) { return {}; }
 }
 
-function saveLastImpostors(players) {
+function savePity(players) {
   try {
-    localStorage.setItem('chazey_last_impostors', JSON.stringify(
-      players.filter(pl => pl.isImpostor).map(pl => pl.name.trim().toLowerCase())
-    ));
+    const pity = loadPity();
+    players.forEach(pl => {
+      const key = pl.name.trim().toLowerCase();
+      const prev = (typeof pity[key] === 'number') ? pity[key] : BALANCE.IMPOSTOR_PRD.DEFAULT_PITY;
+      pity[key] = pl.isImpostor ? 0 : Math.min(prev + 1, 99);
+    });
+    localStorage.setItem('chazey_impostor_pity', JSON.stringify(pity));
   } catch(e) {}
 }
 
-// Sorteo con peso y sin reemplazo: peso 1 para todos, 0.35 para quien
-// fue impostor en la ronda anterior (identificado por su nombre).
-function pickImpostorsBalanced(n, numImp, lastImpostors, names) {
-  const lastSet = new Set((lastImpostors || []).map(s => String(s).trim().toLowerCase()));
+// Sorteo con peso y sin reemplazo usando los pesos PRD de cada jugador.
+function pickImpostorsBalanced(n, numImp, pity, names) {
+  const P = BALANCE.IMPOSTOR_PRD;
   let pool = [...Array(n).keys()].map(i => {
     const nm = String(names[i] || '').trim().toLowerCase();
-    return { i, w: lastSet.has(nm) ? BALANCE.IMPOSTOR_COOLDOWN_WEIGHT : 1 };
+    const p = (pity && typeof pity[nm] === 'number') ? pity[nm] : P.DEFAULT_PITY;
+    return { i, w: Math.min(P.BASE + P.GROWTH * p, P.MAX_WEIGHT) };
   });
   const picked = [];
   while (picked.length < numImp && pool.length > 0) {
@@ -9804,11 +9823,11 @@ function startGame() {
   let hint = null;
   if (cfg.withHints && allHints.length > 0) hint = rand(allHints);
 
-  // Roles: reparto equilibrado. Quien fue impostor en la ronda anterior
-  // conserva la misma probabilidad dividida (peso 0.35 vs 1), así puede
-  // repetir pero es mucho menos probable. Siempre salen exactamente numImp.
-  const lastImpostors = loadLastImpostors();
-  const impostorIdx = pickImpostorsBalanced(n, numImp, lastImpostors, cfg.playerNames);
+  // Roles: PRD con lástima — repetir como impostor es raro (peso mínimo recién
+  // salido del rol) pero las sequías largas aumentan el peso, así que nadie
+  // queda condenado a nunca serlo. Siempre salen exactamente numImp.
+  const pity = loadPity();
+  const impostorIdx = pickImpostorsBalanced(n, numImp, pity, cfg.playerNames);
   const impostorSet = new Set(impostorIdx);
   const restOrder = shuffle([...Array(n).keys()].filter(i => !impostorSet.has(i)));
   const ucSet = new Set(restOrder.slice(0, numUC));
@@ -9827,7 +9846,7 @@ function startGame() {
     avatar: avatarOf(i)
   }));
 
-  saveLastImpostors(players);
+  savePity(players);
 
   // 💣 Kamikaze: como mucho UN impostor por ronda lo recibe (probabilidad configurable)
   const aliveImpostors = players.filter(pl => pl.isImpostor);
@@ -9842,7 +9861,8 @@ function startGame() {
     });
   }
 
-  // Palabras de los undercovers (distintas entre sí, misma categoría)
+  // Palabras de los undercovers: SORTEADAS al azar dentro de la categoría
+  // (distintas entre sí salvo que la categoría tenga menos palabras que UCs)
   const undercoverWords = {};
   if (numUC > 0) {
     const catData = BASE_DE_DATOS.find(c => c.categoria === catName);
@@ -9850,10 +9870,11 @@ function startGame() {
       ? catData.palabras.filter(w => w.palabra !== chosen.palabra).map(w => w.palabra)
       : [];
     if (otherWords.length === 0) otherWords = [chosen.palabra];
-    const picks = [];
-    for (let i = 0; i < numUC; i++) picks.push(otherWords[i % otherWords.length]);
+    const shuffledWords = shuffle(otherWords);
     const ucPlayers = players.filter(pl => pl.isUndercover);
-    ucPlayers.forEach((pl, i) => { undercoverWords[pl.id] = picks[i]; });
+    ucPlayers.forEach((pl, i) => {
+      undercoverWords[pl.id] = shuffledWords[i % shuffledWords.length];
+    });
   }
 
   STATE.game = {
@@ -9868,6 +9889,7 @@ function startGame() {
     revealCount: 0,
     bullets: cfg.infiniteBullets ? Infinity : cfg.numBullets,
     eliminated: [],
+    pendingUcGuesses: [], // UCs muertos por poderes que aún tienen su adivinanza
     powersEnabled: {
       grenade: !!cfg.powers.grenade,
       sacrificio: !!cfg.powers.sacrificio,
@@ -10177,7 +10199,7 @@ function redrawWord() {
   g.currentHint = (STATE.config.withHints && g.allHints.length > 0) ? rand(g.allHints) : null;
   g.usedHints = g.currentHint ? [g.currentHint] : [];
 
-  // Reasignar palabras de undercovers de la nueva categoría
+  // Reasignar palabras de undercovers de la nueva categoría (sorteadas al azar)
   const ucPlayers = g.players.filter(pl => pl.isUndercover);
   if (ucPlayers.length > 0) {
     const catData = BASE_DE_DATOS.find(c => c.categoria === catName);
@@ -10185,8 +10207,9 @@ function redrawWord() {
       ? catData.palabras.filter(w => w.palabra !== chosen.palabra).map(w => w.palabra)
       : [];
     if (otherWords.length === 0) otherWords = [chosen.palabra];
+    const shuffledWords = shuffle(otherWords);
     ucPlayers.forEach((pl, i) => {
-      g.undercoverWords[pl.id] = otherWords[i % otherWords.length];
+      g.undercoverWords[pl.id] = shuffledWords[i % shuffledWords.length];
     });
   }
 
@@ -10230,18 +10253,87 @@ function openDeletePlayer() {
     <div>
       <div style="text-align:center;margin-bottom:16px;">
         <div style="font-size:36px;margin-bottom:8px;">👋</div>
-        <div class="title-md">¿Quién se fue?</div>
-        <div class="caption" style="margin-top:4px;">Sale de la partida sin revelar su rol ni gastar balas</div>
+        <div class="title-md">¿Quién tiene el celular?</div>
+        <div class="caption" style="margin-top:4px;">Tocá tu nombre para repetir tu palabra, o marcá quién se fue</div>
       </div>
       <div style="display:flex;flex-direction:column;">
         ${alive.map(pl => `
-          <button class="pick-item" onclick="confirmDeletePlayer(${pl.id})">
+          <button class="pick-item" onclick="openPlayerMenu(${pl.id})">
             <span class="player-avatar" style="background:${pl.color}22;color:${pl.color};width:34px;height:34px;font-size:16px;">${pl.avatar}</span>
             <span style="flex:1;">${esc(pl.name)}</span>
           </button>
         `).join('')}
       </div>
       <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="closeModal()">Volver</button>
+    </div>
+  `);
+}
+
+// Menú por jugador: repetir palabra / marcar salida / cancelar
+function openPlayerMenu(playerId) {
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || !p.alive) return;
+  playSound('tap');
+
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:10px;">${p.avatar}</div>
+      <div class="title-md" style="margin-bottom:24px;color:${p.color};filter:drop-shadow(0 0 12px ${p.color});">${esc(p.name)}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-primary" onclick="repeatWord(${playerId})">🔁 Repetir palabra</button>
+        <button class="btn btn-red" onclick="confirmDeletePlayer(${playerId})">👋 Confirmar salida</button>
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  `);
+}
+
+// 🔁 Repetir palabra: cada rol ve solo lo que le corresponde
+//   inocente  → su palabra
+//   impostor  → "SOS EL IMPOSTOR" (sin pista, sin categoría)
+//   undercover → su categoría
+function repeatWord(playerId) {
+  const g = STATE.game;
+  const p = g.players.find(pl => pl.id === playerId);
+  if (!p || !p.alive) return;
+  playSound('reveal');
+
+  let emoji, inner;
+  if (p.isImpostor) {
+    emoji = '💀';
+    inner = `
+      <div class="badge badge-impostor" style="margin-bottom:12px;">SECRETO</div>
+      <div class="title-xl glow-red" style="margin-bottom:8px;">SOS EL<br>IMPOSTOR</div>
+      <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+        Seguí fingiendo que la sabés.<br>
+        (No hay pista ni categoría para repetir… ¡obvio!)
+      </div>`;
+  } else if (p.isUndercover) {
+    emoji = '🎭';
+    inner = `
+      <div class="badge badge-undercover" style="margin-bottom:12px;">SECRETO</div>
+      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu categoría</div>
+      <div class="title-xl glow-cyan" style="margin-bottom:8px;">${esc(g.category)}</div>
+      <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
+        Tu palabra sigue siendo secreta: fingí dentro de esta categoría.
+      </div>`;
+  } else {
+    emoji = '✅';
+    inner = `
+      <div class="badge badge-human" style="margin-bottom:12px;">SECRETO</div>
+      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu palabra</div>
+      <div class="title-xl glow-green" style="margin-bottom:8px;">${esc(g.secretWord)}</div>`;
+  }
+
+  openModal(`
+    <div style="text-align:center;">
+      <div class="anim-scale" style="font-size:56px;margin-bottom:10px;">${emoji}</div>
+      <div class="role-card role-card-${p.isImpostor ? 'impostor' : p.isUndercover ? '' : 'human'}" style="animation:none;${p.isUndercover ? 'border-color:rgba(0,245,255,0.4);box-shadow:0 0 60px rgba(0,245,255,0.12);' : ''}">
+        ${inner}
+      </div>
+      <div style="height:16px;"></div>
+      <button class="btn btn-primary" onclick="closeModal()">Ya lo vi · Pasar celular 👉</button>
     </div>
   `);
 }
@@ -10500,18 +10592,7 @@ function executeVote(playerId) {
     // Última oportunidad del undercover: adivinar la palabra real.
     // Sin categoría en pantalla: el undercover ya la conoce y mostrarla
     // públicamente le filtraría información al impostor.
-    openModal(`
-      <div style="text-align:center;">
-        <div style="font-size:48px;margin-bottom:12px;">🎭</div>
-        <div class="title-md" style="color:var(--cyan);margin-bottom:8px;">${esc(p.name)} era el Undercover</div>
-        <div class="body-md" style="color:var(--muted);margin-bottom:6px;">Su palabra era: <strong style="color:var(--cyan)">${esc(g.undercoverWords[p.id] || '?')}</strong></div>
-        <div class="body-md" style="margin-bottom:20px;">¿Puede adivinar la palabra real antes de caer?</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <button class="btn btn-primary" onclick="undercoverGuessResult(true, ${p.id})" style="background:linear-gradient(135deg,var(--cyan),var(--blue));">✅ ¡Adivinó la palabra!</button>
-          <button class="btn btn-red" onclick="undercoverGuessResult(false, ${p.id})">❌ No adivinó</button>
-        </div>
-      </div>
-    `);
+    openUcGuessModal(p.id);
     return;
   }
 
@@ -10543,6 +10624,7 @@ function undercoverGuessResult(guessed, playerId) {
 
   if (guessed) {
     playSound('victory');
+    g.pendingUcGuesses = []; // la partida terminó: limpiar pendientes
     renderVictoryScreen({
       winner: 'undercover',
       reason: '¡Adivinó la palabra secreta al ser eliminado!',
@@ -10553,6 +10635,13 @@ function undercoverGuessResult(guessed, playerId) {
   }
 
   playSound('eliminate');
+
+  // ¿Quedan más UCs muertos por poderes con su adivinanza pendiente?
+  if (Array.isArray(g.pendingUcGuesses) && g.pendingUcGuesses.length > 0) {
+    openUcGuessModal(g.pendingUcGuesses.shift());
+    return;
+  }
+
   const v = checkVictory();
   if (v) {
     renderVictoryScreen(v);
@@ -10606,20 +10695,13 @@ function launchGrenade() {
 
   const roll = Math.random() * 100;
   let targets = [];
-  let title, subtitle, emoji;
 
   if (roll < GB.P_ONLY_IMPOSTORS * 100) {
-    // 🍀 Solo impostores; si no alcanzan, completar con inocentes
-    emoji = '🍀';
-    title = '¡GOLPE DE SUERTE!';
-    subtitle = 'La explosión alcanzó solo al lado impostor.';
+    // 🍀 Apunta solo impostores; si no alcanzan, completa con inocentes
     const imps = pickRandom(impostors, victimCount);
     targets = imps.concat(pickRandom(innocents, victimCount - imps.length));
   } else if (roll < (GB.P_ONLY_IMPOSTORS + GB.P_MIXED) * 100) {
     // 💥 Mixto: garantiza al menos 1 impostor si hay alguno vivo
-    emoji = '💥';
-    title = 'KA-BOOM';
-    subtitle = 'La explosión alcanzó a inocentes y a un infiltrado.';
     const imps = impostors.length > 0 ? pickRandom(impostors, 1) : [];
     targets = imps.concat(pickRandom(innocents, victimCount - imps.length));
     if (targets.length < victimCount) {
@@ -10630,16 +10712,51 @@ function launchGrenade() {
       ));
     }
   } else {
-    // 😬 Solo inocentes; si no alcanzan, completar con impostores
-    emoji = '😬';
-    title = 'KA-BOOM';
-    subtitle = 'La explosión alcanzó solo a inocentes…';
+    // 😬 Apunta solo inocentes; si no alcanzan, completa con impostores
     const innos = pickRandom(innocents, victimCount);
     targets = innos.concat(pickRandom(impostors, victimCount - innos.length));
   }
 
   const { dead, saved } = applyChaosDeaths(targets);
+
+  // Título y subtítulo HONESTOS: describen lo que realmente pasó
+  const { emoji, title, subtitle } = grenadeHeadline(dead);
   showCasualtiesModal({ emoji, title, subtitle, dead, saved });
+}
+
+// Encabezado del modal de granada calculado desde las bajas reales
+function grenadeHeadline(dead) {
+  const dImp = dead.filter(pl => pl.isImpostor).length;
+  const dInno = dead.filter(pl => !pl.isImpostor).length;
+
+  const plural = (n, word) => n === 1 ? word : (word === 'inocente' ? 'inocentes' : 'impostores');
+
+  if (dImp > 0 && dInno > 0) {
+    return {
+      emoji: '💥',
+      title: 'KA-BOOM',
+      subtitle: `La explosión alcanzó a ${dInno} ${plural(dInno, 'inocente')} y ${dImp} ${plural(dImp, 'impostor')}.`
+    };
+  }
+  if (dImp > 0) {
+    return {
+      emoji: '🍀',
+      title: '¡GOLPE DE SUERTE!',
+      subtitle: 'La explosión alcanzó solo al lado impostor.'
+    };
+  }
+  if (dInno > 0) {
+    return {
+      emoji: '😬',
+      title: 'KA-BOOM',
+      subtitle: `La explosión alcanzó solo a ${dInno} ${plural(dInno, 'inocente')}…`
+    };
+  }
+  return {
+    emoji: '🤔',
+    title: '¡FUMATA!',
+    subtitle: 'La explosión no alcanzó a nadie…'
+  };
 }
 
 // Aplica muertes de poderes caóticos (granada / kamikaze). El Ángel Guardián
@@ -10660,6 +10777,11 @@ function applyChaosDeaths(targets) {
       pl.alive = false;
       g.eliminated.push(pl);
       dead.push(pl);
+      // El UC muerto por un poder conserva su última oportunidad de adivinar
+      if (pl.isUndercover) {
+        if (!Array.isArray(g.pendingUcGuesses)) g.pendingUcGuesses = [];
+        g.pendingUcGuesses.push(pl.id);
+      }
     }
   });
   return { dead, saved };
@@ -10707,9 +10829,15 @@ function showPowerFlash(color) {
   setTimeout(() => f.remove(), 850);
 }
 
-// Cierre común de todos los poderes: reevaluar victoria y volver a la votación
+// Cierre común de todos los poderes: si quedó algún UC muerto por el poder,
+// primero tiene su adivinanza; después se reevalúa la victoria
 function finishPowerAction() {
   closeModal();
+  const g = STATE.game;
+  if (Array.isArray(g.pendingUcGuesses) && g.pendingUcGuesses.length > 0) {
+    openUcGuessModal(g.pendingUcGuesses.shift());
+    return;
+  }
   const v = checkVictory();
   if (v) {
     renderVictoryScreen(v);
@@ -10717,6 +10845,25 @@ function finishPowerAction() {
     return;
   }
   renderVotingScreen();
+}
+
+// Modal de última oportunidad del Undercover (compartido por votación y poderes)
+function openUcGuessModal(ucId) {
+  const g = STATE.game;
+  const uc = g.players.find(pl => pl.id === ucId);
+  if (!uc) { finishPowerAction(); return; }
+  openModal(`
+    <div style="text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">🎭</div>
+      <div class="title-md" style="color:var(--cyan);margin-bottom:8px;">${esc(uc.name)} era el Undercover</div>
+      <div class="body-md" style="color:var(--muted);margin-bottom:6px;">Su palabra era: <strong style="color:var(--cyan)">${esc(g.undercoverWords[uc.id] || '?')}</strong></div>
+      <div class="body-md" style="margin-bottom:20px;">¿Puede adivinar la palabra real antes de caer?</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-primary" onclick="undercoverGuessResult(true, ${uc.id})" style="background:linear-gradient(135deg,var(--cyan),var(--blue));">✅ ¡Adivinó la palabra!</button>
+        <button class="btn btn-red" onclick="undercoverGuessResult(false, ${uc.id})">❌ No adivinó</button>
+      </div>
+    </div>
+  `);
 }
 
 function showCasualtiesModal({ emoji, title, subtitle, dead, saved, accent }) {
@@ -10816,6 +10963,23 @@ function useSacrificio() {
   if (!g.powersEnabled.sacrificio || g.powersUsed.sacrificio) return;
   playSound('tap');
 
+  // Sin inocentes vivos no hay a quién sacrificar (ej.: impostores vs undercover)
+  const innosAlive = g.players.filter(pl => pl.alive && !pl.isImpostor);
+  if (innosAlive.length === 0) {
+    openModal(`
+      <div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">🤷</div>
+        <div class="title-md" style="margin-bottom:8px;">No hay inocentes a quién sacrificar</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+          El sacrificio necesita un inocente… y en la mesa solo quedan impostores y Undercover.
+          ¡Se les pasó la mano!
+        </div>
+        <button class="btn btn-ghost" onclick="closeModal()">Volver</button>
+      </div>
+    `);
+    return;
+  }
+
   const SB = BALANCE.SACRIFICIO;
   openModal(`
     <div style="text-align:center;">
@@ -10837,7 +11001,7 @@ function useSacrificio() {
 
 function executeSacrificio() {
   const g = STATE.game;
-  g.powersUsed.sacrificio = true;
+  if (g.powersUsed.sacrificio) { renderVotingScreen(); return; }
   closeModal();
 
   const SB = BALANCE.SACRIFICIO;
@@ -10845,11 +11009,33 @@ function executeSacrificio() {
   const innocents = alive.filter(pl => !pl.isImpostor);
   const impostors = alive.filter(pl => pl.isImpostor);
 
+  // Guard: sin inocentes vivos no hay sacrificio posible (no consume el poder)
+  if (innocents.length === 0) {
+    openModal(`
+      <div style="text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">🤷</div>
+        <div class="title-md" style="margin-bottom:8px;">No hay inocentes a quién sacrificar</div>
+        <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
+          En la mesa solo quedan impostores y Undercover. ¡Se les pasó la mano!
+        </div>
+        <button class="btn btn-ghost" onclick="closeModal()">Volver</button>
+      </div>
+    `);
+    return;
+  }
+  g.powersUsed.sacrificio = true;
+
   // 1) Víctima inocente al azar (el ángel no protege del sacrificio)
   const victim = rand(innocents);
   victim.alive = false;
   g.eliminated.push(victim);
   if (SB.CONSUMES_BULLET && g.bullets !== Infinity) g.bullets--;
+
+  // El UC sacrificado conserva su última oportunidad de adivinar
+  if (victim.isUndercover) {
+    if (!Array.isArray(g.pendingUcGuesses)) g.pendingUcGuesses = [];
+    g.pendingUcGuesses.push(victim.id);
+  }
 
   // 2) Grupo de sospechosos con al menos 1 impostor vivo garantizado,
   //    sin incluir a la víctima
@@ -10970,12 +11156,14 @@ function attemptRevive(playerId) {
     vibrate(80);
     const joke = p.isImpostor
       ? rand([
+          '🤨 ¿Son pendejos? ¿Revivir a un IMPOSTOR?',
           '😅 ¿Revivir al impostor? Tampoco es por ahí…',
           '🤡 Buenísimo: revivir problemas. Pasamos.',
           '👻 Ya cumplió su misión. Que descanse en paz.',
           '💰 No hay suficiente plata para el rescate de un criminal.'
         ])
       : rand([
+          '🤨 ¿Son pendejos? ¿Revivir al UNDERCOVER?',
           '🎭 El Undercover ya gastó su última oportunidad…',
           '🎤 No hay encore para el Undercover. A casa.',
           '😅 Revivir al Undercover… ¿para que adivine de nuevo? No.'
@@ -11013,7 +11201,8 @@ function attemptRevive(playerId) {
 function executeRevivir(playerId) {
   const g = STATE.game;
   const p = g.players.find(pl => pl.id === playerId);
-  if (!p || p.alive || g.powersUsed.revivir || revivirBlocked()) { renderVotingScreen(); return; }
+  // Guardia completa: solo inocentes presentes pueden volver
+  if (!p || p.alive || p.leftEarly || p.isImpostor || p.isUndercover || g.powersUsed.revivir || revivirBlocked()) { renderVotingScreen(); return; }
   g.powersUsed.revivir = true;
 
   if (BALANCE.REVIVIR.CONSUMES_BULLET && g.bullets !== Infinity) g.bullets--;
