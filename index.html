@@ -9898,6 +9898,9 @@ function startGame() {
       angel: !!cfg.powers.angel
     },
     powersUsed: { grenade: false, sacrificio: false, revivir: false },
+    // Snapshot de configuración que afecta la info mostrada en partida
+    randomImpostors: !!cfg.randomImpostors, // 🎲 oculta cuántos impostores hay
+    withHints: !!cfg.withHints,             // 💡 pista del impostor (para los chips)
     starter: null
   };
 
@@ -10468,8 +10471,24 @@ function renderVotingScreen() {
 
   const ucAlive = aliveCount(g, pl => pl.isUndercover);
   const ucChip = ucAlive > 0
-    ? `<div class="stat-chip stat-chip-cyan">🎭 ${ucAlive} undercover</div>`
+    ? `<div class="stat-chip stat-chip-cyan">🎭 ${ucAlive} ${ucAlive === 1 ? 'undercover' : 'undercovers'}</div>`
     : '';
+
+  // 🎲 Modo impostores aleatorios: el número es sorpresa. Se ocultan los chips
+  // que lo delatan (impostores vivos e inocentes vivos: con el total a la vista,
+  // vivos − inocentes − UC = impostores) y también el de pista.
+  const randomMode = !!g.randomImpostors;
+  const impAlive = aliveCount(g, pl => pl.isImpostor);
+  const impChip = randomMode
+    ? `<div class="stat-chip stat-chip-blue">🎲 Impostores: ¿?</div>`
+    : `<div class="stat-chip stat-chip-blue">🕵️ ${impAlive} ${impAlive === 1 ? 'impostor' : 'impostores'}</div>`;
+  const innoChip = randomMode
+    ? ''
+    : `<div class="stat-chip stat-chip-green">✅ ${aliveCount(g, pl => !pl.isImpostor && !pl.isUndercover)} inocentes</div>`;
+  // Contra qué tipo de impostor se enfrenta la mesa (solo si el número es conocido)
+  const hintChip = randomMode
+    ? ''
+    : `<div class="stat-chip stat-chip-violet">${g.withHints ? '💡 Con pista' : '🚫 Sin pista'}</div>`;
 
   const playerRows = alivePlayers.map(pl => `
     <div class="vote-item anim-fade-up" id="vote-row-${pl.id}">
@@ -10527,9 +10546,10 @@ function renderVotingScreen() {
 
     <div class="stat-chips">
       <div class="stat-chip stat-chip-red">🔫 ${bulletsDisplay} balas</div>
-      <div class="stat-chip stat-chip-blue">🕵️ ${aliveCount(g, pl => pl.isImpostor)} impostores</div>
-      <div class="stat-chip stat-chip-green">✅ ${aliveCount(g, pl => !pl.isImpostor && !pl.isUndercover)} inocentes</div>
+      ${impChip}
+      ${innoChip}
       ${ucChip}
+      ${hintChip}
     </div>
 
     <div class="scroll-area">
