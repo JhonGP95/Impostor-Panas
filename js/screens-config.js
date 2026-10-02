@@ -142,7 +142,7 @@ function renderConfig() {
             <div class="switch-track"></div>
           </label>
         </div>
-        <div class="caption">Cada inocente o bufón eliminado por votación gasta 1 bala</div>`;
+        <div class="caption">Solo la muerte de un INOCENTE por votación gasta 1 bala (los demás equipos no gastan)</div>`;
 
   const secPoderes = `
         <div class="caption" style="margin-bottom:10px;">Opcionales · cada poder se usa una vez por partida</div>
@@ -167,7 +167,7 @@ function renderConfig() {
               <div class="switch-track"></div>
             </label>
           </div>
-          <div class="power-desc">Una pareja secreta: se conocen en la revelación y se defienden, pero PROHIBIDO decirlo. Si uno muere, el otro muere de tristeza… salvo que lo salve con Revivir (1 bala). Requiere ${BALANCE.PAREJA.MIN_PLAYERS}+ jugadores.</div>
+          <div class="power-desc">Su propio equipo de a dos: se conocen en la revelación (prohibido decirlo), mueren juntos y ganan SOLO ellos dos, cuando no queden impostores NI inocentes. Su propio ángel cubre a cada uno. Requiere ${BALANCE.PAREJA.MIN_PLAYERS}+ jugadores.</div>
         </div>`;
 
   const secOpciones = `
@@ -206,10 +206,11 @@ function renderConfig() {
 
   const secReglas = `
         <div class="info-note" style="display:flex;flex-direction:column;gap:8px;">
-          <span><strong style="color:var(--green);">✅ Inocentes:</strong> saben la palabra. Pueden tener 💔 Pareja y 😇 Ángel Guardián. Ganan eliminando a <em>todos</em> los impostores y undercovers.</span>
+          <span><strong style="color:var(--green);">✅ Inocentes:</strong> saben la palabra. Pueden tener 😇 Ángel Guardián. Ganan eliminando a <em>todos</em> los impostores y undercovers.</span>
           <span><strong style="color:var(--yellow);">🤡 Bufón:</strong> sabe la palabra. Solo gana si la mesa lo elimina por votación. Puede tener 😇 Ángel Guardián.</span>
           <span><strong style="color:var(--red);">🕵️ Impostores:</strong> no saben la palabra. Ganan si se acaban las balas <em>o</em> si mueren todos los inocentes y undercovers. Pueden tener 💣 Kamikaze.</span>
-          <span><strong style="color:var(--cyan);">🎭 Undercovers:</strong> no saben la palabra (solo la categoría). Ganan si adivinan la palabra al ser eliminados <em>o</em> si quedan últimos en pie. Pueden tener 😇 Ángel Guardián.</span>
+          <span><strong style="color:var(--cyan);">🎭 Undercovers:</strong> no saben la palabra (solo su categoría). Ganan si adivinan la palabra al ser eliminados <em>o</em> si quedan últimos en pie. Pueden tener 😇 Ángel Guardián.</span>
+          <span><strong style="color:var(--orange);">💕 Pareja:</strong> equipo propio de a dos (ambos saben la palabra). Mueren juntos y ganan <em>solo ellos dos</em>: cuando no queden impostores ni inocentes.</span>
         </div>`;
 
   return `

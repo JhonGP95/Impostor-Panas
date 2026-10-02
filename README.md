@@ -3,13 +3,16 @@
 Juego de fiesta pasamanos: un solo celular para todo el grupo. Sin backend, sin
 base de datos externa — todo funciona estático en GitHub Pages.
 
-**Los 4 equipos (desde v5.2):**
-- ✅ **Inocentes** — saben la palabra. Pueden tener 💔 Pareja y 😇 Ángel Guardián. Ganan eliminando a *todos* los impostores y undercovers.
+**Los 4 equipos + la Pareja (desde v5.3):**
+- ✅ **Inocentes** — saben la palabra. Pueden tener 😇 Ángel Guardián. Ganan eliminando a *todos* los impostores y undercovers.
 - 🤡 **Bufón** — sabe la palabra. Solo gana si la mesa lo elimina por votación. Puede tener 😇 Ángel Guardián.
 - 🕵️ **Impostores** — no saben la palabra. Ganan si se acaban las balas o si mueren todos los inocentes y undercovers. Pueden tener 💣 Kamikaze.
 - 🎭 **Undercovers** — no saben la palabra (solo su categoría). Ganan si adivinan la palabra al ser eliminados *o* si quedan últimos en pie. Pueden tener 😇 Ángel Guardián.
+- 💔 **Pareja** — equipo propio de a dos (ambos saben la palabra). Mueren juntos y ganan *solo ellos dos*: cuando no queden impostores NI inocentes. Requiere mesas de 6+. Su propio ángel cubre a cada uno de granada y kamikaze; el corazón roto no tiene salvación.
 
-**Roles especiales (nuevos en v5.1):**
+**Balas:** solo se gastan cuando la mesa elimina a un INOCENTE por votación. Los demás equipos no gastan balas.
+
+**Roles especiales (v5.1):**
 - 🤡 **Bufón** — conoce la palabra de los inocentes y gana SOLO si la mesa lo
   elimina por votación (granada, kamikaze, sacrificio o irse no cuentan).
 - 💔 **Pareja (Cupido)** — dos jugadores se conocen en la revelación. Prohibido

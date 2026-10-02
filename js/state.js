@@ -41,7 +41,7 @@ const POWERS_INFO = {
   sacrificio: {
     emoji: '⚔️',
     name: 'Sacrificio',
-    desc: `Elimina a 1 inocente al azar y a cambio revela un grupo de ${BALANCE.SACRIFICIO.GROUP_MIN}-${BALANCE.SACRIFICIO.GROUP_MAX} jugadores vivos entre los que hay al menos 1 impostor asegurado. Sin decir quién.`
+    desc: `Elimina a 1 jugador al azar (inocente, bufón o undercover; nunca impostor) y a cambio revela un grupo de ${BALANCE.SACRIFICIO.GROUP_MIN}-${BALANCE.SACRIFICIO.GROUP_MAX} jugadores vivos entre los que hay al menos 1 impostor asegurado. Sin decir quién.`
   },
   revivir: {
     emoji: '🕊️',

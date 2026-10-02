@@ -50,12 +50,12 @@ const BALANCE = {
     MAX_PER_GAME: 1
   },
 
-  // 💔 Pareja / Cupido (rol especial): una sola pareja por partida.
-  // Si uno muere por granada o kamikaze, el otro puede salvarlo con Revivir
-  // (1 bala). Muerte por votación o sacrificio = corazón roto inmediato.
+  // 💔 Pareja / Cupido (equipo propio): una sola pareja por partida, solo
+  // entre inocentes puros. Ganan SOLO ellos dos: cuando no queden impostores
+  // NI inocentes. Si uno muere, el otro muere de tristeza (sin excepciones:
+  // su propio ángel los cubre a cada uno de granada y kamikaze).
   PAREJA: {
-    MIN_PLAYERS: 6,                      // se necesita una mesa de 6 o más
-    SAVE_WITH_REVIVIR_COST: 1            // balas que cuesta salvar a la pareja
+    MIN_PLAYERS: 6                       // se necesita una mesa de 6 o más
   },
 
   // 📱 Compacto: a partir de esta cantidad de vivos, la lista de votación

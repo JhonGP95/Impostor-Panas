@@ -1,9 +1,11 @@
 /* ================================================================
-   CONDICIONES DE VICTORIA — 4 equipos
+   CONDICIONES DE VICTORIA — 5 formas de ganar (4 equipos + pareja)
    ✅ Inocentes   · saben la palabra · ganan eliminando a impostores Y undercovers
-   🤡 Bufón       · sabe la palabra  · solo gana si lo eliminan por votación
+   🤡 Bufón       · sabe la palabra  · solo gana si lo eliminan por votación (neutral)
    🕵️ Impostores · no saben la palabra · ganan por balas o mesa sin inocentes/UCs
-   🎭 Undercovers · no saben la palabra · ganan adivinando o quedando últimos en pie
+   🎭 Undercovers · no saben la palabra · ganan adivinando o últimos en pie
+   💔 Pareja      · saben la palabra · equipo de a dos · ganan SOLO ellos dos:
+                    cuando no queden impostores NI inocentes
    ================================================================ */
 function checkVictory() {
   const g = STATE.game;
@@ -12,8 +14,19 @@ function checkVictory() {
   const alive = g.players.filter(pl => pl.alive);
   const impAlive = alive.filter(pl => pl.isImpostor).length;
   const ucAlive = alive.filter(pl => pl.isUndercover).length;
-  // El bufón es neutral: su único objetivo es que lo eliminen por votación
-  const innoAlive = alive.filter(pl => !pl.isImpostor && !pl.isUndercover && !pl.isJester).length;
+  // Inocentes puros: ni impostores, ni UCs, ni bufón, ni miembros de la pareja
+  const innoAlive = alive.filter(pl => !pl.isImpostor && !pl.isUndercover && !pl.isJester && pl.partnerId === null).length;
+
+  // 💔 Pareja: su misión es solo de ellos dos. Se evalúa ANTES que las balas:
+  // el último inocente puede gastar la bala final en el mismo voto, y eso no
+  // les roba la victoria a los que cumplieron su misión.
+  if (g.couple) {
+    const members = g.players.filter(pl => pl.partnerId !== null && pl.partnerId !== undefined);
+    const coupleAlive = members.length === 2 && members.every(pl => pl.alive);
+    if (coupleAlive && impAlive === 0 && innoAlive === 0) {
+      return { winner: 'couple', reason: 'Juntos hasta el final: no quedó ningún impostor ni inocente 💕' };
+    }
+  }
 
   // 1) Sin balas: ganan los impostores
   if (g.bullets !== Infinity && g.bullets <= 0) {
@@ -27,14 +40,15 @@ function checkVictory() {
       : 'Los undercovers quedaron últimos en pie 🎭' };
   }
 
-  // 3) Sin inocentes NI undercovers: ganan los impostores
-  if (innoAlive === 0 && ucAlive === 0) {
-    return { winner: 'impostors', reason: 'No queda ningún inocente ni undercover 😈' };
-  }
-
-  // 4) Sin impostores NI undercovers: ganan los inocentes
+  // 3) Sin impostores NI undercovers: ganan los inocentes
+  //    (la pareja y el bufón no bloquean esta victoria)
   if (impAlive === 0 && ucAlive === 0) {
     return { winner: 'humans', reason: 'Eliminaron a todos los impostores y undercovers 🎯' };
+  }
+
+  // 4) Sin inocentes NI undercovers (con impostores aún vivos): ganan los impostores
+  if (innoAlive === 0 && ucAlive === 0) {
+    return { winner: 'impostors', reason: 'No queda ningún inocente ni undercover 😈' };
   }
 
   return null;
@@ -56,9 +70,13 @@ function renderVictoryScreen(result) {
   const undercoverWin = result.winner === 'undercover';
   const humansWin = result.winner === 'humans';
   const jesterWin = result.winner === 'jester';
+  const coupleWin = result.winner === 'couple';
 
   let color, glow, emoji, title, btnClass;
-  if (jesterWin) {
+  if (coupleWin) {
+    color = 'var(--orange)'; glow = ''; emoji = '💕'; title = '¡LA PAREJA GANA!';
+    btnClass = '';
+  } else if (jesterWin) {
     color = 'var(--yellow)'; glow = 'glow-yellow'; emoji = '🤡'; title = '¡EL BUFÓN GANA!';
     btnClass = '';
   } else if (undercoverWin) {
@@ -72,7 +90,8 @@ function renderVictoryScreen(result) {
     btnClass = 'btn-red';
   }
 
-  if (jesterWin) { playSound('reveal'); setTimeout(() => playSound('impostorWin'), 300); }
+  if (coupleWin) { playSound('revive'); }
+  else if (jesterWin) { playSound('reveal'); setTimeout(() => playSound('impostorWin'), 300); }
   else if (humansWin) playSound('victory');
   else if (undercoverWin) { playSound('reveal'); setTimeout(() => playSound('victory'), 300); }
   else playSound('impostorWin');
@@ -80,6 +99,7 @@ function renderVictoryScreen(result) {
   const impostors = g.players.filter(pl => pl.isImpostor);
   const undercovers = g.players.filter(pl => pl.isUndercover);
   const jesters = g.players.filter(pl => pl.isJester);
+  const parejaMembers = g.players.filter(pl => pl.partnerId !== null && pl.partnerId !== undefined);
   const leftEarly = g.players.filter(pl => pl.leftEarly);
 
   const impostorList = impostors.map(pl => `
@@ -122,7 +142,7 @@ function renderVictoryScreen(result) {
     ? `<div class="caption" style="margin-top:8px;">🤡 Se hizo pasar por inocente con la palabra <strong style="color:var(--yellow)">${esc(g.secretWord)}</strong></div>`
     : '';
 
-  const particleColor = jesterWin ? 'var(--yellow)' : undercoverWin ? 'var(--cyan)' : humansWin ? 'var(--green)' : 'var(--red)';
+  const particleColor = coupleWin ? 'var(--orange)' : jesterWin ? 'var(--yellow)' : undercoverWin ? 'var(--cyan)' : humansWin ? 'var(--green)' : 'var(--red)';
   const particles = Array.from({ length: 20 }, () => `
     <div class="victory-particle" style="
       left:${Math.random() * 100}%;
@@ -150,6 +170,18 @@ function renderVictoryScreen(result) {
       </div>
 
       <div class="anim-fade-up delay-2" style="width:100%;margin-top:28px;">
+        ${parejaMembers.length > 0 ? `
+          <div class="section-label" style="color:var(--orange);">La Pareja era</div>
+          <div>${parejaMembers.map(pl => `
+            <div class="player-item" style="border-color:rgba(255,107,53,0.3);">
+              <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;">${pl.avatar}</div>
+              <div style="flex:1;min-width:0;">
+                <div class="body-md" style="font-weight:700;">${esc(pl.name)}</div>
+                <div class="caption">${coupleWin ? '💕 Su plan funcionó a la perfección' : (pl.alive ? 'Sobrevivió, pero no ganaron' : 'Fue eliminado 💔')}</div>
+              </div>
+              <span class="badge" style="background:rgba(255,107,53,0.15);border-color:rgba(255,107,53,0.4);color:var(--orange);">💕 PAREJA</span>
+            </div>`).join('')}</div>
+        ` : ''}
         ${jesters.length > 0 ? `
           <div class="section-label">El Bufón era</div>
           <div>${jesters.map(pl => `

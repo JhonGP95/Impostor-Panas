@@ -91,13 +91,15 @@ function repeatWord(playerId) {
       <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu categoría</div>
       <div class="title-xl glow-cyan" style="margin-bottom:8px;">${esc(g.category)}</div>
       <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-        Tu palabra sigue siendo secreta: fingí dentro de esta categoría.
+        No tenés palabra: inventá pistas dentro de esta categoría<br>
+        y preparate para adivinar la secreta al final.
       </div>`;
   } else {
-    emoji = '✅';
+    const isCoupleMember = p.partnerId !== null && p.partnerId !== undefined;
+    emoji = isCoupleMember ? '💕' : '✅';
     cardClass = 'human';
     inner = `
-      <div class="badge badge-human" style="margin-bottom:12px;">SECRETO</div>
+      <div class="badge ${isCoupleMember ? '' : 'badge-human'}" style="margin-bottom:12px;${isCoupleMember ? 'background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.45);color:var(--orange);' : ''}">SECRETO</div>
       <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu palabra</div>
       <div class="title-xl glow-green" style="margin-bottom:8px;">${esc(g.secretWord)}</div>`;
   }

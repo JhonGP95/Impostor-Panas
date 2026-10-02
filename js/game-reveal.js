@@ -266,7 +266,7 @@ function revealRole() {
       <div class="role-card role-card-impostor" style="${A_CARD}">
         <div style="font-size:52px;margin-bottom:16px;animation: popIn .45s .28s cubic-bezier(.34,1.56,.64,1) both, glitch 3s 1.4s infinite;">💀</div>
         <div class="badge badge-impostor" style="margin-bottom:12px;${A_UP1}">IMPOSTOR</div>
-        <div class="title-xl glow-red" style="margin-bottom:8px;${A_WORD}">ERES EL<br>IMPOSTOR</div>
+        <div class="title-xl glow-red" style="margin-bottom:8px;${A_WORD}">SOS EL<br>IMPOSTOR</div>
         <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
           Nadie conoce tu secreto.<br>Fingí que la sabés.
         </div>
@@ -278,8 +278,16 @@ function revealRole() {
         ${coupleHtml}
       </div>`;
   } else {
-    card.innerHTML = `
-      <div class="role-card role-card-human" style="${A_CARD}">
+    const isCoupleMember = player.partnerId !== null && player.partnerId !== undefined;
+    const headHtml = isCoupleMember ? `
+        <div style="font-size:52px;margin-bottom:16px;${A_POP}">💕</div>
+        <div class="badge" style="margin-bottom:12px;${A_UP1}background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.45);color:var(--orange);">PAREJA SECRETA</div>
+        <div class="title-xl" style="margin-bottom:8px;${A_WORD}color:var(--orange);text-shadow:0 0 24px rgba(255,107,53,0.45);">Ustedes Dos<br>Contra Todos</div>
+        <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
+          Son su <strong style="color:var(--orange)">propio equipo</strong>: no son inocentes para el juego.<br>
+          Su misión: que caigan <strong style="color:var(--text)">todos los impostores y todos los inocentes</strong>.<br>
+          Ganarán solo ustedes dos. 💕
+        </div>` : `
         <div style="font-size:52px;margin-bottom:16px;${A_POP}">✅</div>
         <div class="badge badge-human" style="margin-bottom:12px;${A_UP1}">INOCENTE</div>
         <div class="title-xl glow-green" style="margin-bottom:8px;${A_WORD}">${esc(g.secretWord)}</div>
@@ -289,7 +297,10 @@ function revealRole() {
         <div style="margin-top:12px;${A_UP3}">
           <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;">Categoría</div>
           <div class="body-md" style="color:var(--green);">${esc(g.category)}</div>
-        </div>
+        </div>`;
+    card.innerHTML = `
+      <div class="role-card ${isCoupleMember ? '' : 'role-card-human'}" style="${A_CARD};${isCoupleMember ? 'border-color:rgba(255,107,53,0.45);box-shadow:0 0 60px rgba(255,107,53,0.12);' : ''}">
+        ${headHtml}
         ${coupleHtml}
       </div>`;
   }

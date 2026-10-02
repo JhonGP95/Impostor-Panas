@@ -42,7 +42,7 @@ function renderVotingScreen() {
       : `<div class="stat-chip stat-chip-blue">🕵️ ${impAlive} ${impAlive === 1 ? 'impostor' : 'impostores'}</div>`;
   const innoChip = hideNumbers
     ? ''
-    : `<div class="stat-chip stat-chip-green">✅ ${aliveCount(g, pl => !pl.isImpostor && !pl.isUndercover && !pl.isJester)} inocentes</div>`;
+    : `<div class="stat-chip stat-chip-green">✅ ${aliveCount(g, pl => !pl.isImpostor && !pl.isUndercover && !pl.isJester && pl.partnerId === null)} inocentes</div>`;
   // Contra qué tipo de impostor se enfrenta la mesa (solo si el número es conocido)
   const hintChip = randomMode
     ? ''
@@ -73,6 +73,7 @@ function renderVotingScreen() {
     else if (pl.isImpostor) badge = `<span class="badge badge-impostor">Impostor</span>`;
     else if (pl.isUndercover) badge = `<span class="badge badge-undercover">Undercover</span>`;
     else if (pl.isJester) badge = `<span class="badge badge-bufon">Bufón</span>`;
+    else if (pl.partnerId !== null && pl.partnerId !== undefined) badge = `<span class="badge" style="background:rgba(255,107,53,0.15);border-color:rgba(255,107,53,0.4);color:var(--orange);">💕 Pareja</span>`;
     else badge = `<span class="badge badge-human">Inocente</span>`;
     if (pl.diedOf === 'heartbreak') badge += ` <span class="badge badge-left">💔</span>`;
     return `
@@ -172,16 +173,16 @@ function executeVote(playerId) {
   vibrate(120);
 
   if (p.isUndercover) {
-    if (g.bullets !== Infinity) g.bullets--;
     // Última oportunidad del undercover: adivinar la palabra real.
     // Sin categoría en pantalla: el undercover ya la conoce y mostrarla
     // públicamente le filtraría información al impostor.
+    // (Su muerte NO gasta bala: solo los inocentes gastan.)
     openUcGuessModal(p.id);
     return;
   }
 
-  if (!p.isImpostor) {
-    // Inocente o bufón eliminado por votación: se gasta una bala
+  if (!p.isImpostor && !p.isUndercover && !p.isJester && p.partnerId === null) {
+    // Solo la muerte de un INOCENTE puro gasta bala (los demás equipos no)
     if (g.bullets !== Infinity) g.bullets--;
   }
 

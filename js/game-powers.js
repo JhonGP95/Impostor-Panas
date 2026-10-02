@@ -29,6 +29,7 @@ function useGrenade() {
 
 function launchGrenade() {
   const g = STATE.game;
+  if (g.powersUsed.grenade) return; // guard anti doble tap
   g.powersUsed.grenade = true;
 
   const GB = BALANCE.GRENADE;
@@ -108,14 +109,32 @@ function grenadeHeadline(dead) {
 
 // Aplica muertes de poderes caóticos (granada / kamikaze). El Ángel Guardián
 // salva a los alcanzados que lo tengan; devuelve quién murió y quién fue salvado.
-// Además encola: UCs con adivinanza pendiente y parejas con salvación pendiente.
+// 💔 Pareja: la muerte de un miembro arrastra al otro (su propio ángel los cubre
+// por separado; el corazón roto no tiene salvación). Encola UCs con adivinanza
+// pendiente y las tragedias románticas para el teatrito.
 function applyChaosDeaths(targets) {
   const g = STATE.game;
   const dead = [];
   const saved = [];
   const seen = new Set();
   if (!Array.isArray(g.pendingUcGuesses)) g.pendingUcGuesses = [];
-  if (!Array.isArray(g.pendingCoupleSaves)) g.pendingCoupleSaves = [];
+  if (!Array.isArray(g.pendingHeartbreaks)) g.pendingHeartbreaks = [];
+
+  const kill = (pl) => {
+    pl.alive = false;
+    g.eliminated.push(pl);
+    dead.push(pl);
+    if (pl.isUndercover) g.pendingUcGuesses.push(pl.id);
+    const mate = partnerOf(pl);
+    if (mate && mate.alive && !seen.has(mate.id)) {
+      seen.add(mate.id);
+      applyHeartbreak(pl); // 💔 corazón roto inmediato, sin salvación
+      dead.push(mate);
+      queueHeartbreak(pl, mate); // teatrito al cerrar el resumen de bajas
+      if (mate.isUndercover) g.pendingUcGuesses.push(mate.id);
+    }
+  };
+
   targets.forEach(pl => {
     if (seen.has(pl.id)) return;
     seen.add(pl.id);
@@ -124,14 +143,7 @@ function applyChaosDeaths(targets) {
       pl.angel = false; // el ángel se consumió al salvarlo
       saved.push(pl);
     } else {
-      pl.alive = false;
-      g.eliminated.push(pl);
-      dead.push(pl);
-      // El UC muerto por un poder conserva su última oportunidad de adivinar
-      if (pl.isUndercover) g.pendingUcGuesses.push(pl.id);
-      // El miembro de una pareja muerto por poder puede ser salvado por el otro
-      const mate = partnerOf(pl);
-      if (mate && mate.alive) g.pendingCoupleSaves.push(pl.id);
+      kill(pl);
     }
   });
   return { dead, saved };
@@ -181,48 +193,26 @@ function showPowerFlash(color) {
 }
 
 // Cierre común de todos los poderes. Orden de resolución:
-// 1) 💔 salvar pareja (si un poder la mató y su pareja está viva)
+// Cierre común de todos los poderes:
+// 1) 💔 tragedias románticas pendientes (corazones rotos con teatrito)
 // 2) 🎭 adivinanzas de UC pendientes
 // 3) reevaluar victoria y volver a la votación
 function finishPowerAction() {
   closeModal();
-  // Primero las tragedias románticas pendientes, después el resto
   processHeartbreakQueue(finishPowerActionRest);
 }
 
 function finishPowerActionRest() {
   const g = STATE.game;
-  if (!Array.isArray(g.pendingCoupleSaves)) g.pendingCoupleSaves = [];
   if (!Array.isArray(g.pendingUcGuesses)) g.pendingUcGuesses = [];
 
-  // 1) Oferta de salvar a la pareja (solo si murió por granada/kamikaze)
-  while (g.pendingCoupleSaves.length > 0) {
-    const deadId = g.pendingCoupleSaves.shift();
-    const dead = g.players.find(pl => pl.id === deadId);
-    const mate = dead ? partnerOf(dead) : null;
-    if (dead && !dead.alive && mate && mate.alive && canSavePartner()) {
-      offerPartnerSave(dead, mate);
-      return;
-    }
-    // Sin salvación posible (sin balas, poder gastado o pareja ya muerta):
-    // corazón roto inmediato (con su teatrito)
-    if (dead && !dead.alive && mate && mate.alive) {
-      const broken = applyHeartbreak(dead);
-      if (broken) queueHeartbreak(dead, broken);
-    }
-  }
-  if (g.pendingHeartbreaks && g.pendingHeartbreaks.length > 0) {
-    processHeartbreakQueue(finishPowerActionRest);
-    return;
-  }
-
-  // 2) Adivinanzas de UC pendientes
+  // Adivinanzas de UC pendientes
   if (g.pendingUcGuesses.length > 0) {
     openUcGuessModal(g.pendingUcGuesses.shift());
     return;
   }
 
-  // 3) Victoria + votación
+  // Victoria + votación
   const v = checkVictory();
   if (v) {
     renderVictoryScreen(v);
@@ -232,108 +222,9 @@ function finishPowerActionRest() {
   renderVotingScreen();
 }
 
-// ¿Se puede ofrecer la salvación de pareja con Revivir?
-function canSavePartner() {
-  const g = STATE.game;
-  if (!g.powersEnabled.revivir || g.powersUsed.revivir) return false;
-  if (g.bullets !== Infinity && g.bullets < BALANCE.REVIVIR.MIN_BULLETS_REQUIRED) return false;
-  return true;
-}
 
-// 💔 Modal de decisión: salvar a la pareja con Revivir, o despedirla para siempre
-function offerPartnerSave(dead, survivor) {
-  const g = STATE.game;
-  playSound('tap');
-  openModal(`
-    <div style="text-align:center;">
-      <div style="font-size:48px;margin-bottom:10px;">💔</div>
-      <div class="title-md" style="margin-bottom:6px;color:var(--orange);">${esc(survivor.name)}…</div>
-      <div class="body-md" style="color:var(--muted);margin-bottom:16px;">
-        Tu pareja secreta <strong style="color:var(--text)">${esc(dead.name)}</strong> acaba de morir
-        por la explosión.<br>Pero todavía hay una esperanza.
-      </div>
-      <div class="info-note" style="text-align:left;margin-bottom:20px;">
-        🕊️ Usá el poder <strong>Revivir</strong> para traer${dead.isUndercover ? 'l' : 'a'} ${esc(dead.name)} de vuelta.<br>
-        💸 Costo: <strong style="color:var(--red)">${BALANCE.PAREJA.SAVE_WITH_REVIVIR_COST} bala</strong>
-        ${g.bullets !== Infinity ? `(quedarán ${g.bullets - BALANCE.PAREJA.SAVE_WITH_REVIVIR_COST})` : ''}.<br>
-        🤐 Nadie podrá probar que eran pareja… salvo por tu cara.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn btn-green" onclick="savePartner(${dead.id}, ${survivor.id})">🕊️ Salvar a mi pareja</button>
-        <button class="btn btn-ghost" onclick="declinePartnerSave(${dead.id}, ${survivor.id})">💔 Despedir a mi pareja</button>
-      </div>
-    </div>
-  `);
-}
 
-function savePartner(deadId, survivorId) {
-  const g = STATE.game;
-  const dead = g.players.find(pl => pl.id === deadId);
-  const survivor = g.players.find(pl => pl.id === survivorId);
-  if (!dead || !survivor || g.powersUsed.revivir || revivirBlocked()) { finishPowerAction(); return; }
 
-  // El sacrificio emocional consume el poder de Revivir y 1 bala
-  g.powersUsed.revivir = true;
-  if (g.bullets !== Infinity) g.bullets -= BALANCE.PAREJA.SAVE_WITH_REVIVIR_COST;
-  dead.alive = true;
-  dead.angel = false;
-  g.eliminated = g.eliminated.filter(pl => pl.id !== dead.id);
-  if (Array.isArray(g.pendingUcGuesses)) {
-    g.pendingUcGuesses = g.pendingUcGuesses.filter(id => id !== dead.id); // está vivo: sin adivinanza
-  }
-  if (Array.isArray(g.pendingCoupleSaves)) {
-    g.pendingCoupleSaves = g.pendingCoupleSaves.filter(id => id !== dead.id);
-  }
-
-  playSound('revive');
-  vibrate([60, 40, 120]);
-  showPowerFlash('rgba(255,107,53,0.35)');
-
-  openModal(`
-    <div style="text-align:center;">
-      <div class="anim-rise" style="font-size:64px;margin-bottom:10px;">💕</div>
-      <div class="title-xl" style="color:var(--orange);text-shadow:0 0 24px rgba(255,107,53,0.5);margin-bottom:8px;">¡MILAGRO DE AMOR!</div>
-      <div class="body-md" style="color:var(--muted);margin-bottom:16px;">
-        <strong style="color:var(--text)">${esc(dead.name)}</strong> vuelve a la mesa…
-        y <strong style="color:var(--text)">${esc(survivor.name)}</strong> no muere de tristeza.
-        El secreto sigue a salvo.
-      </div>
-      <div class="caption" style="margin-bottom:16px;">Costo: 1 bala${g.bullets !== Infinity ? ` · quedan ${g.bullets}` : ''}</div>
-      <button class="btn btn-primary" onclick="finishPowerAction()">Continuar</button>
-    </div>
-  `);
-}
-
-function declinePartnerSave(deadId, survivorId) {
-  closeModal();
-  const g = STATE.game;
-  const survivor = g.players.find(pl => pl.id === survivorId);
-  if (survivor && survivor.alive) {
-    // 💔 Corazón roto: la pareja sobreviviente muere de tristeza (con teatrito)
-    survivor.alive = false;
-    survivor.diedOf = 'heartbreak';
-    g.eliminated.push(survivor);
-    playSound('eliminate');
-    vibrate([60, 40, 120]);
-    const dead = g.players.find(pl => pl.id === deadId);
-    if (dead) queueHeartbreak(dead, survivor);
-    // Si la sobreviviente era UC… no hay adivinanza: murió de tristeza, no de voto.
-  }
-  processHeartbreakQueue(() => {
-    // La pareja muerta sigue en cola de adivinanza si era UC
-    const v = checkVictory();
-    if (v) {
-      renderVictoryScreen(v);
-      navigate('screen-victory');
-      return;
-    }
-    if (Array.isArray(g.pendingUcGuesses) && g.pendingUcGuesses.length > 0) {
-      openUcGuessModal(g.pendingUcGuesses.shift());
-      return;
-    }
-    renderVotingScreen();
-  });
-}
 
 // Modal de última oportunidad del Undercover (compartido por votación y poderes)
 function openUcGuessModal(ucId) {
@@ -413,6 +304,8 @@ function kamikazeActivate(playerId) {
   const g = STATE.game;
   const p = g.players.find(pl => pl.id === playerId);
   if (!p) { renderVotingScreen(); return; }
+  if (!p.kamikaze) { renderVotingScreen(); return; } // guard anti doble tap
+  p.kamikaze = false; // se consume al primer toque
   closeModal();
 
   const targets = kamikazeNeighbors(p);
@@ -478,9 +371,10 @@ function useSacrificio() {
       <div style="font-size:48px;margin-bottom:12px;">⚔️</div>
       <div class="title-md" style="margin-bottom:8px;">¿Ofrecer un Sacrificio?</div>
       <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
-        Un <strong style="color:var(--text)">inocente al azar</strong> será eliminado y, a cambio,
-        se revelará un grupo de ${SB.GROUP_MIN}-${SB.GROUP_MAX} jugadores vivos
-        entre los que hay <strong style="color:var(--violet)">al menos 1 impostor asegurado</strong>.
+        Un <strong style="color:var(--text)">jugador al azar</strong> (inocente, bufón, undercover
+        o miembro de la pareja) será eliminado y, a cambio, se revelará un grupo de
+        ${SB.GROUP_MIN}-${SB.GROUP_MAX} jugadores vivos entre los que hay
+        <strong style="color:var(--violet)">al menos 1 impostor asegurado</strong>.
         Solo se puede usar <strong>una vez</strong>.
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
@@ -647,24 +541,40 @@ function attemptRevive(playerId) {
   const p = g.players.find(pl => pl.id === playerId);
   if (!p || p.alive || p.leftEarly) return;
 
-  // Un impostor o undercover no puede ser revivido: mensaje gracioso
-  if (p.isImpostor || p.isUndercover) {
+  // Revivir solo sirve para inocentes puros. Cualquier otra cosa: burla.
+  const esInocentePuro = !p.isImpostor && !p.isUndercover && !p.isJester && p.partnerId === null;
+  if (!esInocentePuro) {
     playSound('error');
     vibrate(80);
-    const joke = p.isImpostor
-      ? rand([
-          '🤨 ¿Son pendejos? ¿Revivir a un IMPOSTOR?',
-          '😅 ¿Revivir al impostor? Tampoco es por ahí…',
-          '🤡 Buenísimo: revivir problemas. Pasamos.',
-          '👻 Ya cumplió su misión. Que descanse en paz.',
-          '💰 No hay suficiente plata para el rescate de un criminal.'
-        ])
-      : rand([
-          '🤨 ¿Son pendejos? ¿Revivir al UNDERCOVER?',
-          '🎭 El Undercover ya gastó su última oportunidad…',
-          '🎤 No hay encore para el Undercover. A casa.',
-          '😅 Revivir al Undercover… ¿para que adivine de nuevo? No.'
-        ]);
+    let joke;
+    if (p.isImpostor) {
+      joke = rand([
+        '🤨 ¿Son pendejos? ¿Revivir a un IMPOSTOR?',
+        '😅 ¿Revivir al impostor? Tampoco es por ahí…',
+        '🤡 Buenísimo: revivir problemas. Pasamos.',
+        '👻 Ya cumplió su misión. Que descanse en paz.',
+        '💰 No hay suficiente plata para el rescate de un criminal.'
+      ]);
+    } else if (p.isUndercover) {
+      joke = rand([
+        '🤨 ¿Son pendejos? ¿Revivir al UNDERCOVER?',
+        '🎭 El Undercover ya gastó su última oportunidad…',
+        '🎤 No hay encore para el Undercover. A casa.',
+        '😅 Revivir al Undercover… ¿para que adivine de nuevo? No.'
+      ]);
+    } else if (p.isJester) {
+      joke = rand([
+        '🤨 ¿Revivir al BUFÓN? Él quería que lo eliminen, no que lo resuciten…',
+        '🤡 ¡No arruinen su obra maestra! Murió como soñaba.',
+        '🎭 El show ya terminó. Aplausos y a casa.'
+      ]);
+    } else {
+      joke = rand([
+        '💔 ¿Revivir a la pareja? No, el amor de ellos ya cumplió su ciclo…',
+        '🥀 Un amor así no se revive: se recuerda.',
+        '😅 Revivir a uno de la pareja… ¿para que muera de tristeza otra vez? No.'
+      ]);
+    }
     openModal(`
       <div style="text-align:center;">
         <div style="font-size:48px;margin-bottom:12px;">🚫</div>
@@ -698,8 +608,8 @@ function attemptRevive(playerId) {
 function executeRevivir(playerId) {
   const g = STATE.game;
   const p = g.players.find(pl => pl.id === playerId);
-  // Guardia completa: solo inocentes presentes pueden volver
-  if (!p || p.alive || p.leftEarly || p.isImpostor || p.isUndercover || g.powersUsed.revivir || revivirBlocked()) { renderVotingScreen(); return; }
+  // Guardia completa: solo inocentes puros presentes pueden volver
+  if (!p || p.alive || p.leftEarly || p.isImpostor || p.isUndercover || p.isJester || p.partnerId !== null || g.powersUsed.revivir || revivirBlocked()) { renderVotingScreen(); return; }
   g.powersUsed.revivir = true;
 
   if (BALANCE.REVIVIR.CONSUMES_BULLET && g.bullets !== Infinity) g.bullets--;
