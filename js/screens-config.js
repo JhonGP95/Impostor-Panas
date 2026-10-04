@@ -188,7 +188,7 @@ function renderConfig() {
         <div class="caption" style="margin-top:8px;">La pista ayuda al impostor a fingir que conoce la palabra</div>`;
 
   const secCategorias = `
-        <div class="caption" style="margin-bottom:8px;">Si no elegís ninguna, se usan todas</div>
+        <div class="caption" style="margin-bottom:8px;">Si no eliges ninguna, se usan todas</div>
         <div style="display:flex;flex-direction:column;" id="cat-checkboxes">${catRows}</div>
         <div class="switch-row">
           <span class="body-md" style="color:var(--violet);">🎲 Todas</span>
@@ -201,14 +201,15 @@ function renderConfig() {
         </div>`;
 
   const secNombres = `
-        <div class="caption" style="margin-bottom:8px;">Usá las flechas ↕ para ordenar el pasamanos</div>
+        <div class="caption" style="margin-bottom:8px;">Usa las flechas ↕ para ordenar el pasamanos</div>
         <div id="player-names-list"></div>`;
 
   const secReglas = `
         <div class="info-note" style="display:flex;flex-direction:column;gap:8px;">
-          <span><strong style="color:var(--green);">✅ Inocentes:</strong> saben la palabra. Pueden tener 😇 Ángel Guardián. Ganan eliminando a <em>todos</em> los impostores y undercovers.</span>
+          <span><strong style="color:var(--green);">✅ Inocentes:</strong> saben la palabra. Pueden tener 😇 Ángel Guardián. Ganan eliminando a <em>todos</em> los impostores, undercovers y la pareja.</span>
           <span><strong style="color:var(--yellow);">🤡 Bufón:</strong> sabe la palabra. Solo gana si la mesa lo elimina por votación. Puede tener 😇 Ángel Guardián.</span>
           <span><strong style="color:var(--red);">🕵️ Impostores:</strong> no saben la palabra. Ganan si se acaban las balas <em>o</em> si mueren todos los inocentes y undercovers. Pueden tener 💣 Kamikaze.</span>
+          <span><strong style="color:var(--orange);">💕 Pareja:</strong> equipo propio de a dos. Ganan solo ellos dos cuando no queden impostores ni inocentes.</span>
           <span><strong style="color:var(--cyan);">🎭 Undercovers:</strong> no saben la palabra (solo su categoría). Ganan si adivinan la palabra al ser eliminados <em>o</em> si quedan últimos en pie. Pueden tener 😇 Ángel Guardián.</span>
           <span><strong style="color:var(--orange);">💕 Pareja:</strong> equipo propio de a dos (ambos saben la palabra). Mueren juntos y ganan <em>solo ellos dos</em>: cuando no queden impostores ni inocentes.</span>
         </div>`;
@@ -218,7 +219,7 @@ function renderConfig() {
     <div class="screen-header">
       <div style="flex:1;">
         <div class="title-lg">Configurar <span class="glow-violet">Partida</span></div>
-        <div class="caption">Personalizá tu experiencia · tocá una sección para abrirla</div>
+        <div class="caption">Personaliza tu experiencia · toca una sección para abrirla</div>
       </div>
       <button class="icon-btn install-btn" style="display:none;" onclick="handleInstallClick()" title="Instalar app">📲</button>
     </div>

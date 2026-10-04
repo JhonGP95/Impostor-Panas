@@ -106,7 +106,7 @@ function openPwaInfo() {
       <div style="font-size:40px;margin-bottom:12px;">📲</div>
       <div class="title-md" style="margin-bottom:8px;">Instalar como App</div>
       <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
-        Jugá a pantalla completa, sin la barra del navegador.
+        Juega a pantalla completa, sin la barra del navegador.
       </div>
       <div style="text-align:left;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;">
         <div class="info-note"><strong style="color:var(--cyan);">📱 Android (Chrome):</strong><br>Menú ⋮ → <em>Instalar aplicación</em> / <em>Agregar a pantalla de inicio</em>.</div>
@@ -117,7 +117,7 @@ function openPwaInfo() {
         <button class="btn btn-primary btn-sm" onclick="closeModal()">Entendido</button>
       </div>
       <div class="caption" style="margin-top:14px;">
-        El sw.js es opcional: copialo junto a index.html en tu repositorio para poder jugar sin internet.
+        El sw.js es opcional: cópialo junto a index.html en tu repositorio para poder jugar sin internet.
       </div>
     </div>
   `);

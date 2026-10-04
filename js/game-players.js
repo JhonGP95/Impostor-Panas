@@ -11,7 +11,7 @@ function openDeletePlayer() {
       <div style="text-align:center;margin-bottom:16px;">
         <div style="font-size:36px;margin-bottom:8px;">👋</div>
         <div class="title-md">¿Quién tiene el celular?</div>
-        <div class="caption" style="margin-top:4px;">Tocá tu nombre para repetir tu palabra, o marcá quién se fue</div>
+        <div class="caption" style="margin-top:4px;">Toca tu nombre para repetir tu palabra, o marca quién se fue</div>
       </div>
       <div style="display:flex;flex-direction:column;">
         ${alive.map(pl => `
@@ -48,7 +48,7 @@ function openPlayerMenu(playerId) {
 
 // 🔁 Repetir palabra: cada rol ve solo lo que le corresponde
 //   inocente  → su palabra
-//   impostor  → "SOS EL IMPOSTOR" (sin pista, sin categoría)
+//   impostor  → "ERES EL IMPOSTOR" (sin pista, sin categoría)
 //   undercover → su categoría
 function repeatWord(playerId) {
   const g = STATE.game;
@@ -68,9 +68,9 @@ function repeatWord(playerId) {
     cardClass = 'impostor';
     inner = `
       <div class="badge badge-impostor" style="margin-bottom:12px;">SECRETO</div>
-      <div class="title-xl glow-red" style="margin-bottom:8px;">SOS EL<br>IMPOSTOR</div>
+      <div class="title-xl glow-red" style="margin-bottom:8px;">ERES EL<br>IMPOSTOR</div>
       <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-        Seguí fingiendo que la sabés.<br>
+        Sigue fingiendo que la sabes.<br>
         (No hay pista ni categoría para repetir… ¡obvio!)
       </div>`;
   } else if (p.isJester) {
@@ -91,8 +91,8 @@ function repeatWord(playerId) {
       <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu categoría</div>
       <div class="title-xl glow-cyan" style="margin-bottom:8px;">${esc(g.category)}</div>
       <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-        No tenés palabra: inventá pistas dentro de esta categoría<br>
-        y preparate para adivinar la secreta al final.
+        No tienes palabra: inventa pistas dentro de esta categoría<br>
+        y prepárate para adivinar la secreta al final.
       </div>`;
   } else {
     const isCoupleMember = p.partnerId !== null && p.partnerId !== undefined;

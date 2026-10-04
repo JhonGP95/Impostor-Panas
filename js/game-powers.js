@@ -270,7 +270,7 @@ function openKamikazeModal(p) {
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:48px;margin-bottom:12px;">💣</div>
-      <div class="title-md glow-red" style="margin-bottom:8px;">${esc(p.name)}, tenés Kamikaze</div>
+      <div class="title-md glow-red" style="margin-bottom:8px;">${esc(p.name)}, tienes Kamikaze</div>
       <div class="body-md" style="color:var(--muted);margin-bottom:20px;">
         Te eliminaron por votación. ¿Querés activarlo?<br>
         Explotarás y te llevarás a tus <strong style="color:var(--text)">vecinos de la ronda</strong>…
@@ -278,7 +278,7 @@ function openKamikazeModal(p) {
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn btn-red" onclick="kamikazeActivate(${p.id})">💥 ¡Sí, activar Kamikaze!</button>
-        <button class="btn btn-ghost" onclick="kamikazeDecline()">🙅 No, me marcho tranquilo</button>
+        <button class="btn btn-ghost" onclick="kamikazeDecline()">🙅 No, me retiro en paz</button>
       </div>
     </div>
   `);
@@ -549,30 +549,30 @@ function attemptRevive(playerId) {
     let joke;
     if (p.isImpostor) {
       joke = rand([
-        '🤨 ¿Son pendejos? ¿Revivir a un IMPOSTOR?',
-        '😅 ¿Revivir al impostor? Tampoco es por ahí…',
+        '🤨 ¿En serio? ¿Revivir a un impostor?',
+        '😅 ¿Revivir al impostor? Ni lo pienses…',
         '🤡 Buenísimo: revivir problemas. Pasamos.',
         '👻 Ya cumplió su misión. Que descanse en paz.',
         '💰 No hay suficiente plata para el rescate de un criminal.'
       ]);
     } else if (p.isUndercover) {
       joke = rand([
-        '🤨 ¿Son pendejos? ¿Revivir al UNDERCOVER?',
+        '🤨 ¿En serio? ¿Revivir al undercover?',
         '🎭 El Undercover ya gastó su última oportunidad…',
-        '🎤 No hay encore para el Undercover. A casa.',
-        '😅 Revivir al Undercover… ¿para que adivine de nuevo? No.'
+        '🎤 No hay encore para el undercover. Despidanlo.',
+        '😅 Revivir al undercover… ¿para que adivine otra vez? No.'
       ]);
     } else if (p.isJester) {
       joke = rand([
-        '🤨 ¿Revivir al BUFÓN? Él quería que lo eliminen, no que lo resuciten…',
+        '🤨 ¿Revivir al bufón? Él quería que lo eliminen, no que lo resuciten…',
         '🤡 ¡No arruinen su obra maestra! Murió como soñaba.',
         '🎭 El show ya terminó. Aplausos y a casa.'
       ]);
     } else {
       joke = rand([
-        '💔 ¿Revivir a la pareja? No, el amor de ellos ya cumplió su ciclo…',
+        '💔 ¿Revivir a la pareja? Ellos ya cumplieron su destino juntos…',
         '🥀 Un amor así no se revive: se recuerda.',
-        '😅 Revivir a uno de la pareja… ¿para que muera de tristeza otra vez? No.'
+        '😅 Revivir a uno de la pareja… ¿para que mueran de nuevo? No.'
       ]);
     }
     openModal(`

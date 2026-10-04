@@ -60,7 +60,7 @@ function renderRevealScreen() {
               </button>
               <div class="hold-progress"><div class="hold-fill" id="hold-fill"></div></div>
             </div>
-            <div class="caption" style="margin-top:10px;">¿No funciona? Tocá 5 veces seguidas el botón</div>
+            <div class="caption" style="margin-top:10px;">¿No funciona? Toca 5 veces seguidas el botón</div>
           </div>
         </div>
 
@@ -217,7 +217,7 @@ function revealRole() {
         <div class="body-md" style="margin-bottom:8px;">Tu pareja es <strong style="color:var(--orange)">${mate.avatar} ${esc(mate.name)}</strong>.</div>
         <div class="caption" style="line-height:1.6;">
           🤐 <strong style="color:var(--text)">PROHIBIDO decirlo</strong>: si la mesa se entera, los elimina.<br>
-          💔 Si tu pareja muere, morís de tristeza… salvo que la salves con el poder Revivir (si muere por granada o kamikaze).
+          💔 Si tu pareja muere, mueres de tristeza.
         </div>
       </div>` : '';
 
@@ -226,10 +226,10 @@ function revealRole() {
       <div class="role-card" style="border-color:rgba(255,214,0,0.45);box-shadow:0 0 60px rgba(255,214,0,0.12);${A_CARD}">
         <div style="font-size:52px;margin-bottom:16px;${A_POP}">🤡</div>
         <div class="badge badge-bufon" style="margin-bottom:12px;${A_UP1}">BUFÓN</div>
-        <div class="title-xl glow-yellow" style="margin-bottom:8px;${A_WORD}">SOS EL<br>BUFÓN</div>
+        <div class="title-xl glow-yellow" style="margin-bottom:8px;${A_WORD}">ERES EL<br>BUFÓN</div>
         <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
           Tu misión: que la mesa te <strong style="color:var(--yellow)">elimine por votación</strong>.<br>
-          Fingí, meté sospechas sobre vos, sé obvio… pero no tanto.
+          Finge, pon sospechas sobre ti, sé obvio… pero no tanto.
         </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(255,214,0,0.06);border:1px solid rgba(255,214,0,0.25);border-radius:var(--radius-sm);${A_UP3}">
           <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--yellow);margin-bottom:6px;">🗝️ Para fingir, la palabra de los inocentes es</div>
@@ -237,7 +237,7 @@ function revealRole() {
           <div class="caption" style="margin-top:6px;">Categoría: ${esc(g.category)}</div>
         </div>
         <div style="margin-top:12px;${A_UP3}">
-          <div class="caption" style="line-height:1.6;">⚠️ Solo cuenta el <strong style="color:var(--yellow)">voto</strong>: si morís por granada, kamikaze, sacrificio o te vas, no ganás nada.</div>
+          <div class="caption" style="line-height:1.6;">⚠️ Solo cuenta el <strong style="color:var(--yellow)">voto</strong>: si mueres por granada, kamikaze, sacrificio o te vas, no ganas nada.</div>
         </div>
         ${coupleHtml}
       </div>`;
@@ -251,13 +251,13 @@ function revealRole() {
           <div class="title-xl glow-cyan">${esc(g.category)}</div>
         </div>
         <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:8px;${A_UP2}">
-          No tenés palabra: la de ellos es un <strong style="color:var(--cyan)">misterio para vos</strong>.<br>
-          Mezclate, inventá pistas que encajen en la categoría…<br>
-          y tu momento llegará: <strong style="color:var(--cyan)">te van a eliminar</strong>.
+          No tienes palabra. La única pista que tienes es esta categoría.<br>
+          Mezcla, inventa pistas que encajen…<br>
+          y cuando te eliminen, tendrás tu oportunidad de adivinar.
         </div>
         <div style="margin-top:20px;padding:14px 16px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:var(--radius-sm);${A_UP3}">
           <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:6px;">🎯 Tu deber para ganar</div>
-          <div class="body-md" style="color:var(--muted);font-size:13px;">Cuando te eliminen, vas a tener una oportunidad de <strong style="color:var(--cyan)">adivinar la palabra secreta</strong>. Si aciertas, ¡ganás todo!</div>
+          <div class="body-md" style="color:var(--muted);font-size:13px;">Cuando te eliminen, vas a tener una oportunidad de <strong style="color:var(--cyan)">adivinar la palabra secreta</strong>. Si aciertas, ¡ganas todo!</div>
         </div>
         ${coupleHtml}
       </div>`;
@@ -266,13 +266,13 @@ function revealRole() {
       <div class="role-card role-card-impostor" style="${A_CARD}">
         <div style="font-size:52px;margin-bottom:16px;animation: popIn .45s .28s cubic-bezier(.34,1.56,.64,1) both, glitch 3s 1.4s infinite;">💀</div>
         <div class="badge badge-impostor" style="margin-bottom:12px;${A_UP1}">IMPOSTOR</div>
-        <div class="title-xl glow-red" style="margin-bottom:8px;${A_WORD}">SOS EL<br>IMPOSTOR</div>
+        <div class="title-xl glow-red" style="margin-bottom:8px;${A_WORD}">ERES EL<br>IMPOSTOR</div>
         <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
-          Nadie conoce tu secreto.<br>Fingí que la sabés.
+          Nadie conoce tu secreto.<br>Finge que la sabes.
         </div>
         ${g.currentHint ? `
         <div style="margin-top:20px;padding:14px 16px;background:rgba(255,49,49,0.08);border:1px solid rgba(255,49,49,0.2);border-radius:var(--radius-sm);${A_UP3}">
-          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para vos</div>
+          <div style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);margin-bottom:6px;">Pista para ti</div>
           <div class="title-md glow-red">${esc(g.currentHint)}</div>
         </div>` : ''}
         ${coupleHtml}
@@ -285,8 +285,12 @@ function revealRole() {
         <div class="title-xl" style="margin-bottom:8px;${A_WORD}color:var(--orange);text-shadow:0 0 24px rgba(255,107,53,0.45);">Ustedes Dos<br>Contra Todos</div>
         <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;${A_UP2}">
           Son su <strong style="color:var(--orange)">propio equipo</strong>: no son inocentes para el juego.<br>
-          Su misión: que caigan <strong style="color:var(--text)">todos los impostores y todos los inocentes</strong>.<br>
-          Ganarán solo ustedes dos. 💕
+          Deben sobrevivir hasta que solo queden ustedes dos. 💕
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.2);border-radius:var(--radius-sm);${A_UP3}">
+          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Tu palabra (para fingir como inocente)</div>
+          <div class="title-xl glow-orange" style="margin-bottom:4px;color:var(--orange);text-shadow:0 0 24px rgba(255,107,53,0.45);">${esc(g.secretWord)}</div>
+          <div class="caption" style="margin-top:4px;">Categoría: ${esc(g.category)}</div>
         </div>` : `
         <div style="font-size:52px;margin-bottom:16px;${A_POP}">✅</div>
         <div class="badge badge-human" style="margin-bottom:12px;${A_UP1}">INOCENTE</div>

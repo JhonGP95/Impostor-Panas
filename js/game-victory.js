@@ -1,11 +1,11 @@
 /* ================================================================
    CONDICIONES DE VICTORIA — 5 formas de ganar (4 equipos + pareja)
-   ✅ Inocentes   · saben la palabra · ganan eliminando a impostores Y undercovers
+   ✅ Inocentes   · saben la palabra · ganan eliminando a TODOS (imps+UCs+pareja)
    🤡 Bufón       · sabe la palabra  · solo gana si lo eliminan por votación (neutral)
-   🕵️ Impostores · no saben la palabra · ganan por balas o mesa sin inocentes/UCs
+   🕵️ Impostores · no saben la palabra · ganan por balas o mesa sin inocentes/UCs/pareja
    🎭 Undercovers · no saben la palabra · ganan adivinando o últimos en pie
    💔 Pareja      · saben la palabra · equipo de a dos · ganan SOLO ellos dos:
-                    cuando no queden impostores NI inocentes
+                    cuando no queden impostores NI inocentes (UCs no bloquean)
    ================================================================ */
 function checkVictory() {
   const g = STATE.game;
@@ -14,40 +14,38 @@ function checkVictory() {
   const alive = g.players.filter(pl => pl.alive);
   const impAlive = alive.filter(pl => pl.isImpostor).length;
   const ucAlive = alive.filter(pl => pl.isUndercover).length;
+  const coupleAlive = g.couple ? alive.filter(pl => pl.partnerId !== null && pl.partnerId !== undefined).length : 0;
   // Inocentes puros: ni impostores, ni UCs, ni bufón, ni miembros de la pareja
   const innoAlive = alive.filter(pl => !pl.isImpostor && !pl.isUndercover && !pl.isJester && pl.partnerId === null).length;
 
-  // 💔 Pareja: su misión es solo de ellos dos. Se evalúa ANTES que las balas:
-  // el último inocente puede gastar la bala final en el mismo voto, y eso no
-  // les roba la victoria a los que cumplieron su misión.
-  if (g.couple) {
-    const members = g.players.filter(pl => pl.partnerId !== null && pl.partnerId !== undefined);
-    const coupleAlive = members.length === 2 && members.every(pl => pl.alive);
-    if (coupleAlive && impAlive === 0 && innoAlive === 0) {
-      return { winner: 'couple', reason: 'Juntos hasta el final: no quedó ningún impostor ni inocente 💕' };
-    }
-  }
-
   // 1) Sin balas: ganan los impostores
-  if (g.bullets !== Infinity && g.bullets <= 0) {
+  if (g.bullets !== Infinity && g.bullets <= 0 && impAlive > 0) {
     return { winner: 'impostors', reason: 'Se agotaron todas las balas 🔫' };
   }
 
-  // 2) 🎭 Undercover(s) último(s) en pie: eliminó a inocentes E impostores
-  if (ucAlive > 0 && impAlive === 0 && innoAlive === 0) {
+  // 2) 💔 Pareja: únicos sobrevivientes (sin impostores NI inocentes)
+  //    Los undercovers no bloquean: su victoria es adivinar, no sobrevivir
+  if (coupleAlive > 0 && impAlive === 0 && innoAlive === 0) {
+    return { winner: 'couple', reason: coupleAlive === 2
+      ? 'Juntos hasta el final: no quedó ningún impostor ni inocente 💕'
+      : 'El último de la pareja quedó en pie 💕' };
+  }
+
+  // 3) 🎭 Undercover(s) único(s) en pie (sin impostores NI inocentes NI pareja)
+  if (ucAlive > 0 && impAlive === 0 && innoAlive === 0 && coupleAlive === 0) {
     return { winner: 'undercover', reason: ucAlive === 1
       ? 'Quedó último en pie: eliminó a inocentes e impostores 🎭'
       : 'Los undercovers quedaron últimos en pie 🎭' };
   }
 
-  // 3) Sin impostores NI undercovers: ganan los inocentes
-  //    (la pareja y el bufón no bloquean esta victoria)
-  if (impAlive === 0 && ucAlive === 0) {
-    return { winner: 'humans', reason: 'Eliminaron a todos los impostores y undercovers 🎯' };
+  // 4) Sin impostores NI UCs NI pareja: ganan los inocentes
+  //    (los inocentes DEBEN eliminar también a la pareja y a los UCs)
+  if (impAlive === 0 && ucAlive === 0 && coupleAlive === 0 && innoAlive > 0) {
+    return { winner: 'humans', reason: 'Eliminaron a todos los impostores, undercovers y pareja 🎯' };
   }
 
-  // 4) Sin inocentes NI undercovers (con impostores aún vivos): ganan los impostores
-  if (innoAlive === 0 && ucAlive === 0) {
+  // 5) Solo quedan impostores (sin inocentes NI UCs NI pareja): ganan los impostores
+  if (impAlive > 0 && innoAlive === 0 && ucAlive === 0 && coupleAlive === 0) {
     return { winner: 'impostors', reason: 'No queda ningún inocente ni undercover 😈' };
   }
 
