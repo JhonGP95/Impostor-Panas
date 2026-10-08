@@ -43,6 +43,24 @@ function renderVotingScreen() {
   const innoChip = hideNumbers
     ? ''
     : `<div class="stat-chip stat-chip-green">✅ ${aliveCount(g, pl => !pl.isImpostor && !pl.isUndercover && !pl.isJester && pl.partnerId === null)} inocentes</div>`;
+
+  // 🤡 Bufón: chip informativo solo si el rol está activo en esta partida
+  const bufWasInGame = g.players.some(pl => pl.isJester);
+  const bufAlive = aliveCount(g, pl => pl.isJester);
+  const bufChip = (bufWasInGame && !hideNumbers)
+    ? `<div class="stat-chip" style="background:rgba(255,214,0,0.08);border-color:rgba(255,214,0,0.3);color:var(--yellow);">🤡 ${bufAlive} ${bufAlive === 1 ? 'bufón' : 'bufones'}</div>`
+    : '';
+
+  // 💔 Pareja: chip informativo solo si el rol está activo en esta partida.
+  // Mueren juntos, así que el chip alterna entre vivo y caído.
+  const parejaWasInGame = !!g.couple;
+  const parejaAlive = alivePlayers.filter(pl => pl.partnerId !== null && pl.partnerId !== undefined).length;
+  const parejaChip = (parejaWasInGame && !hideNumbers)
+    ? (parejaAlive === 2
+        ? `<div class="stat-chip" style="background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.3);color:var(--orange);">💕 Pareja</div>`
+        : `<div class="stat-chip" style="background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.3);color:var(--muted);">💔 Pareja</div>`)
+    : '';
+
   // Contra qué tipo de impostor se enfrenta la mesa (solo si el número es conocido)
   const hintChip = randomMode
     ? ''
@@ -114,6 +132,8 @@ function renderVotingScreen() {
       ${impChip}
       ${innoChip}
       ${ucChip}
+      ${bufChip}
+      ${parejaChip}
       ${hintChip}
     </div>
 
