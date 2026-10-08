@@ -61,7 +61,8 @@ document.addEventListener('touchend', e => {
 }, { passive: false });
 
 document.addEventListener('touchmove', e => {
-  if (!e.target.closest('.scroll-area')) {
+  // Permitir scroll táctil dentro del modal (lista de jugadores, etc.)
+  if (!e.target.closest('.scroll-area') && !e.target.closest('.modal-card')) {
     e.preventDefault();
   }
 }, { passive: false });

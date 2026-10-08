@@ -153,6 +153,7 @@ function roleBadgeFor(pl) {
   if (pl.isImpostor) return `<span class="badge badge-impostor">Impostor</span>`;
   if (pl.isUndercover) return `<span class="badge badge-undercover">Undercover</span>`;
   if (pl.isJester) return `<span class="badge badge-bufon">Bufón</span>`;
+  if (pl.partnerId !== null && pl.partnerId !== undefined) return `<span class="badge" style="background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.4);color:var(--orange);">💕 Pareja</span>`;
   return `<span class="badge badge-human">Inocente</span>`;
 }
 
