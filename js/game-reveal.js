@@ -30,7 +30,8 @@ function renderRevealScreen() {
   const turn = `${g.revealCount + 1} / ${g.players.filter(pl => pl.alive).length}`;
 
   screen.innerHTML = `
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 20px;text-align:center;">
+    <div class="screen-scroll" style="display:flex;flex-direction:column;align-items:center;padding:12px 20px;text-align:center;">
+      <div style="margin:auto 0;width:100%;">
       <div class="anim-fade-up" style="margin-bottom:8px;">
         <div class="caption">Turno de ${turn}</div>
         <div class="title-xl" style="color:${player.color};filter:drop-shadow(0 0 12px ${player.color});">
@@ -65,6 +66,7 @@ function renderRevealScreen() {
         </div>
 
         <div id="reveal-card" style="display:none;width:100%;perspective:900px;"></div>
+      </div>
       </div>
     </div>
 

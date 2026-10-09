@@ -902,3 +902,24 @@ html, body {
   border-top: 1px solid var(--border);
 }
 .config-section.collapsed .config-section-body { display: none; }
+
+/* ================================================================
+   📜 SCROLL SEGURO — contenido de pantalla que puede crecer más
+   que el viewport (cartas de pareja, bufón, UC en celulares chicos)
+   ================================================================ */
+.screen-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.screen-scroll::-webkit-scrollbar { display: none; }
+
+/* Centrado vertical seguro: centra cuando hay espacio de sobra, pero
+   nunca recorta el contenido cuando este se desborda */
+.scroll-center {
+  margin: auto 0;
+  width: 100%;
+}

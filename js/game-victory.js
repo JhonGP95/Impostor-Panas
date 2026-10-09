@@ -155,7 +155,8 @@ function renderVictoryScreen(result) {
   screen.innerHTML = `
     <div class="victory-bg">${particles}</div>
 
-    <div class="scroll-area" style="display:flex;flex-direction:column;justify-content:center;padding-top:24px;">
+    <div class="scroll-area" style="display:flex;flex-direction:column;padding-top:24px;">
+      <div style="margin:auto 0;width:100%;">
       <div class="anim-scale" style="text-align:center;">
         <div style="font-size:72px;margin-bottom:16px;filter:drop-shadow(0 0 30px ${color});">${emoji}</div>
       </div>
@@ -206,6 +207,7 @@ function renderVictoryScreen(result) {
         ` : ''}
       </div>
       <div style="height:16px;"></div>
+      </div>
     </div>
 
     <div class="screen-footer">

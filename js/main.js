@@ -60,11 +60,21 @@ document.addEventListener('touchend', e => {
   lastTouch = now;
 }, { passive: false });
 
+// El scroll táctil se permite en CUALQUIER contenedor que realmente pueda
+// desplazarse (scroll-area, modal-card, o cualquier elemento con overflow
+// auto/scroll y contenido más alto que su visor). Si el toque ocurre fuera
+// de todos ellos, se previene el gesto para evitar rebotes de la página.
 document.addEventListener('touchmove', e => {
-  // Permitir scroll táctil dentro del modal (lista de jugadores, etc.)
-  if (!e.target.closest('.scroll-area') && !e.target.closest('.modal-card')) {
-    e.preventDefault();
+  let el = e.target;
+  while (el && el !== document.documentElement) {
+    if (el.nodeType === 1) {
+      const cs = getComputedStyle(el);
+      const puedeDesplazar = /(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1;
+      if (puedeDesplazar) return;
+    }
+    el = el.parentElement;
   }
+  e.preventDefault();
 }, { passive: false });
 
 // En Android, el long-press abre el menú contextual y cancela el gesto de
