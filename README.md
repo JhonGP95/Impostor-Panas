@@ -1,142 +1,181 @@
-# 🎮 El Impostor · Chazey Panas — v5.1
+# El Impostor · Chazey Panas
 
-Juego de fiesta pasamanos: un solo celular para todo el grupo. Sin backend, sin
-base de datos externa — todo funciona estático en GitHub Pages.
+Juego de fiesta para jugar con un solo celular que se va pasando de mano en mano.
+Cada jugador ve su rol en secreto, después todos discuten dando pistas sobre la
+palabra, y la mesa vota a quién sacar. Básicamente un Undercover de frente, pero
+con poderes, roles extra y varias sorpresas.
 
-**Los 4 equipos + la Pareja (desde v5.3):**
-- ✅ **Inocentes** — saben la palabra. Pueden tener 😇 Ángel Guardián. Ganan eliminando a *todos* los impostores y undercovers.
-- 🤡 **Bufón** — sabe la palabra. Solo gana si la mesa lo elimina por votación. Puede tener 😇 Ángel Guardián.
-- 🕵️ **Impostores** — no saben la palabra. Ganan si se acaban las balas o si mueren todos los inocentes y undercovers. Pueden tener 💣 Kamikaze.
-- 🎭 **Undercovers** — no saben la palabra (solo su categoría). Ganan si adivinan la palabra al ser eliminados *o* si quedan últimos en pie. Pueden tener 😇 Ángel Guardián.
-- 💔 **Pareja** — equipo propio de a dos (ambos saben la palabra). Mueren juntos y ganan *solo ellos dos*: cuando no queden impostores NI inocentes. Requiere mesas de 6+. Su propio ángel cubre a cada uno de granada y kamikaze; el corazón roto no tiene salvación.
-
-**Balas:** solo se gastan cuando la mesa elimina a un INOCENTE por votación. Los demás equipos no gastan balas.
-
-**Roles especiales (v5.1):**
-- 🤡 **Bufón** — conoce la palabra de los inocentes y gana SOLO si la mesa lo
-  elimina por votación (granada, kamikaze, sacrificio o irse no cuentan).
-- 💔 **Pareja (Cupido)** — dos jugadores se conocen en la revelación. Prohibido
-  decirlo. Si uno muere, el otro muere de tristeza… salvo que lo salve con el
-  poder Revivir (solo si la muerte fue por granada o kamikaze; cuesta 1 bala).
-  Requiere mesas de 6+ jugadores. Máximo una pareja por partida.
-- 👁️ **Opción "revelar roles al eliminar"** — apagable en ⚙️ Opciones: los
-  eliminados muestran "❓" y los contadores de la mesa quedan en secreto.
-- 📱 **Modo compacto automático** — la lista de votación se compacta sola en
-  mesas de más de 12 jugadores, y la configuración tiene secciones colapsables.
-- 💾 **Continuar partida** — si la app se cierra a mitad de partida, al abrirla
-  ofrece "¿Continuar la partida?".
-
-Esta versión reorganiza el proyecto en archivos separados para que sea fácil de
-mantener, sobre todo la **base de palabras**, que ahora vive en sus propios archivos.
+Lo hice para jugar con amigos. No hay cuentas, no hay backend, no hay base de
+datos: todo es HTML/CSS/JS estático servido desde GitHub Pages. Si el celular se
+queda sin internet en medio de la partida, no pasa nada (hay service worker).
 
 ---
 
-## 📂 Estructura del proyecto
+## Probarlo en tu compu
+
+Necesitas un servidor local por el service worker (si abres el archivo con doble
+clic el juego funciona, pero no carga el modo offline):
 
 ```
-/
-├── index.html              ← página principal (solo el cascarón + el orden de módulos)
-├── sw.js                   ← service worker (jugar sin internet)
-├── .nojekyll               ← le dice a GitHub Pages que sirva todo tal cual
-├── css/
-│   └── styles.css          ← todos los estilos
+cd v5.0
+python -m http.server 8000
+```
+
+Abres `http://localhost:8000` y listo. Para ver errores usa F12.
+
+## Subir cambios a producción
+
+El juego vive en `https://jhongp95.github.io/Impostor-Panas/`. Para publicar:
+
+1. Haz tus cambios.
+2. **Sube la versión** en `js/version.js` (por ejemplo de `v5.4.2` a `v5.4.3`).
+   Esto es importante: el service worker cachea los archivos, y cambiar la
+   versión es lo que hace que los celulares con la app instalada reciban la
+   actualización.
+3. Commit y push del contenido de esta carpeta a la raíz del repo.
+
+Si después de publicar sigues viendo la versión vieja, cierra y abre la PWA dos
+veces: el service worker actualiza en segundo plano y el segundo abierto ya
+carga lo nuevo.
+
+---
+
+## Cómo está armado
+
+Antes todo esto era un solo `index.html` de 250 KB y era insostenible. Ahora:
+
+```
+v5.0/
+├── index.html          el cascarón: casi no tiene lógica, solo carga módulos
+├── sw.js               service worker (offline + actualizaciones)
+├── css/styles.css      todos los estilos
 ├── js/
-│   ├── version.js          ← ⭐ VERSIÓN del juego (subila al publicar cambios)
-│   ├── balance.js          ← ⭐ BALANCE: todos los números ajustables (porcentajes, etc.)
-│   ├── database.js         ← cargador de la base de palabras (valida y normaliza)
-│   ├── utils.js            ← funciones comunes
-│   ├── audio.js            ← sonidos (Web Audio)
-│   ├── state.js            ← estado del juego + íconos/colores + info de poderes
-│   ├── ui.js               ← navegación entre pantallas y modales
-│   ├── pwa.js              ← instalación como app + íconos generados
-│   ├── screens-config.js   ← pantallas: splash y configuración
-│   ├── game-start.js       ← inicio de partida (roles PRD, palabras, poderes)
-│   ├── game-reveal.js      ← rotación de revelación (mantener para revelar)
-│   ├── game-players.js     ← menú por jugador (repetir palabra / se fue)
-│   ├── game-discussion.js  ← pantalla de discusión
-│   ├── game-voting.js      ← votación
-│   ├── game-powers.js      ← granada, kamikaze, sacrificio, revivir, ángel
-│   ├── game-victory.js     ← condiciones de victoria y pantalla final
-│   └── main.js             ← arranque
-└── data/
-    └── categorias/
-        ├── deportes.js          ← ⚽ un archivo por categoría
-        ├── chazey-panas.js      ← 🫂 la categoría del grupo
-        └── ... (33 en total)
+│   ├── version.js      la versión, en un solo lugar
+│   ├── balance.js      ⭐ todos los números del juego (ver más abajo)
+│   ├── database.js     cargador que valida la base de palabras
+│   ├── state.js        estado global, íconos, descripciones de poderes
+│   ├── utils.js        utilidades + guardado de partida en curso
+│   ├── audio.js        sonidos generados con Web Audio (no hay mp3)
+│   ├── ui.js           navegación entre pantallas y modales
+│   ├── pwa.js          manifest dinámico + instalación + íconos
+│   ├── screens-config.js   splash y pantalla de configuración
+│   ├── game-start.js   reparto de roles, palabra, poderes
+│   ├── game-reveal.js  la rotación de "mantén para ver tu rol"
+│   ├── game-players.js menú por jugador (repetir palabra / salirse)
+│   ├── game-discussion.js / game-voting.js / game-powers.js / game-victory.js
+│   └── main.js         arranque + listeners globales de touch
+└── data/categorias/    ⭐ la base de palabras: un archivo por categoría
 ```
 
----
+El `index.html` carga los módulos en orden. Los archivos de categorías llaman a
+`DB.add(...)` y `database.js` los valida y normaliza.
 
-## ✏️ Cómo editar palabras y pistas
+## Editar palabras (lo que más vas a usar)
 
-Abrí `data/categorias/<categoría>.js`. Cada palabra es **una línea**:
+Abre `data/categorias/` y edita el archivo de la categoría. Cada palabra es una
+línea:
+
+```js
+{ "palabra": "Fútbol", "pistas": ["Esférica", "Once"] },
+```
+
+- Copia una línea para agregar, bórrala para quitar.
+- Las pistas van de 1 a 3. Si una palabra no tiene pistas el juego lo avisa en
+  consola pero funciona igual.
+- Si rompes la sintaxis (una coma de más, una comilla sin cerrar), el juego no
+  se rompe: avisa en consola y salta esa palabra. Aun así, arreglalo.
+
+### Agregar una categoría nueva
+
+Crea un archivo en `data/categorias/`:
 
 ```js
 DB.add({
-  "categoria": "⚽ Deportes",
+  "categoria": "🎯 Mi Categoría",
   "palabras": [
-    { "palabra": "Fútbol", "pistas": ["Esférica", "Once"] },
-    { "palabra": "Tenis",  "pistas": ["Arcilla", "Red"] },
-    ...
+    { "palabra": "Ejemplo", "pistas": ["Uno", "Dos"] }
   ]
 });
 ```
 
-- **Agregar una palabra:** copiá una línea, cambiá palabra y pistas.
-- **Quitar una palabra:** borrá la línea.
-- **Pistas:** de 1 a 3 entre corchetes. La primera es la que mejor define.
-- Si te equivocás en la sintaxis (coma faltante, comilla sin cerrar), el juego lo
-  avisa en la consola del navegador (F12) y saltea esa palabra, no se rompe.
+Y agrégale su línea en `index.html` junto a las otras categorías:
 
-### Agregar una categoría nueva
+```html
+<script src="data/categorias/mi-categoria.js"></script>
+```
 
-1. Creá `data/categorias/mi-categoria.js`:
-   ```js
-   DB.add({
-     "categoria": "🎯 Mi Categoría",
-     "palabras": [
-       { "palabra": "Ejemplo", "pistas": ["Pista 1", "Pista 2"] }
-     ]
-   });
-   ```
-2. Agregá en `index.html` una línea junto a las otras categorías:
-   ```html
-   <script src="data/categorias/mi-categoria.js"></script>
-   ```
+Quitar una categoría es lo mismo al revés: borra el archivo y su línea.
 
-### Quitar una categoría
+## Ajustar el balance
 
-Borrá su archivo de `data/categorias/` y su línea en `index.html`.
+Todo está en `js/balance.js`. Probabilidad del kamikaze, del ángel, los
+porcentajes de la granada, cuántas víctimas hace, el tamaño del grupo del
+sacrificio, el costo del revivir, la fórmula de reparto de impostores. Las
+descripciones que ve el jugador en la configuración salen de esas constantes,
+así que si cambias un número la UI se actualiza sola.
 
-> 💡 Para probar cambios rápido en la compu: desde esta carpeta corré
-> `python -m http.server 8000` y abrí `http://localhost:8000`.
-> (Directo con doble click también funciona el juego, pero sin service worker.)
+## Los equipos
 
----
+Son 4 equipos + la pareja:
 
-## ⚖️ Ajustar el balance
+- **Inocentes**: conocen la palabra. Ganan eliminando a todos los impostores y
+  undercovers (la pareja también cuenta como "eliminar").
+- **Bufón**: conoce la palabra, pero gana solo si la mesa lo elimina por
+  votación. Si muere de otra forma, pierde. Es neutral: su vida o muerte no
+  afecta a los demás.
+- **Impostores**: solo conocen una pista. Ganan si las balas llegan a cero o si
+  mueren todos los inocentes y undercovers.
+- **Undercovers**: no conocen la palabra, solo la categoría de la partida. Ganan
+  si al eliminarlos adivinan la palabra secreta, o si quedan como último equipo
+  en pie.
+- **Pareja**: dos jugadores que forman su propio equipo. Conocen la palabra,
+  están prohibido decirlo, y mueren juntos. Ganan solo ellos dos, cuando no
+  queden impostores NI inocentes vivos. Requiere 6+ jugadores.
 
-Todo vive en `js/balance.js`: probabilidades de Granada, Kamikaze, Ángel,
-tamaño del grupo del Sacrificio, costos de Revivir y la fórmula PRD de
-selección de impostores. Las descripciones de la UI se generan desde ahí.
+Las balas solo se gastan cuando la mesa elimina a un inocente puro. Votar a un
+impostor, undercover, bufón o pareja no cuesta balas.
 
----
+## Poderes
 
-## 🚀 Publicar en GitHub Pages
+Opcionales, se activan en la configuración:
 
-1. Hacé los cambios (palabras, balance, código).
-2. Si cambiaste algo del juego, **subí `APP_VERSION`** en `js/version.js`
-   (ej.: `v5.0.0` → `v5.0.1`). Eso hace que los jugadores con la app instalada
-   reciban la actualización (el service worker borra el cache viejo solo).
-3. Subí **todo el contenido de esta carpeta** a la raíz del repositorio
-   (reemplazando el `index.html` viejo).
-4. GitHub Pages sirve `index.html` automáticamente.
+- **Granada**: explota y mata jugadores al azar. 50% solo inocentes, 35%
+  mezcla, 15% solo impostores. La cantidad de víctimas escala con la mesa.
+- **Kamikaze**: en ~15% de las partidas un impostor lo recibe en secreto.
+  Cuando lo votan puede explotar y llevarse a sus vecinos de ronda.
+- **Sacrificio**: mata a un no-impostor al azar y a cambio revela un grupo de
+  3-4 jugadores entre los que hay al menos un impostor garantizado.
+- **Revivir**: devuelve a un inocente eliminado. Cuesta 1 bala y revela una
+  pista extra que ayuda también al impostor.
+- **Ángel Guardián**: ~10% de los no-impostores tienen uno por partida. Si la
+  granada o el kamikaze los alcanza, se salvan.
 
----
+## Detalles que conviene saber
 
-## 🛠️ Desarrollo
+- **El impostor no ve la categoría ni la palabra**, solo una pista (si está
+  activada). Esto es a propósito.
+- **La pareja muere junta siempre**, sin excepciones. El ángel de cada uno los
+  protege por separado de granada y kamikaze, pero el corazón roto no tiene
+  salvación.
+- **"Jugador se fue"** saca a alguien de la partida sin revelar su rol y sin
+  gastar balas. Es para cuando alguien se tiene que ir de verdad.
+- Si apagan "revelar roles al eliminar" en opciones, los eliminados aparecen
+  como "❓" y los contadores de la mesa pasan a modo secreto.
+- El reparto de impostores usa una distribución pseudo-aleatoria con lástima:
+  a quien le tocó impostor le cuesta más repetir, y a los que llevan varias
+  rondas sin tocarles les sube la probabilidad. Funciona por nombre, así que
+  conviene que los jugadores usen nombres reales.
+- La partida en curso se guarda: si alguien cierra la app por una llamada, al
+  abrirla ofrece continuar.
+- En el modal de "jugador se fue" hay scroll: no es un bug si tienes muchos
+  jugadores.
 
-- **Servidor local:** `python -m http.server 8000` → `http://localhost:8000`
-- **Consola:** F12 muestra errores y avisos de la base de datos.
-- **Ver tu versión:** se muestra en el splash ("v5.0.0").
-- El service worker se registra solo en `https://` o `localhost`.
+## Service worker (léelo si vas a tocar el SW)
+
+`sw.js` usa network-first para `index.html` y cache-first para el resto. La
+razón: el HTML siempre intenta traer la versión nueva, y los módulos se sirven
+del cache pero se refrescan en segundo plano. El nombre del cache incluye la
+versión, así que al subir `APP_VERSION` el cache viejo se borra solo.
+
+Si estás probando cambios locales y no los ves, es casi seguro el cache: haz
+un hard refresh o desregistra el service worker desde F12 → Application.
