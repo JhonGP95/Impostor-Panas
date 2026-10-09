@@ -1,12 +1,78 @@
 /* ================================================================
    PODERES (una vez por partida)
    ================================================================ */
+// ─────────────────────────────────────────────
+// GRANADA v2 · fumata, Bufón y Pareja
+// ─────────────────────────────────────────────
+
+// Identificación de roles para la granada (ya coincide con el modelo del juego)
+const grenadeIsBufon      = pl => !!(pl.isJester || pl.role === 'jester');
+const grenadeIsUndercover = pl => !!(pl.isUndercover || pl.role === 'undercover');
+const grenadeIsPareja     = pl => !!(pl.partnerId != null);
+
+// Respeta la opción "revelar roles al eliminar"
+function grenadeRolesRevealed() {
+  const g = STATE.game;
+  return g.revealRoles !== false;
+}
+
+// Probabilidades normalizadas (no importa si no suman exactamente 1)
+function grenadeOdds() {
+  const GB = BALANCE.GRENADE;
+  const raw = {
+    nobody:        GB.P_NOBODY ?? 0.10,
+    onlyImpostors: GB.P_ONLY_IMPOSTORS,
+    mixed:         GB.P_MIXED,
+    onlyInnocents: GB.P_ONLY_INNOCENTS
+  };
+  const total = Object.values(raw).reduce((a, b) => a + b, 0) || 1;
+  const odds = {};
+  for (const k in raw) odds[k] = raw[k] / total;
+  return odds;
+}
+
+function rollGrenadeMode(odds) {
+  let r = Math.random();
+  for (const mode of ['nobody', 'onlyImpostors', 'mixed', 'onlyInnocents']) {
+    if (r < odds[mode]) return mode;
+    r -= odds[mode];
+  }
+  return 'onlyInnocents';
+}
+
+function pickGrenadeTargets(mode, alive, n) {
+  const imps   = alive.filter(pl => pl.isImpostor);
+  const others = alive.filter(pl => !pl.isImpostor); // inocentes, undercover, bufón, pareja
+  let targets = [];
+
+  if (mode === 'onlyImpostors') {
+    targets = pickRandom(imps, Math.min(n, imps.length));
+  } else if (mode === 'onlyInnocents') {
+    targets = pickRandom(others, Math.min(n, others.length));
+  } else if (mode === 'mixed') {
+    if (imps.length && others.length) {
+      const total = Math.min(Math.max(n, 2), alive.length);
+      const base = pickRandom(imps, 1).concat(pickRandom(others, 1));
+      const rest = alive.filter(pl => !base.includes(pl));
+      targets = base.concat(pickRandom(rest, total - base.length));
+    }
+  }
+
+  // Si el grupo elegido estaba vacío, que la granada no se desperdicie
+  if (targets.length === 0 && alive.length > 0) {
+    targets = pickRandom(alive, Math.min(n, alive.length));
+  }
+  return targets;
+}
+
 function useGrenade() {
   const g = STATE.game;
   if (!g.powersEnabled.grenade || g.powersUsed.grenade) return;
   playSound('tap');
 
-  const GB = BALANCE.GRENADE;
+  const odds = grenadeOdds();
+  const pct = p => Math.round(p * 100);
+
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:48px;margin-bottom:12px;">💥</div>
@@ -15,9 +81,10 @@ function useGrenade() {
         Resultado totalmente aleatorio. Solo se puede usar <strong>una vez</strong> en toda la partida.
       </div>
       <div class="info-note" style="text-align:left;margin-bottom:24px;">
-        😬 ${Math.round(GB.P_ONLY_INNOCENTS * 100)}% · solo inocentes<br>
-        💥 ${Math.round(GB.P_MIXED * 100)}% · mezcla, con al menos 1 impostor<br>
-        🍀 ${Math.round(GB.P_ONLY_IMPOSTORS * 100)}% · solo impostores
+        💨 ${pct(odds.nobody)}% · no explota, nadie cae<br>
+        😬 ${pct(odds.onlyInnocents)}% · solo inocentes<br>
+        💥 ${pct(odds.mixed)}% · mezcla, con al menos 1 impostor<br>
+        🍀 ${pct(odds.onlyImpostors)}% · solo impostores
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn btn-red" onclick="launchGrenade()">💥 Lanzar</button>
@@ -34,77 +101,91 @@ function launchGrenade() {
 
   const GB = BALANCE.GRENADE;
   const alive = g.players.filter(pl => pl.alive);
-  const innocents = alive.filter(pl => !pl.isImpostor); // incluye undercover
-  const impostors = alive.filter(pl => pl.isImpostor);
 
   // Víctimas escaladas a los jugadores vivos
   const wanted = Math.max(GB.MIN_VICTIMS, Math.floor(alive.length / GB.VICTIM_DIVISOR));
   const victimCount = Math.min(wanted, alive.length);
 
-  const roll = Math.random() * 100;
-  let targets = [];
+  const mode = rollGrenadeMode(grenadeOdds());
 
-  if (roll < GB.P_ONLY_IMPOSTORS * 100) {
-    // 🍀 Apunta solo impostores; si no alcanzan, completa con inocentes
-    const imps = pickRandom(impostors, victimCount);
-    targets = imps.concat(pickRandom(innocents, victimCount - imps.length));
-  } else if (roll < (GB.P_ONLY_IMPOSTORS + GB.P_MIXED) * 100) {
-    // 💥 Mixto: garantiza al menos 1 impostor si hay alguno vivo
-    const imps = impostors.length > 0 ? pickRandom(impostors, 1) : [];
-    targets = imps.concat(pickRandom(innocents, victimCount - imps.length));
-    if (targets.length < victimCount) {
-      // Muy pocos vivos: completar con impostores restantes
-      targets = targets.concat(pickRandom(
-        impostors.filter(x => !targets.includes(x)),
-        victimCount - targets.length
-      ));
-    }
-  } else {
-    // 😬 Apunta solo inocentes; si no alcanzan, completa con impostores
-    const innos = pickRandom(innocents, victimCount);
-    targets = innos.concat(pickRandom(impostors, victimCount - innos.length));
+  let dead = [];
+  let saved = [];
+  if (mode !== 'nobody') {
+    const targets = pickGrenadeTargets(mode, alive, victimCount);
+    ({ dead, saved } = applyChaosDeaths(targets));
+    playSound('explosion');
+    vibrate([120, 60, 220]);
+    showPowerFlash('rgba(255,107,53,0.4)');
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 600);
   }
 
-  const { dead, saved } = applyChaosDeaths(targets);
-
   // Título y subtítulo HONESTOS: describen lo que realmente pasó
-  const { emoji, title, subtitle } = grenadeHeadline(dead);
+  const { emoji, title, subtitle } = grenadeHeadline(dead, saved);
   showCasualtiesModal({ emoji, title, subtitle, dead, saved });
 }
 
-// Encabezado del modal de granada calculado desde las bajas reales
-function grenadeHeadline(dead) {
-  const dImp = dead.filter(pl => pl.isImpostor).length;
-  const dInno = dead.filter(pl => !pl.isImpostor).length;
+function grenadeJoin(list) {
+  if (list.length <= 1) return list.join('');
+  return list.slice(0, -1).join(', ') + ' y ' + list[list.length - 1];
+}
 
-  const plural = (n, word) => n === 1 ? word : (word === 'inocente' ? 'inocentes' : 'impostores');
+// Encabezado del modal calculado desde las bajas reales
+function grenadeHeadline(dead, saved = []) {
+  const nSaved = saved.length;
 
-  if (dImp > 0 && dInno > 0) {
+  // Nadie murió
+  if (dead.length === 0) {
+    if (nSaved > 0) {
+      return {
+        emoji: '👼',
+        title: '¡MILAGRO!',
+        subtitle: nSaved === 1
+          ? 'La explosión alcanzó a 1 jugador, pero su ángel lo salvó.'
+          : `La explosión alcanzó a ${nSaved} jugadores, pero sus ángeles los salvaron.`
+      };
+    }
+    return { emoji: '💨', title: '¡FUMATA!', subtitle: 'La granada no explotó. Nadie cayó…' };
+  }
+
+  // Roles ocultos: titular neutro para no filtrar información
+  if (!grenadeRolesRevealed()) {
+    const n = dead.length;
     return {
       emoji: '💥',
       title: 'KA-BOOM',
-      subtitle: `La explosión alcanzó a ${dInno} ${plural(dInno, 'inocente')} y ${dImp} ${plural(dImp, 'impostor')}.`
+      subtitle: `La explosión se llevó a ${n} ${n === 1 ? 'jugador' : 'jugadores'}.`
     };
   }
-  if (dImp > 0) {
-    return {
-      emoji: '🍀',
-      title: '¡GOLPE DE SUERTE!',
-      subtitle: 'La explosión alcanzó solo al lado impostor.'
-    };
-  }
-  if (dInno > 0) {
-    return {
-      emoji: '😬',
-      title: 'KA-BOOM',
-      subtitle: `La explosión alcanzó solo a ${dInno} ${plural(dInno, 'inocente')}…`
-    };
-  }
-  return {
-    emoji: '🤔',
-    title: '¡FUMATA!',
-    subtitle: 'La explosión no alcanzó a nadie…'
-  };
+
+  // Clasificación de las bajas reales
+  const dImp   = dead.filter(pl => pl.isImpostor).length;
+  const dUnder = dead.filter(pl => !pl.isImpostor && grenadeIsUndercover(pl)).length;
+  const bufon  = dead.some(pl => !pl.isImpostor && grenadeIsBufon(pl));
+  const pareja = dead.some(pl => !pl.isImpostor && grenadeIsPareja(pl));
+  const dInno  = dead.filter(pl =>
+    !pl.isImpostor && !grenadeIsUndercover(pl) && !grenadeIsBufon(pl) && !grenadeIsPareja(pl)
+  ).length;
+
+  const parts = [];
+  if (dInno)  parts.push(`${dInno} ${dInno === 1 ? 'inocente' : 'inocentes'}`);
+  if (dUnder) parts.push(`${dUnder} undercover`);
+  if (dImp)   parts.push(`${dImp} ${dImp === 1 ? 'impostor' : 'impostores'}`);
+  if (bufon)  parts.push('el Bufón 🃏');
+  if (pareja) parts.push('la pareja 💔');
+
+  let subtitle = `${dead.length === 1 ? 'Cayó' : 'Cayeron'} ${grenadeJoin(parts)}.`;
+  if (bufon) subtitle += ' El Bufón pierde: no lo eliminó la mesa.';
+
+  const good = dImp + dUnder;           // lo que la mesa quiere eliminar
+  const bad  = dInno + (pareja ? 1 : 0); // daño colateral
+
+  let emoji = '💥', title = 'KA-BOOM';
+  if (good > 0 && bad === 0 && !bufon)      { emoji = '🍀'; title = '¡GOLPE DE SUERTE!'; }
+  else if (good === 0 && bad > 0 && !bufon) { emoji = '😬'; title = 'KA-BOOM'; }
+  else if (good === 0 && bad === 0 && bufon){ emoji = '🃏'; title = '¡CAYÓ EL BUFÓN!'; }
+
+  return { emoji, title, subtitle };
 }
 
 // Aplica muertes de poderes caóticos (granada / kamikaze). El Ángel Guardián

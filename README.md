@@ -139,8 +139,10 @@ impostor, undercover, bufón o pareja no cuesta balas.
 
 Opcionales, se activan en la configuración:
 
-- **Granada**: explota y mata jugadores al azar. 50% solo inocentes, 35%
-  mezcla, 15% solo impostores. La cantidad de víctimas escala con la mesa.
+- **Granada**: explota y mata jugadores al azar. 10% ni explota (fumata), 40%
+  solo inocentes, 35% mezcla con al menos un impostor, 15% solo impostores. La
+  cantidad de víctimas escala con la mesa. Si la opción "revelar roles" está
+  apagada, el resumen de bajas no delata los roles de los caídos.
 - **Kamikaze**: en ~15% de las partidas un impostor lo recibe en secreto.
   Cuando lo votan puede explotar y llevarse a sus vecinos de ronda.
 - **Sacrificio**: mata a un no-impostor al azar y a cambio revela un grupo de

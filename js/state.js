@@ -36,7 +36,7 @@ const POWERS_INFO = {
   grenade: {
     emoji: '💥',
     name: 'Granada',
-    desc: `Alto riesgo, pura suerte: ${Math.round(BALANCE.GRENADE.P_ONLY_INNOCENTS * 100)}% mata solo inocentes · ${Math.round(BALANCE.GRENADE.P_MIXED * 100)}% mata mezcla (con al menos 1 impostor) · ${Math.round(BALANCE.GRENADE.P_ONLY_IMPOSTORS * 100)}% mata solo impostores. Víctimas según jugadores vivos.`
+    desc: `Alto riesgo, pura suerte: ${Math.round(BALANCE.GRENADE.P_NOBODY * 100)}% ni explota · ${Math.round(BALANCE.GRENADE.P_ONLY_INNOCENTS * 100)}% mata solo no-impostores · ${Math.round(BALANCE.GRENADE.P_MIXED * 100)}% mezcla (garantiza 1 impostor) · ${Math.round(BALANCE.GRENADE.P_ONLY_IMPOSTORS * 100)}% solo impostores. Víctimas según jugadores vivos.`
   },
   sacrificio: {
     emoji: '⚔️',

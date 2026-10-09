@@ -24,8 +24,9 @@ const BALANCE = {
 
   // 💥 Granada: resultados y cantidad de víctimas
   GRENADE: {
-    P_ONLY_INNOCENTS: 0.50,              // mata solo inocentes
-    P_MIXED: 0.35,                       // mata mezcla (garantiza 1 impostor si hay)
+    P_NOBODY: 0.10,                      // fumata: no explota, nadie cae
+    P_ONLY_INNOCENTS: 0.40,              // mata solo no-impostores
+    P_MIXED: 0.35,                       // mata mezcla (garantiza 1 impostor + 1 otro)
     P_ONLY_IMPOSTORS: 0.15,              // mata solo impostores
     VICTIM_DIVISOR: 3,                   // víctimas = max(1, floor(vivos / 3))
     MIN_VICTIMS: 1
