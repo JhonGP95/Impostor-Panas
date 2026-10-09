@@ -211,7 +211,6 @@ function renderConfig() {
           <span><strong style="color:var(--red);">🕵️ Impostores:</strong> no saben la palabra. Ganan si se acaban las balas <em>o</em> si mueren todos los inocentes y undercovers. Pueden tener 💣 Kamikaze.</span>
           <span><strong style="color:var(--orange);">💕 Pareja:</strong> equipo propio de a dos. Ganan solo ellos dos cuando no queden impostores ni inocentes.</span>
           <span><strong style="color:var(--cyan);">🎭 Undercovers:</strong> no saben la palabra (solo su categoría). Ganan si adivinan la palabra al ser eliminados <em>o</em> si quedan últimos en pie. Pueden tener 😇 Ángel Guardián.</span>
-          <span><strong style="color:var(--orange);">💕 Pareja:</strong> equipo propio de a dos (ambos saben la palabra). Mueren juntos y ganan <em>solo ellos dos</em>: cuando no queden impostores ni inocentes.</span>
         </div>`;
 
   return `
