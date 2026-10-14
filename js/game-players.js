@@ -100,8 +100,8 @@ function repeatWord(playerId) {
     cardClass = 'human';
     inner = `
       <div class="badge ${isCoupleMember ? '' : 'badge-human'}" style="margin-bottom:12px;${isCoupleMember ? 'background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.45);color:var(--orange);' : ''}">SECRETO</div>
-      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu palabra</div>
-      <div class="title-xl glow-green" style="margin-bottom:8px;">${esc(g.secretWord)}</div>`;
+      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${isCoupleMember ? 'Tu pista (para fingir como inocente)' : 'Tu palabra'}</div>
+      <div class="title-xl glow-green" style="margin-bottom:8px;">${esc(isCoupleMember ? (g.allHints[0] || g.category) : g.secretWord)}</div>`;
   }
 
   openModal(`

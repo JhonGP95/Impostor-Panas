@@ -167,7 +167,7 @@ function renderConfig() {
               <div class="switch-track"></div>
             </label>
           </div>
-          <div class="power-desc">Su propio equipo de a dos: se conocen en la revelación (prohibido decirlo), mueren juntos y ganan SOLO ellos dos, cuando no queden impostores NI inocentes. Su propio ángel cubre a cada uno. Requiere ${BALANCE.PAREJA.MIN_PLAYERS}+ jugadores.</div>
+          <div class="power-desc">Su propio equipo de a dos: se conocen en la revelación (prohibido decirlo), reciben una pista de la palabra para fingir, mueren juntos y ganan SOLO ellos dos, cuando no queden impostores NI inocentes. Su propio ángel cubre a cada uno. Requiere ${BALANCE.PAREJA.MIN_PLAYERS}+ jugadores.</div>
         </div>`;
 
   const secOpciones = `
@@ -209,7 +209,7 @@ function renderConfig() {
           <span><strong style="color:var(--green);">✅ Inocentes:</strong> saben la palabra. Pueden tener 😇 Ángel Guardián. Ganan eliminando a <em>todos</em> los impostores, undercovers y la pareja.</span>
           <span><strong style="color:var(--yellow);">🤡 Bufón:</strong> sabe la palabra. Solo gana si la mesa lo elimina por votación. Puede tener 😇 Ángel Guardián.</span>
           <span><strong style="color:var(--red);">🕵️ Impostores:</strong> no saben la palabra. Ganan si se acaban las balas <em>o</em> si mueren todos los inocentes y undercovers. Pueden tener 💣 Kamikaze.</span>
-          <span><strong style="color:var(--orange);">💕 Pareja:</strong> equipo propio de a dos. Ganan solo ellos dos cuando no queden impostores ni inocentes.</span>
+          <span><strong style="color:var(--orange);">💕 Pareja:</strong> equipo propio de a dos. Reciben una pista de la palabra para fingir. Ganan solo ellos dos cuando no queden impostores ni inocentes.</span>
           <span><strong style="color:var(--cyan);">🎭 Undercovers:</strong> no saben la palabra (solo su categoría). Ganan si adivinan la palabra al ser eliminados <em>o</em> si quedan últimos en pie. Pueden tener 😇 Ángel Guardián.</span>
         </div>`;
 

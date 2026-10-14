@@ -281,6 +281,9 @@ function revealRole() {
       </div>`;
   } else {
     const isCoupleMember = player.partnerId !== null && player.partnerId !== undefined;
+    // La pareja no recibe la palabra: recibe la pista principal de la misma,
+    // suficiente para fingir inocente y dar pistas coherentes.
+    const pistaPareja = g.allHints[0] || g.category;
     const headHtml = isCoupleMember ? `
         <div style="font-size:52px;margin-bottom:16px;${A_POP}">💕</div>
         <div class="badge" style="margin-bottom:12px;${A_UP1}background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.45);color:var(--orange);">PAREJA SECRETA</div>
@@ -290,8 +293,8 @@ function revealRole() {
           Deben sobrevivir hasta que solo queden ustedes dos. 💕
         </div>
         <div style="margin-top:16px;padding:14px 16px;background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.2);border-radius:var(--radius-sm);${A_UP3}">
-          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Tu palabra (para fingir como inocente)</div>
-          <div class="title-xl glow-orange" style="margin-bottom:4px;color:var(--orange);text-shadow:0 0 24px rgba(255,107,53,0.45);">${esc(g.secretWord)}</div>
+          <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">🗝️ Tu pista (para fingir como inocente)</div>
+          <div class="title-xl" style="margin-bottom:4px;color:var(--orange);text-shadow:0 0 24px rgba(255,107,53,0.45);">${esc(pistaPareja)}</div>
           <div class="caption" style="margin-top:4px;">Categoría: ${esc(g.category)}</div>
         </div>` : `
         <div style="font-size:52px;margin-bottom:16px;${A_POP}">✅</div>
