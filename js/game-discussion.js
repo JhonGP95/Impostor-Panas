@@ -17,8 +17,9 @@ function renderDiscussionScreen() {
     navigate('screen-victory');
     return;
   }
-  const starter = rand(alivePlayers);
+  const starter = g.starter?.alive ? g.starter : rand(alivePlayers);
   g.starter = starter;
+  g.phase = 'discussion';
   saveGameState(); // 💾 rotación completa, discusión lista
 
   screen.innerHTML = `

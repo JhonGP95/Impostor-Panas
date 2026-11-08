@@ -1,4 +1,4 @@
-// 📦 👔 Profesiones — 116 palabras
+// 📦 👔 Profesiones — 111 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -9,7 +9,7 @@ DB.add({
     { "palabra": "Cirujano", "pistas": ["Esterilidad","Pulso"] },
     { "palabra": "Arquitecto", "pistas": ["Boceto","Cimiento"] },
     { "palabra": "Chef", "pistas": ["Mandil","Prueba"] },
-    { "palabra": "Bombero", "pistas": ["Alarma","Retaguardia"] },
+    { "palabra": "Bombero", "pistas": ["Alarma","Casco","Rescate"] },
     { "palabra": "Periodista", "pistas": ["Grabadora","Fuente"] },
     { "palabra": "Astronauta", "pistas": ["Vacío","Oxígeno"] },
     { "palabra": "Médico", "pistas": ["Guardapolvo","Diagnóstico"] },
@@ -36,10 +36,10 @@ DB.add({
     { "palabra": "Herrero", "pistas": ["Yunque","Fragua"] },
     { "palabra": "Vidriero", "pistas": ["Cristal","Corte"] },
     { "palabra": "Fontanero", "pistas": ["Grifo","Presión"] },
-    { "palabra": "Técnico", "pistas": ["Herramienta","Reparación"] },
+    { "palabra": "Técnico", "pistas": ["Herramienta","Reparación","Diagnóstico"] },
     { "palabra": "Yesero", "pistas": ["Yeso","Alisado"] },
     { "palabra": "Techador", "pistas": ["Teja","Pendiente"] },
-    { "palabra": "Cerrajero", "pistas": ["Llave","Cerradura"] },
+    { "palabra": "Cerrajero", "pistas": ["Llaves","Urgencia","Copia"] },
     { "palabra": "Cortador", "pistas": ["Piedra","Diamante"] },
     { "palabra": "Montador", "pistas": ["Andamio","Altura"] },
     { "palabra": "Profesor", "pistas": ["Pizarra","Alumno"] },
@@ -64,7 +64,7 @@ DB.add({
     { "palabra": "Secretario", "pistas": ["Agenda","Teléfono"] },
     { "palabra": "Vendedor", "pistas": ["Catálogo","Comisión"] },
     { "palabra": "Corredor", "pistas": ["Bienes","Firma"] },
-    { "palabra": "Analista", "pistas": ["Dato","Reporte"] },
+    { "palabra": "Analista", "pistas": ["Datos","Reporte","Patrones"] },
     { "palabra": "Consultor", "pistas": ["Estrategia","Asesoría"] },
     { "palabra": "Traductor", "pistas": ["Diccionario","Versión"] },
     { "palabra": "Banquero", "pistas": ["Bóveda","Crédito"] },
@@ -78,7 +78,7 @@ DB.add({
     { "palabra": "Bailarín", "pistas": ["Coreografía","Ritmo"] },
     { "palabra": "Director", "pistas": ["Lente","Acción"] },
     { "palabra": "Escritor", "pistas": ["Borrador","Narrativa"] },
-    { "palabra": "Diseñador", "pistas": ["Boceto","Paleta"] },
+    { "palabra": "Diseñador", "pistas": ["Boceto","Paleta","Prototipo"] },
     { "palabra": "Fotógrafo", "pistas": ["Obturador","Enfoque"] },
     { "palabra": "Ilustrador", "pistas": ["Tinta","Dibujo"] },
     { "palabra": "Comediante", "pistas": ["Chiste","Risa"] },
@@ -97,7 +97,6 @@ DB.add({
     { "palabra": "Escolta", "pistas": ["Protección","Traje"] },
     { "palabra": "Militar", "pistas": ["Uniforme","Rango"] },
     { "palabra": "Guardabosques", "pistas": ["Árbol","Fuego"] },
-    { "palabra": "Bombero", "pistas": ["Alarma","Retaguardia"] },
     { "palabra": "Defensor", "pistas": ["Causa","Voz"] },
     { "palabra": "Perito", "pistas": ["Dictamen","Forense"] },
     { "palabra": "Inspector", "pistas": ["Norma","Sello"] },
@@ -114,9 +113,6 @@ DB.add({
     { "palabra": "Cavador", "pistas": ["Fosa","Tierra"] },
     { "palabra": "Programador", "pistas": ["Código","Bucle"] },
     { "palabra": "Ingeniero", "pistas": ["Plano","Cálculo"] },
-    { "palabra": "Diseñador", "pistas": ["Interfaz","UX"] },
-    { "palabra": "Analista", "pistas": ["Datos","SQL"] },
-    { "palabra": "Técnico", "pistas": ["Pantalla","Restarto"] },
     { "palabra": "Community", "pistas": ["Post","Hashtag"] },
     { "palabra": "Streamer", "pistas": ["Cámara","Directo"] },
     { "palabra": "Creador", "pistas": ["Contenido","Algoritmo"] },

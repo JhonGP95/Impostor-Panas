@@ -1,4 +1,4 @@
-// 📦 ⚽ Deportes — 30 palabras
+// 📦 ⚽ Deportes — 31 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -18,7 +18,7 @@ DB.add({
     { "palabra": "Ciclismo", "pistas": ["Pelotón","Maillot"] },
     { "palabra": "Atletismo", "pistas": ["Pista","Vallas"] },
     { "palabra": "Esgrima", "pistas": ["Florete","Toque"] },
-    { "palabra": "Judo", "pistas": ["Judogi","Ippon"] },
+    { "palabra": "Judo", "pistas": ["Agarre","Caída","Colchoneta"] },
     { "palabra": "Hockey sobre hielo", "pistas": ["Puck","Slapshot"] },
     { "palabra": "Snowboard", "pistas": ["Halfpipe","Tabla"] },
     { "palabra": "Surf", "pistas": ["Ola","Longboard"] },
@@ -36,5 +36,7 @@ DB.add({
     { "palabra": "Uno", "pistas": ["Reverso","Colores"] },
     { "palabra": "Catan", "pistas": ["Ladrillo","Comercio"] },
     { "palabra": "Tiro al arco", "pistas": ["Diana","Flecha"] },
+    { "palabra": "Escalada deportiva", "pistas": ["Agarre","Magnesio","Altura"] },
+    { "palabra": "Tiro con arco", "pistas": ["Diana","Pulso","Tensión"] },
   ]
 });

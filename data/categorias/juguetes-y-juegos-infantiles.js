@@ -1,4 +1,4 @@
-// 📦 🧸 Juguetes y Juegos Infantiles — 27 palabras
+// 📦 🧸 Juguetes y Juegos Infantiles — 29 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -22,7 +22,7 @@ DB.add({
     { "palabra": "Tren", "pistas": ["Vagon","Riel"] },
     { "palabra": "Avión de papel", "pistas": ["Doblar","Hoja"] },
     { "palabra": "Perinola", "pistas": ["Caras","Corona"] },
-    { "palabra": "Saltar la cuerda", "pistas": ["Niñez","Saltar"] },
+    { "palabra": "Saltar la cuerda", "pistas": ["Recreo","Ritmo","Tobillos"] },
     { "palabra": "Elástico", "pistas": ["Caucho","Saltos"] },
     { "palabra": "Zancos", "pistas": ["Alto","Palos"] },
     { "palabra": "Mascara", "pistas": ["Caras","Animal"] },
@@ -33,5 +33,8 @@ DB.add({
     { "palabra": "Timbre", "pistas": ["Bicicleta","Ring"] },
     { "palabra": "Pista de carreras", "pistas": ["Auto","Circuito"] },
     { "palabra": "Ahorcado", "pistas": ["Pizarra","Letra"] },
+    { "palabra": "Sillas musicales", "pistas": ["Círculo","Pausa","Recreo"] },
+    { "palabra": "Teléfono roto", "pistas": ["Susurro","Cadena","Malentendido"] },
+    { "palabra": "Veo veo", "pistas": ["Colores","Turnos","Observación"] },
   ]
 });

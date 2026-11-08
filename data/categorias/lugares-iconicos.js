@@ -1,4 +1,4 @@
-// 📦 🗺️ Lugares Icónicos — 55 palabras
+// 📦 🗺️ Lugares Icónicos — 54 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -54,7 +54,7 @@ DB.add({
     { "palabra": "San Andrés", "pistas": ["Isla","Caribe"] },
     { "palabra": "Teotihuacán", "pistas": ["Pirámides","México"] },
     { "palabra": "Hagia Sophia", "pistas": ["Cúpula","Turquía"] },
-    { "palabra": "Eje Cafetero", "pistas": ["Café","Colombia"] },
+    { "palabra": "Eje Cafetero", "pistas": ["Laderas","Finca","Paisaje verde"] },
     { "palabra": "Cañón del Chicamocha", "pistas": ["Profundo","Santander"] },
     { "palabra": "Cataratas del Niágara", "pistas": ["Cascada","Canadá"] },
     { "palabra": "Leticia", "pistas": ["Amazonas","Colombia"] },

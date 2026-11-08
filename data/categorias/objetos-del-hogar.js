@@ -1,4 +1,4 @@
-// 📦 🏠 Objetos del Hogar — 32 palabras
+// 📦 🏠 Objetos del Hogar — 34 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -33,10 +33,13 @@ DB.add({
     { "palabra": "Cómoda", "pistas": ["Cajones","Ropa"] },
     { "palabra": "Toalla", "pistas": ["Baño","Secar"] },
     { "palabra": "Cenicero", "pistas": ["Ceniza","Cigarrillo"] },
-    { "palabra": "Basurero", "pistas": ["Basura","Bolsa"] },
+    { "palabra": "Basurero", "pistas": ["Tapa","Bolsa","Pedal"] },
     { "palabra": "Vela", "pistas": ["Cera","Luz"] },
     { "palabra": "Mechero", "pistas": ["Fuego","Encender"] },
     { "palabra": "Balde", "pistas": ["Agua","Limpiar"] },
     { "palabra": "Trapo", "pistas": ["Limpiar","Piso"] },
+    { "palabra": "Hamaca", "pistas": ["Balanceo","Descanso","Tejido"] },
+    { "palabra": "Cortina de baño", "pistas": ["Anillos","Salpicadura","Privacidad"] },
+    { "palabra": "Caja de herramientas", "pistas": ["Compartimentos","Reparación","Asa"] },
   ]
 });

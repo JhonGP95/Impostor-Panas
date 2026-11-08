@@ -1,4 +1,4 @@
-// 📦 🛠️ Herramientas y Utensilios — 106 palabras
+// 📦 🛠️ Herramientas y Utensilios — 107 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -51,7 +51,7 @@ DB.add({
     { "palabra": "Cafetera", "pistas": ["Grano","Líquido"] },
     { "palabra": "Licuadora", "pistas": ["Hélice","Mezcla"] },
     { "palabra": "Batidora", "pistas": ["Varillas","Aire"] },
-    { "palabra": "Microondas", "pistas": ["Ondas","Calentar"] },
+    { "palabra": "Microondas", "pistas": ["Temporizador","Plato giratorio","Recalentar"] },
     { "palabra": "Tostadora", "pistas": ["Resistencia","Dorado"] },
     { "palabra": "Abrelatas", "pistas": ["Corte","Envase"] },
     { "palabra": "Pelador", "pistas": ["Cáscara","Filo"] },
@@ -64,7 +64,7 @@ DB.add({
     { "palabra": "Tabla Cortar", "pistas": ["Cuchillo","Superficie"] },
     { "palabra": "Colador", "pistas": ["Agujeros","Drenar"] },
     { "palabra": "Tamiz", "pistas": ["Fino","Harina"] },
-    { "palabra": "Rodillo Amasar", "pistas": ["Masa","Plano"] },
+    { "palabra": "Rodillo Amasar", "pistas": ["Harina","Presión","Superficie plana"] },
     { "palabra": "Cortador Pizza", "pistas": ["Rueda","Rebanar"] },
     { "palabra": "Afilador", "pistas": ["Piedra","Bordes"] },
     { "palabra": "Termómetro Cocina", "pistas": ["Grados","Calor"] },
@@ -81,7 +81,7 @@ DB.add({
     { "palabra": "Pegamento", "pistas": ["Unión","Líquido"] },
     { "palabra": "Cinta Adhesiva", "pistas": ["Pegar","Transparente"] },
     { "palabra": "Carpeta", "pistas": ["Documentos","Orden"] },
-    { "palabra": "Archivador", "pistas": ["Cajas","Archivo"] },
+    { "palabra": "Archivador", "pistas": ["Pestañas","Oficina","Clasificar"] },
     { "palabra": "Bloc", "pistas": ["Notas","Hojas"] },
     { "palabra": "Post-it", "pistas": ["Recordatorio","Amarillo"] },
     { "palabra": "Pizarra", "pistas": ["Tiza","Escribir"] },
@@ -112,5 +112,7 @@ DB.add({
     { "palabra": "Aspiradora", "pistas": ["Succión","Polvo"] },
     { "palabra": "Plancha", "pistas": ["Vapor","Arruga"] },
     { "palabra": "Desatascador", "pistas": ["Vacío","Tubería"] },
+    { "palabra": "Nivel de burbuja", "pistas": ["Líquido","Instalación","Horizontal"] },
+    { "palabra": "Llave Allen", "pistas": ["Hexágono","Montaje","Muebles"] },
   ]
 });

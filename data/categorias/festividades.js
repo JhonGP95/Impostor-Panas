@@ -1,4 +1,4 @@
-// 📦 🎉 Festividades — 35 palabras
+// 📦 🎉 Festividades — 33 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -17,7 +17,7 @@ DB.add({
     { "palabra": "Pascua", "pistas": ["Resurrección","Huevos"] },
     { "palabra": "San Valentín", "pistas": ["Cupido","Tarjeta"] },
     { "palabra": "Día del Trabajo", "pistas": ["Mayo","Sindicato"] },
-    { "palabra": "Oktoberfest", "pistas": ["Cerveza","Tirol"] },
+    { "palabra": "Oktoberfest", "pistas": ["Carpa","Jarra","Pretzel"] },
     { "palabra": "Thanksgiving", "pistas": ["Pavo","Cosecha"] },
     { "palabra": "Cuaresma", "pistas": ["Miercoles","40 días"] },
     { "palabra": "Reyes Magos", "pistas": ["Oro","Carbón"] },
@@ -40,6 +40,5 @@ DB.add({
     { "palabra": "Burning Man", "pistas": ["Efigie","Black Rock"] },
     { "palabra": "Día de la Constitución", "pistas": ["Carta","Ciudadanos"] },
     { "palabra": "Día de los Santos Inocentes", "pistas": ["diciembre","Bromas"] },
-    { "palabra": "Oktoberfest", "pistas": ["Carpa","Pretzel"] },
   ]
 });

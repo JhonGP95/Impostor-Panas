@@ -1,4 +1,4 @@
-// 📦 🫂🫂Chazey Panas — 33 palabras
+// 📦 🫂🫂Chazey Panas — 30 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -23,7 +23,7 @@ DB.add({
     { "palabra": "Equipo Cash Apps Mitchell", "pistas": ["Error","Cortos"] },
     { "palabra": "Rosquetas", "pistas": ["Panaderia","Jeje"] },
     { "palabra": "Clasismo", "pistas": ["Mejores","Estrato"] },
-    { "palabra": "Marihuana", "pistas": ["Juana","Maria"] },
+    { "palabra": "Marihuana", "pistas": ["Humo","Papel","Cultivo"] },
     { "palabra": "Cacao Seco de pipe", "pistas": ["Delicioso","Gourmet"] },
     { "palabra": "Revolcon de Andy", "pistas": ["Isamar","Potente"] },
     { "palabra": "Dollar City", "pistas": ["Break","Ramen"] },

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f2eb">
+  <meta name="description" content="Una mesa, dos preguntas y alguien que no encaja. Un juego de fiesta en español para compartir un solo celular.">
+  <title>Entre líneas · Chazey Panas</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="questions.js"></script>
+  <script defer src="engine.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Entre líneas, inicio"><span class="brand-icon" aria-hidden="true">≋</span><span>entre líneas<span class="brand-by">POR CHAZEY PANAS</span></span></a>
+    <button class="help-button" data-action="help"><span aria-hidden="true">?</span> Cómo se juega</button>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <footer class="site-footer"><span>Un celular. Tus panas. Muchas sospechas.</span><a href="../index.html">Jugar El Impostor <span aria-hidden="true">↗</span></a></footer>
+  <dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
+  <div id="notice" class="notice" role="status" aria-live="polite"></div>
+  <noscript><p class="panel">Activa JavaScript para jugar Entre líneas.</p></noscript>
+</body>
+</html>

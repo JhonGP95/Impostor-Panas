@@ -10,13 +10,13 @@ function openDeletePlayer() {
     <div>
       <div style="text-align:center;margin-bottom:16px;">
         <div style="font-size:36px;margin-bottom:8px;">👋</div>
-        <div class="title-md">¿Quién tiene el celular?</div>
-        <div class="caption" style="margin-top:4px;">Toca tu nombre para repetir tu palabra, o marca quién se fue</div>
+        <div class="title-md">Gestionar jugadores</div>
+        <div class="caption" style="margin-top:4px;">Consulta tu tarjeta en privado o marca quién se fue.</div>
       </div>
       <div style="display:flex;flex-direction:column;">
         ${alive.map(pl => `
           <button class="pick-item" onclick="openPlayerMenu(${pl.id})">
-            <span class="player-avatar" style="background:${pl.color}22;color:${pl.color};width:34px;height:34px;font-size:16px;">${pl.avatar}</span>
+            <span class="player-avatar" aria-hidden="true" style="background:${pl.color}22;color:${pl.color};width:34px;height:34px;font-size:16px;">${pl.avatar}</span>
             <span style="flex:1;">${esc(pl.name)}</span>
           </button>
         `).join('')}
@@ -38,7 +38,7 @@ function openPlayerMenu(playerId) {
       <div style="font-size:40px;margin-bottom:10px;">${p.avatar}</div>
       <div class="title-md" style="margin-bottom:24px;color:${p.color};filter:drop-shadow(0 0 12px ${p.color});">${esc(p.name)}</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn btn-primary" onclick="repeatWord(${playerId})">🔁 Repetir palabra</button>
+        <button class="btn btn-primary" onclick="repeatWord(${playerId})">🔁 Volver a ver mi tarjeta</button>
         <button class="btn btn-red" onclick="confirmDeletePlayer(${playerId})">👋 Confirmar salida</button>
         <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       </div>
@@ -46,72 +46,14 @@ function openPlayerMenu(playerId) {
   `);
 }
 
-// 🔁 Repetir palabra: cada rol ve solo lo que le corresponde
-//   inocente  → su palabra
-//   impostor  → "ERES EL IMPOSTOR" (sin pista, sin categoría)
-//   undercover → su categoría
+// El recordatorio usa la misma tarjeta privada que la revelación.
 function repeatWord(playerId) {
-  const g = STATE.game;
-  const p = g.players.find(pl => pl.id === playerId);
-  if (!p || !p.alive) return;
+  const player = STATE.game.players.find(pl => pl.id === playerId);
+  if (!player?.alive) return;
   playSound('reveal');
-
-  // 💔 Recordatorio de pareja para los miembros de la pareja
-  const mate = partnerOf(p);
-  const partnerNote = mate
-    ? `<div class="caption" style="margin-top:14px;line-height:1.6;">💕 Tu pareja: <strong style="color:var(--orange)">${mate.avatar} ${esc(mate.name)}</strong> — no se lo digas a nadie</div>`
-    : '';
-
-  let emoji, cardClass, inner;
-  if (p.isImpostor) {
-    emoji = '💀';
-    cardClass = 'impostor';
-    inner = `
-      <div class="badge badge-impostor" style="margin-bottom:12px;">SECRETO</div>
-      <div class="title-xl glow-red" style="margin-bottom:8px;">ERES EL<br>IMPOSTOR</div>
-      <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-        Sigue fingiendo que la sabes.<br>
-        (No hay pista ni categoría para repetir… ¡obvio!)
-      </div>`;
-  } else if (p.isJester) {
-    emoji = '🤡';
-    cardClass = '';
-    inner = `
-      <div class="badge badge-bufon" style="margin-bottom:12px;">SECRETO</div>
-      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu misión</div>
-      <div class="title-md glow-yellow" style="margin-bottom:12px;">Que te eliminen por votación 🗳️</div>
-      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Para fingir, la palabra de los inocentes</div>
-      <div class="title-xl glow-yellow" style="margin-bottom:8px;">${esc(g.secretWord)}</div>
-      <div class="caption">Categoría: ${esc(g.category)}</div>`;
-  } else if (p.isUndercover) {
-    emoji = '🎭';
-    cardClass = '';
-    inner = `
-      <div class="badge badge-undercover" style="margin-bottom:12px;">SECRETO</div>
-      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tu categoría</div>
-      <div class="title-xl glow-cyan" style="margin-bottom:8px;">${esc(g.category)}</div>
-      <div style="color:var(--muted);font-size:15px;line-height:1.5;margin-top:16px;">
-        No tienes palabra: inventa pistas dentro de esta categoría<br>
-        y prepárate para adivinar la secreta al final.
-      </div>`;
-  } else {
-    const isCoupleMember = p.partnerId !== null && p.partnerId !== undefined;
-    emoji = isCoupleMember ? '💕' : '✅';
-    cardClass = 'human';
-    inner = `
-      <div class="badge ${isCoupleMember ? '' : 'badge-human'}" style="margin-bottom:12px;${isCoupleMember ? 'background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.45);color:var(--orange);' : ''}">SECRETO</div>
-      <div class="caption" style="text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${isCoupleMember ? 'Tu pista (para fingir como inocente)' : 'Tu palabra'}</div>
-      <div class="title-xl glow-green" style="margin-bottom:8px;">${esc(isCoupleMember ? (g.allHints[0] || g.category) : g.secretWord)}</div>`;
-  }
-
   openModal(`
-    <div style="text-align:center;">
-      <div class="anim-scale" style="font-size:56px;margin-bottom:10px;">${emoji}</div>
-      <div class="role-card role-card-${cardClass}" style="animation:none;${p.isUndercover ? 'border-color:rgba(0,245,255,0.4);box-shadow:0 0 60px rgba(0,245,255,0.12);' : ''}${p.isJester ? 'border-color:rgba(255,214,0,0.45);box-shadow:0 0 60px rgba(255,214,0,0.12);' : ''}">
-        ${inner}
-        ${partnerNote}
-      </div>
-      <div style="height:16px;"></div>
+    <div class="dialog-stack">
+      ${renderPrivateRole(player, true)}
       <button class="btn btn-primary" onclick="closeModal()">Ya lo vi · Pasar celular 👉</button>
     </div>
   `);
@@ -146,6 +88,8 @@ function executeDeletePlayer(playerId) {
   p.alive = false;
   p.leftEarly = true;
   g.eliminated.push(p);
+  const mate = applyHeartbreak(p);
+  if (mate) mate.diedOf = 'partner-left';
   playSound('eliminate');
 
   afterPlayerRemoval();

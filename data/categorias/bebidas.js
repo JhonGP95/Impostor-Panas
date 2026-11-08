@@ -1,4 +1,4 @@
-// 📦 💧 Bebidas — 35 palabras
+// 📦 💧 Bebidas — 36 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -11,10 +11,10 @@ DB.add({
     { "palabra": "Jugo", "pistas": ["Naranja","Licuadora"] },
     { "palabra": "Cerveza", "pistas": ["Fría","Espuma"] },
     { "palabra": "Limonada", "pistas": ["Ácida","Refrescante"] },
-    { "palabra": "Aguapanela", "pistas": ["Panela","Campesina"] },
+    { "palabra": "Aguapanela", "pistas": ["Vapor","Limón","Jarra"] },
     { "palabra": "Lulada", "pistas": ["Lulo","Antro"] },
     { "palabra": "Chocolate", "pistas": ["Caliente","Taza"] },
-    { "palabra": "Té", "pistas": ["Manzanilla","Tetera"] },
+    { "palabra": "Té", "pistas": ["Infusión","Sobremesa","Hojas secas"] },
     { "palabra": "Leche", "pistas": ["Vaca","Blanca"] },
     { "palabra": "Ron", "pistas": ["Pirata","Barco"] },
     { "palabra": "Vino", "pistas": ["Uva","Copa"] },
@@ -26,7 +26,7 @@ DB.add({
     { "palabra": "Mojito", "pistas": ["Menta","Cubano"] },
     { "palabra": "Piña colada", "pistas": ["Coco","Playa"] },
     { "palabra": "Salpicón", "pistas": ["Frutas","Trozos"] },
-    { "palabra": "Canelazo", "pistas": ["Canela","Caliente"] },
+    { "palabra": "Canelazo", "pistas": ["Vapor","Noche fría","Taza"] },
     { "palabra": "Guarapo", "pistas": ["Caña","Dulce"] },
     { "palabra": "Batido", "pistas": ["Plátano","Fruta"] },
     { "palabra": "Ponche", "pistas": ["Navidad","Frutas"] },
@@ -41,5 +41,7 @@ DB.add({
     { "palabra": "Espresso", "pistas": ["Italiano","Chiquito"] },
     { "palabra": "Sangría", "pistas": ["Vino","Frutas"] },
     { "palabra": "Jugo de mora", "pistas": ["Morada","Antioqueño"] },
+    { "palabra": "Cholado", "pistas": ["Hielo raspado","Fruta","Vaso"] },
+    { "palabra": "Agua de jamaica", "pistas": ["Infusión fría","Ácido","Pétalos"] },
   ]
 });

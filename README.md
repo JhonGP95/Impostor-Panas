@@ -1,13 +1,16 @@
 # El Impostor · Chazey Panas
 
+También incluye **Entre líneas**, el juego de preguntas para pasar el celular: 96 pares de preguntas en español, respuestas privadas y revelación de intrusos al final. Abre `preguntas/` o el acceso «Nuevo · Entre líneas» en la configuración. Instrucciones y edición de la base en [preguntas/README.md](preguntas/README.md).
+
 Juego de fiesta para jugar con un solo celular que se va pasando de mano en mano.
 Cada jugador ve su rol en secreto, después todos discuten dando pistas sobre la
 palabra, y la mesa vota a quién sacar. Básicamente un Undercover de frente, pero
 con poderes, roles extra y varias sorpresas.
 
-Lo hice para jugar con amigos. No hay cuentas, no hay backend, no hay base de
-datos: todo es HTML/CSS/JS estático servido desde GitHub Pages. Si el celular se
-queda sin internet en medio de la partida, no pasa nada (hay service worker).
+Lo hice para jugar con amigos. GitHub Pages sirve los archivos HTML, CSS y
+JavaScript. Las palabras viven en archivos locales y la partida se guarda en
+el celular. El service worker permite volver a abrir ambos juegos sin internet
+después de una primera visita en línea.
 
 ---
 
@@ -22,6 +25,12 @@ python -m http.server 8000
 ```
 
 Abres `http://localhost:8000` y listo. Para ver errores usa F12.
+
+Para ejecutar las pruebas de ambos juegos con Node.js:
+
+```
+node --test tests/*.test.cjs preguntas/*.test.cjs
+```
 
 ## Subir cambios a producción
 
@@ -57,7 +66,7 @@ v5.0/
 │   ├── utils.js        utilidades + guardado de partida en curso
 │   ├── audio.js        sonidos generados con Web Audio (no hay mp3)
 │   ├── ui.js           navegación entre pantallas y modales
-│   ├── pwa.js          manifest dinámico + instalación + íconos
+│   ├── pwa.js          instalación y registro del service worker
 │   ├── screens-config.js   splash y pantalla de configuración
 │   ├── game-start.js   reparto de roles, palabra, poderes
 │   ├── game-reveal.js  la rotación de "mantén para ver tu rol"
@@ -76,14 +85,17 @@ Abre `data/categorias/` y edita el archivo de la categoría. Cada palabra es una
 línea:
 
 ```js
-{ "palabra": "Fútbol", "pistas": ["Esférica", "Once"] },
+{ "palabra": "Fútbol", "pistas": ["Cancha", "Once", "Tiempo añadido"] },
 ```
 
 - Copia una línea para agregar, bórrala para quitar.
-- Las pistas van de 1 a 3. Si una palabra no tiene pistas el juego lo avisa en
-  consola pero funciona igual.
-- Si rompes la sintaxis (una coma de más, una comilla sin cerrar), el juego no
-  se rompe: avisa en consola y salta esa palabra. Aun así, arreglalo.
+- Escribe entre dos y tres pistas que funcionen por separado. Piensa en
+  contextos, acciones o características que puedan encajar con varias respuestas.
+- Evita apodos, iniciales, traducciones directas y partes reconocibles del
+  nombre. El cargador descarta pistas repetidas o que contienen la respuesta
+  completa. La elección de pistas indirectas queda a cargo de quien edite la base.
+- Un error de sintaxis puede impedir que se cargue toda la categoría. Revisa la
+  consola del navegador si una categoría desaparece.
 
 ### Agregar una categoría nueva
 
@@ -128,9 +140,10 @@ Son 4 equipos + la pareja:
 - **Undercovers**: no conocen la palabra, solo la categoría de la partida. Ganan
   si al eliminarlos adivinan la palabra secreta, o si quedan como último equipo
   en pie.
-- **Pareja**: dos jugadores que forman su propio equipo. Conocen la palabra,
-  están prohibido decirlo, y mueren juntos. Ganan solo ellos dos, cuando no
-  queden impostores NI inocentes vivos. Requiere 6+ jugadores.
+- **Pareja** recibe una pista compartida y conoce la identidad de su compañero
+  en privado. La pista sigue disponible aunque se desactive la del impostor.
+  Mueren juntos y ganan si sobreviven hasta que no queden impostores ni
+  inocentes vivos. Requiere 6+ jugadores.
 
 Las balas solo se gastan cuando la mesa elimina a un inocente puro. Votar a un
 impostor, undercover, bufón o pareja no cuesta balas.
@@ -174,10 +187,10 @@ Opcionales, se activan en la configuración:
 
 ## Service worker (léelo si vas a tocar el SW)
 
-`sw.js` usa network-first para `index.html` y cache-first para el resto. La
-razón: el HTML siempre intenta traer la versión nueva, y los módulos se sirven
-del cache pero se refrescan en segundo plano. El nombre del cache incluye la
-versión, así que al subir `APP_VERSION` el cache viejo se borra solo.
+`sw.js` busca las páginas HTML primero en la red y guarda un respaldo para
+cada juego. El resto de los archivos se sirve desde el caché de la versión
+activa. Al subir `APP_VERSION`, el service worker descarga los archivos nuevos
+y borra las versiones anteriores del caché del juego.
 
 Si estás probando cambios locales y no los ves, es casi seguro el cache: haz
 un hard refresh o desregistra el service worker desde F12 → Application.

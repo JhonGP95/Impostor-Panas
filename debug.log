@@ -1,0 +1,3 @@
+[1108/171109.041:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
+[1108/171317.695:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
+[1108/171317.895:ERROR:ui\gl\angle_platform_impl.cc:47] vulkan_icd.cpp:158 (angle::vk::ScopedVkLoaderEnvironment::ScopedVkLoaderEnvironment): Error setting CWD for Vulkan layers init.

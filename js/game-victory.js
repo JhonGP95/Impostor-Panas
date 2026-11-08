@@ -4,7 +4,7 @@
    🤡 Bufón       · sabe la palabra  · solo gana si lo eliminan por votación (neutral)
    🕵️ Impostores · no saben la palabra · ganan por balas o mesa sin inocentes/UCs/pareja
    🎭 Undercovers · no saben la palabra · ganan adivinando o últimos en pie
-   💔 Pareja      · saben la palabra · equipo de a dos · ganan SOLO ellos dos:
+   💔 Pareja      · reciben una pista · equipo de a dos · ganan SOLO ellos dos:
                     cuando no queden impostores NI inocentes (UCs no bloquean)
    ================================================================ */
 function checkVictory() {
@@ -17,6 +17,10 @@ function checkVictory() {
   const coupleAlive = g.couple ? alive.filter(pl => pl.partnerId !== null && pl.partnerId !== undefined).length : 0;
   // Inocentes puros: ni impostores, ni UCs, ni bufón, ni miembros de la pareja
   const innoAlive = alive.filter(pl => !pl.isImpostor && !pl.isUndercover && !pl.isJester && pl.partnerId === null).length;
+
+  if (alive.every(pl => pl.isJester)) {
+    return { winner: 'draw', reason: 'No queda ningún equipo en pie.' };
+  }
 
   // 1) Sin balas: ganan los impostores
   if (g.bullets !== Infinity && g.bullets <= 0 && impAlive > 0) {
@@ -71,15 +75,18 @@ function renderVictoryScreen(result) {
   const coupleWin = result.winner === 'couple';
 
   let color, glow, emoji, title, btnClass;
-  if (coupleWin) {
+  if (result.winner === 'draw') {
+    color = 'var(--violet)'; glow = 'glow-violet'; emoji = '🤝'; title = 'RONDA SIN GANADOR';
+    btnClass = 'btn-primary';
+  } else if (coupleWin) {
     color = 'var(--orange)'; glow = ''; emoji = '💕'; title = '¡LA PAREJA GANA!';
-    btnClass = '';
+    btnClass = 'btn-primary';
   } else if (jesterWin) {
     color = 'var(--yellow)'; glow = 'glow-yellow'; emoji = '🤡'; title = '¡EL BUFÓN GANA!';
-    btnClass = '';
+    btnClass = 'btn-primary';
   } else if (undercoverWin) {
     color = 'var(--cyan)'; glow = 'glow-cyan'; emoji = '🎭'; title = '¡UNDERCOVER GANA!';
-    btnClass = '';
+    btnClass = 'btn-primary';
   } else if (humansWin) {
     color = 'var(--green)'; glow = 'glow-green'; emoji = '🏆'; title = '¡INOCENTES GANAN!';
     btnClass = 'btn-green';
@@ -88,7 +95,8 @@ function renderVictoryScreen(result) {
     btnClass = 'btn-red';
   }
 
-  if (coupleWin) { playSound('revive'); }
+  if (result.winner === 'draw') playSound('tap');
+  else if (coupleWin) { playSound('revive'); }
   else if (jesterWin) { playSound('reveal'); setTimeout(() => playSound('impostorWin'), 300); }
   else if (humansWin) playSound('victory');
   else if (undercoverWin) { playSound('reveal'); setTimeout(() => playSound('victory'), 300); }
@@ -140,7 +148,7 @@ function renderVictoryScreen(result) {
     ? `<div class="caption" style="margin-top:8px;">🤡 Se hizo pasar por inocente con la palabra <strong style="color:var(--yellow)">${esc(g.secretWord)}</strong></div>`
     : '';
 
-  const particleColor = coupleWin ? 'var(--orange)' : jesterWin ? 'var(--yellow)' : undercoverWin ? 'var(--cyan)' : humansWin ? 'var(--green)' : 'var(--red)';
+  const particleColor = color;
   const particles = Array.from({ length: 20 }, () => `
     <div class="victory-particle" style="
       left:${Math.random() * 100}%;
@@ -188,7 +196,7 @@ function renderVictoryScreen(result) {
               <div class="player-avatar" style="background:${pl.color}22;color:${pl.color};font-size:20px;">${pl.avatar}</div>
               <div style="flex:1;min-width:0;">
                 <div class="body-md" style="font-weight:700;">${esc(pl.name)}</div>
-                <div class="caption">${pl.alive ? 'Sobrevivió (no lo votaron…)' : 'Misión cumplida 🤡'}</div>
+                <div class="caption">${jesterWin ? 'Misión cumplida 🤡' : pl.alive ? 'Sobrevivió sin que lo votaran' : 'Salió sin cumplir su misión'}</div>
               </div>
               <span class="badge badge-bufon">BUFÓN</span>
             </div>`).join('')}</div>

@@ -4,19 +4,12 @@
 document.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
   renderApp();
-  setupPwaManifest();
   tryRegisterServiceWorker();
-
-  // 💾 Si quedó una partida en curso, ofrecer continuarla
-  setTimeout(() => {
-    const snap = loadGameState();
-    if (snap) offerContinueGame(snap);
-  }, 2300);
 });
 
 function offerContinueGame(snap) {
   const vivos = snap.players.filter(p => p.alive).length;
-  const fuera = snap.eliminatedIds.length;
+  const fuera = (snap.eliminatedIds || []).length;
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:48px;margin-bottom:10px;">💾</div>
@@ -30,20 +23,27 @@ function offerContinueGame(snap) {
         <button class="btn btn-ghost" onclick="discardGame()">🗑️ Empezar de nuevo</button>
       </div>
     </div>
-  `);
+  `, false);
 }
 
 function continueGame() {
   const snap = loadGameState();
   if (!snap) { closeModal(); return; }
-  restoreGame(snap);
+  closeModal();
+  const game = restoreGame(snap);
   playSound('start');
-  if (STATE.game.revealCount < STATE.game.players.length) {
-    renderRevealScreen();
+  if (game.phase === 'reveal') {
     navigate('screen-reveal');
+    renderRevealScreen();
+  } else if (game.phase === 'discussion') {
+    renderDiscussionScreen();
+    navigate('screen-discussion');
   } else {
     renderVotingScreen();
     navigate('screen-voting');
+    const pending = game.players.find(pl => pl.id === game.pendingKamikazeId);
+    if (pending) openKamikazeModal(pending);
+    else finishPowerAction();
   }
 }
 
@@ -53,33 +53,17 @@ function discardGame() {
   playSound('tap');
 }
 
-let lastTouch = 0;
-document.addEventListener('touchend', e => {
-  const now = Date.now();
-  if (now - lastTouch < 300) e.preventDefault();
-  lastTouch = now;
-}, { passive: false });
+window.addEventListener('blur', resetHoldState);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) return;
+  resetHoldState();
+  if ($('modal-content').querySelector('.private-card')) closeModal();
+  if (STATE.currentScreen === 'screen-reveal' && !$('reveal-card')?.hidden) renderRevealScreen();
+});
 
-// El scroll táctil se permite en CUALQUIER contenedor que realmente pueda
-// desplazarse (scroll-area, modal-card, o cualquier elemento con overflow
-// auto/scroll y contenido más alto que su visor). Si el toque ocurre fuera
-// de todos ellos, se previene el gesto para evitar rebotes de la página.
-document.addEventListener('touchmove', e => {
-  let el = e.target;
-  while (el && el !== document.documentElement) {
-    if (el.nodeType === 1) {
-      const cs = getComputedStyle(el);
-      const puedeDesplazar = /(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1;
-      if (puedeDesplazar) return;
-    }
-    el = el.parentElement;
-  }
-  e.preventDefault();
-}, { passive: false });
-
-// En Android, el long-press abre el menú contextual y cancela el gesto de
-// "mantener para revelar". Es un juego: nunca queremos ese menú.
-document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && modalDismissible && $('modal').classList.contains('open')) closeModal();
+});
 
 document.addEventListener('touchstart', () => initAudio(), { once: true });
 document.addEventListener('click', () => initAudio(), { once: true });

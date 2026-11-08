@@ -18,7 +18,7 @@ const STATE = {
     revealRoles: true
   },
   game: null,
-  currentScreen: 'splash'
+  currentScreen: 'screen-splash'
 };
 
 // Pool grande de íconos y colores: se ciclan con módulo, así nunca se

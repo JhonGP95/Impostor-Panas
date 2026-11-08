@@ -1,4 +1,4 @@
-// 📦 🏙️ Lugares de la Ciudad — 36 palabras
+// 📦 🏙️ Lugares de la Ciudad — 38 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -42,5 +42,8 @@ DB.add({
     { "palabra": "Bomberos", "pistas": ["Fuego","Rojo"] },
     { "palabra": "Aeropuerto", "pistas": ["Avion","Maleta"] },
     { "palabra": "Terminal de transporte", "pistas": ["Bus","Boleta"] },
+    { "palabra": "Ciclovía", "pistas": ["Domingo","Carril","Paseo"] },
+    { "palabra": "Mirador", "pistas": ["Altura","Panorama","Atardecer"] },
+    { "palabra": "Lavandería", "pistas": ["Fichas","Centrifugado","Espera"] },
   ]
 });

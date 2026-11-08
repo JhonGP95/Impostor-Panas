@@ -1,4 +1,4 @@
-// 📦 🔭 Astronomía — 30 palabras
+// 📦 🔭 Astronomía — 32 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -36,5 +36,8 @@ DB.add({
     { "palabra": "Enana Blanca", "pistas": ["Final","Densa"] },
     { "palabra": "Materia oscura", "pistas": ["Invisible","Masa"] },
     { "palabra": "Big Bang", "pistas": ["Origen","Expansión"] },
+    { "palabra": "Lluvia de meteoros", "pistas": ["Destello","Noche","Fragmentos"] },
+    { "palabra": "Planeta enano", "pistas": ["Órbita","Clasificación","Cinturón"] },
+    { "palabra": "Lente gravitacional", "pistas": ["Arco","Luz","Distorsión"] },
   ]
 });

@@ -1,4 +1,4 @@
-// 📦 🍜 Gastronomía — 72 palabras
+// 📦 🍜 Gastronomía — 73 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -54,7 +54,7 @@ DB.add({
     { "palabra": "Curry", "pistas": ["Aromatico","Intenso"] },
     { "palabra": "Arepa", "pistas": ["Maíz","Plancha"] },
     { "palabra": "Mole", "pistas": ["México","Chocolate"] },
-    { "palabra": "Tres Leches", "pistas": ["Pastel","Leche"] },
+    { "palabra": "Tres Leches", "pistas": ["Postre frío","Bizcocho","Cuchara"] },
     { "palabra": "Churros", "pistas": ["Fritos","Azúcar"] },
     { "palabra": "Risotto", "pistas": ["Arroz","Italia"] },
     { "palabra": "Guacamole", "pistas": ["Aguacate","Verde"] },
@@ -68,8 +68,8 @@ DB.add({
     { "palabra": "Arroz con Leche", "pistas": ["Postre","Canela"] },
     { "palabra": "Mofongo", "pistas": ["Plátano","Puerto Rico"] },
     { "palabra": "Asado", "pistas": ["Parrilla","Carne"] },
-    { "palabra": "Salchipapa", "pistas": ["Salchicha","Papa"] },
-    { "palabra": "Aguapanela", "pistas": ["Panela","Colombia"] },
+    { "palabra": "Salchipapa", "pistas": ["Comida callejera","Salsas","Porción para compartir"] },
+    { "palabra": "Aguapanela", "pistas": ["Bebida caliente","Limón","Jarra"] },
     { "palabra": "Arroz con Coco", "pistas": ["Caribe","Dulce"] },
     { "palabra": "Obleas", "pistas": ["Cali","Dulce"] },
     { "palabra": "Tequeños", "pistas": ["Queso","Venezuela"] },
@@ -78,5 +78,7 @@ DB.add({
     { "palabra": "Macarrones con Queso", "pistas": ["Pasta","Horno"] },
     { "palabra": "Suspiro", "pistas": ["Merengue","Perú"] },
     { "palabra": "Cocada", "pistas": ["Coco","Dulce"] },
+    { "palabra": "Arepa de huevo", "pistas": ["Costa","Aceite","Relleno"] },
+    { "palabra": "Mote de queso", "pistas": ["Sopa","Ñame","Costa"] },
   ]
 });

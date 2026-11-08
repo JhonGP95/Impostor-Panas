@@ -14,6 +14,7 @@ function renderVotingScreen() {
   if (!screen) return;
   const g = STATE.game;
   if (!g) return;
+  g.phase = 'voting';
   saveGameState(); // 💾 partida en curso al día
 
   const alivePlayers = g.players.filter(pl => pl.alive);
@@ -32,7 +33,7 @@ function renderVotingScreen() {
   const ucAlive = aliveCount(g, pl => pl.isUndercover);
   const ucChip = (ucAlive > 0 && !hideNumbers)
     ? `<div class="stat-chip stat-chip-cyan">🎭 ${ucAlive} ${ucAlive === 1 ? 'undercover' : 'undercovers'}</div>`
-    : (ucAlive > 0 ? `<div class="stat-chip stat-chip-cyan">🎭 ¿?</div>` : '');
+    : (hideNumbers && g.players.some(pl => pl.isUndercover) ? `<div class="stat-chip stat-chip-cyan">🎭 ¿?</div>` : '');
 
   const impAlive = aliveCount(g, pl => pl.isImpostor);
   const impChip = randomMode
@@ -87,13 +88,13 @@ function renderVotingScreen() {
   const elimRows = g.eliminated.map(pl => {
     let badge;
     if (pl.leftEarly) badge = `<span class="badge badge-left">👋 Se fue</span>`;
-    else if (!g.revealRoles) badge = `<span class="badge badge-left">❓ Sin revelar</span>`;
+    else if (!g.revealRoles || pl.diedOf === 'partner-left') badge = `<span class="badge badge-left">❓ Sin revelar</span>`;
     else if (pl.isImpostor) badge = `<span class="badge badge-impostor">Impostor</span>`;
     else if (pl.isUndercover) badge = `<span class="badge badge-undercover">Undercover</span>`;
     else if (pl.isJester) badge = `<span class="badge badge-bufon">Bufón</span>`;
     else if (pl.partnerId !== null && pl.partnerId !== undefined) badge = `<span class="badge" style="background:rgba(255,107,53,0.15);border-color:rgba(255,107,53,0.4);color:var(--orange);">💕 Pareja</span>`;
     else badge = `<span class="badge badge-human">Inocente</span>`;
-    if (pl.diedOf === 'heartbreak') badge += ` <span class="badge badge-left">💔</span>`;
+    if (g.revealRoles && pl.diedOf === 'heartbreak') badge += ` <span class="badge badge-left">💔</span>`;
     return `
     <div class="vote-item" style="opacity:0.45;">
       <div style="display:flex;align-items:center;gap:12px;min-width:0;">
@@ -197,7 +198,8 @@ function executeVote(playerId) {
     // Sin categoría en pantalla: el undercover ya la conoce y mostrarla
     // públicamente le filtraría información al impostor.
     // (Su muerte NO gasta bala: solo los inocentes gastan.)
-    openUcGuessModal(p.id);
+    g.pendingUcGuesses.push(p.id);
+    finishPowerAction();
     return;
   }
 
@@ -221,19 +223,13 @@ function executeVote(playerId) {
 
   // 💣 Kamikaze: si el impostor eliminado lo tenía, decide si activarlo
   if (p.isImpostor && p.kamikaze && g.powersEnabled.kamikaze) {
+    g.pendingKamikazeId = p.id;
+    saveGameState();
     openKamikazeModal(p);
     return;
   }
 
-  processHeartbreakQueue(() => {
-    const v = checkVictory();
-    if (v) {
-      renderVictoryScreen(v);
-      navigate('screen-victory');
-      return;
-    }
-    renderVotingScreen();
-  });
+  finishPowerAction();
 }
 
 /* ================================================================
@@ -243,7 +239,7 @@ let hbThen = null;
 
 function queueHeartbreak(eliminated, broken) {
   const g = STATE.game;
-  if (!broken) return;
+  if (!broken || !g.revealRoles) return;
   if (!Array.isArray(g.pendingHeartbreaks)) g.pendingHeartbreaks = [];
   g.pendingHeartbreaks.push({ loverId: eliminated.id, sadId: broken.id });
 }
@@ -252,11 +248,15 @@ function queueHeartbreak(eliminated, broken) {
 function processHeartbreakQueue(then) {
   const g = STATE.game;
   if (!Array.isArray(g.pendingHeartbreaks)) g.pendingHeartbreaks = [];
-  const hb = g.pendingHeartbreaks.shift();
+  const hb = g.pendingHeartbreaks[0];
   if (!hb) { then(); return; }
   const lover = g.players.find(pl => pl.id === hb.loverId);
   const sad = g.players.find(pl => pl.id === hb.sadId);
-  if (!lover || !sad || sad.alive) { processHeartbreakQueue(then); return; }
+  if (!g.revealRoles || !lover || !sad || sad.alive) {
+    g.pendingHeartbreaks.shift();
+    processHeartbreakQueue(then);
+    return;
+  }
   showHeartbreakModal(lover, sad, then);
 }
 
@@ -288,14 +288,16 @@ function showHeartbreakModal(lover, sad, then) {
       <div class="info-note" style="margin:16px 0;font-style:italic;">${epitafios[randInt(epitafios.length)]}</div>
       <button class="btn btn-primary" onclick="heartbreakContinue()">💔 Momento de silencio</button>
     </div>
-  `);
+  `, false);
 }
 
 function heartbreakContinue() {
   closeModal();
+  STATE.game.pendingHeartbreaks.shift();
+  saveGameState();
   const t = hbThen;
   hbThen = null;
-  if (t) t();
+  if (t) processHeartbreakQueue(t);
 }
 
 // 💔 Muerte de tristeza: cuando muere un miembro de la pareja, el otro lo sigue.
@@ -313,8 +315,10 @@ function applyHeartbreak(p) {
 }
 
 function undercoverGuessResult(guessed, playerId) {
-  closeModal();
   const g = STATE.game;
+  if (g.pendingUcGuesses[0] !== playerId) return;
+  closeModal();
+  g.pendingUcGuesses.shift();
   const guesser = g.players.find(pl => pl.id === playerId);
 
   if (guessed) {
@@ -331,26 +335,5 @@ function undercoverGuessResult(guessed, playerId) {
 
   playSound('eliminate');
 
-  // 💔 Si el UC eliminado tenía pareja, muere de tristeza (con su teatrito)
-  const guesserRef = guesser || g.players.find(pl => pl.id === playerId);
-  if (guesserRef) {
-    const broken = applyHeartbreak(guesserRef);
-    if (broken) queueHeartbreak(guesserRef, broken);
-  }
-
-  processHeartbreakQueue(() => {
-    // ¿Quedan más UCs muertos por poderes con su adivinanza pendiente?
-    if (Array.isArray(g.pendingUcGuesses) && g.pendingUcGuesses.length > 0) {
-      openUcGuessModal(g.pendingUcGuesses.shift());
-      return;
-    }
-
-    const v = checkVictory();
-    if (v) {
-      renderVictoryScreen(v);
-      navigate('screen-victory');
-      return;
-    }
-    renderVotingScreen();
-  });
+  finishPowerAction();
 }

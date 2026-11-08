@@ -1,4 +1,4 @@
-// 📦 🍌 Frutas y Verduras — 35 palabras
+// 📦 🍌 Frutas y Verduras — 34 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -27,7 +27,7 @@ DB.add({
     { "palabra": "Lechuga", "pistas": ["Verde","Ensalada"] },
     { "palabra": "Aguacate", "pistas": ["Verde","Guacamole"] },
     { "palabra": "Pepino", "pistas": ["Verde","Crujiente"] },
-    { "palabra": "Mora", "pistas": ["Morada","Jugo"] },
+    { "palabra": "Mora", "pistas": ["Jugo","Mancha","Arbusto"] },
     { "palabra": "Guanábana", "pistas": ["Blanca","Grande"] },
     { "palabra": "Mandarina", "pistas": ["Pequeña","Pelar"] },
     { "palabra": "Carambola", "pistas": ["Estrella","Amarilla"] },

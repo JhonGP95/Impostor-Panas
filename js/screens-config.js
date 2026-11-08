@@ -10,11 +10,16 @@ function renderApp() {
     ${renderVotingShell()}
     ${renderVictoryShell()}
   `;
+  document.querySelectorAll('.screen').forEach(screen => { screen.inert = true; });
   $('screen-splash').classList.add('active');
+  $('screen-splash').inert = false;
   syncConfigUI();
   setTimeout(() => {
-    if (STATE.currentScreen === 'splash') navigate('screen-config');
-  }, 1800);
+    if (STATE.currentScreen !== 'screen-splash') return;
+    navigate('screen-config');
+    const snap = loadGameState();
+    if (snap) offerContinueGame(snap);
+  }, 1000);
 }
 
 /* ================================================================
@@ -215,15 +220,21 @@ function renderConfig() {
 
   return `
   <div class="screen" id="screen-config">
-    <div class="screen-header">
+    <div class="screen-header config-header">
       <div style="flex:1;">
-        <div class="title-lg">Configurar <span class="glow-violet">Partida</span></div>
-        <div class="caption">Personaliza tu experiencia · toca una sección para abrirla</div>
+        <p class="section-label">👁️ El Impostor · Chazey Panas</p>
+        <h1 class="title-xl">Configura la partida</h1>
+        <p class="caption">Elige quién juega, los roles y las categorías.</p>
       </div>
       <button class="icon-btn install-btn" style="display:none;" onclick="handleInstallClick()" title="Instalar app">📲</button>
     </div>
 
     <div class="scroll-area" id="config-scroll">
+      <a href="preguntas/" class="btn config-game-link">
+        <span aria-hidden="true">≋</span>
+        <span><strong>Entre líneas</strong><small>Preguntas distintas, respuestas sospechosas.</small></span>
+        <span aria-hidden="true">↗</span>
+      </a>
       ${configSection('jugadores', '👥', 'Jugadores', secJugadores)}
       ${configSection('impostores', '🕵️', 'Impostores', secImpostores)}
       ${configSection('undercovers', '🎭', 'Undercovers', secUndercovers)}
@@ -256,11 +267,11 @@ function configSection(key, emoji, title, contentHtml) {
   } catch(e) {}
   return `
   <div class="config-section ${open ? '' : 'collapsed'}" data-section="${key}">
-    <button class="config-section-head" onclick="toggleConfigSection('${key}')">
+    <button class="config-section-head" aria-expanded="${open}" aria-controls="config-body-${key}" onclick="toggleConfigSection('${key}')">
       <span class="cfg-title">${emoji} ${title}</span>
       <span class="cfg-caret">▾</span>
     </button>
-    <div class="config-section-body">
+    <div class="config-section-body" id="config-body-${key}">
       ${contentHtml}
     </div>
   </div>`;
@@ -270,6 +281,7 @@ function toggleConfigSection(key) {
   const el = document.querySelector(`.config-section[data-section="${key}"]`);
   if (!el) return;
   el.classList.toggle('collapsed');
+  el.querySelector('.config-section-head').setAttribute('aria-expanded', String(!el.classList.contains('collapsed')));
   try { localStorage.setItem('chazey_cfg_sec_' + key, el.classList.contains('collapsed') ? '0' : '1'); } catch(e) {}
   playSound('tap');
 }
@@ -304,7 +316,7 @@ function rebuildPlayerList() {
     html += `
     <div class="player-item" data-index="${i}">
       <div class="player-avatar" style="background:${colorOf(i)}22;color:${colorOf(i)};font-size:20px;">${avatarOf(i)}</div>
-      <input class="player-input" type="text" value="${esc(name)}" maxlength="18" placeholder="Jugador ${i + 1}"
+      <input class="player-input" id="player-name-${i}" type="text" value="${esc(name)}" maxlength="18" aria-label="Nombre del jugador ${i + 1}" placeholder="Jugador ${i + 1}"
         oninput="updatePlayerName(${i}, this.value)">
       <div class="player-move-btns">
         <button class="player-move-btn ${canUp ? '' : 'disabled'}" onclick="movePlayer(${i}, -1)" ${canUp ? '' : 'disabled'}>↑</button>

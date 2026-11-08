@@ -1,4 +1,4 @@
-// 📦 🚄 Transporte — 70 palabras
+// 📦 🚄 Transporte — 69 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -39,7 +39,7 @@ DB.add({
     { "palabra": "Portaaviones", "pistas": ["Cubierta","Despegue"] },
     { "palabra": "Aerodeslizador", "pistas": ["Cojín","Aire"] },
     { "palabra": "Avión", "pistas": ["Alas","Despegue"] },
-    { "palabra": "Helicóptero", "pistas": ["Hélice","Vertical"] },
+    { "palabra": "Helicóptero", "pistas": ["Rescate","Vuelo bajo","Aterrizaje vertical"] },
     { "palabra": "Planeador", "pistas": ["Silencio","Viento"] },
     { "palabra": "Dirigible", "pistas": ["Nave","Lento"] },
     { "palabra": "Paracaídas", "pistas": ["Salto","Tela"] },
@@ -58,7 +58,7 @@ DB.add({
     { "palabra": "Balsa", "pistas": ["Inflable","Río"] },
     { "palabra": "Locomotora", "pistas": ["Máquina","Humo"] },
     { "palabra": "Carroza", "pistas": ["Caballos","Princesa"] },
-    { "palabra": "Cuatrimoto", "pistas": ["cuatro","Campo"] },
+    { "palabra": "Cuatrimoto", "pistas": ["Barro","Manubrio","Todoterreno"] },
     { "palabra": "Avioneta", "pistas": ["Pequeña","Aterriza"] },
     { "palabra": "Jet Ski", "pistas": ["Agua","Rápido"] },
     { "palabra": "Caravana", "pistas": ["Grande","Vacaciones"] },

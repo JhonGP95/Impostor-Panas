@@ -3,18 +3,26 @@
    - Navegación (index.html): NETWORK-FIRST → si hay internet, siempre la
      versión nueva; sin internet, cae al cache. Así nadie queda pegado a una
      versión vieja.
-   - Resto de archivos: CACHE-FIRST con actualización en segundo plano
-     (stale-while-revalidate). Los archivos nuevos (ej. una categoría nueva)
-     se cachean solos en la primera visita.
+   - Resto de archivos: CACHE-FIRST dentro de la versión activa.
    Para publicar una actualización a los jugadores instalados: subí los cambios
    y cambiá APP_VERSION en js/version.js (el cache viejo se borra solo).
 */
 importScripts('js/version.js');
 
 const CACHE = 'impostor-panas-' + APP_VERSION;
+const CACHE_PREFIX = 'impostor-panas-';
 const CORE = [
   "./",
   "./index.html",
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./preguntas/index.html",
+  "./preguntas/styles.css",
+  "./preguntas/questions.js",
+  "./preguntas/engine.js",
+  "./preguntas/app.js",
+  "./preguntas/icon.svg",
   "./css/styles.css",
   "./js/version.js",
   "./js/balance.js",
@@ -70,14 +78,16 @@ const CORE = [
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((c) => c.addAll(CORE.map(url => new Request(url, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -88,32 +98,42 @@ self.addEventListener('fetch', (e) => {
 
   // Navegación: red primero, cache de respaldo
   if (req.mode === 'navigate') {
+    // Cada juego conserva su propio HTML: /preguntas/ no debe reemplazar
+    // al index del Impostor ni abrir el juego equivocado cuando está offline.
+    const pageURL = new URL(req.url);
+    if (pageURL.pathname.endsWith('/')) pageURL.pathname += 'index.html';
+    pageURL.search = '';
     e.respondWith(
       fetch(req)
-        .then((res) => {
-          const cp = res.clone();
-          caches.open(CACHE).then((c) => c.put('./index.html', cp));
+        .then(async (res) => {
+          if (res.ok) {
+            try {
+              const c = await caches.open(CACHE);
+              await c.put(pageURL.href, res.clone());
+            } catch (_) { /* La página en vivo funciona aunque el almacenamiento esté lleno. */ }
+          }
           return res;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(async () => (await caches.match(pageURL.href)) || Response.error())
     );
     return;
   }
 
-  // Mismo origen: cache primero, refrescando en segundo plano
+  // Mismo origen: cache de esta versión, con respaldo de red.
   if (new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
-    caches.match(req).then((hit) => {
-      const net = fetch(req)
-        .then((res) => {
-          if (res.ok) {
-            const cp = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, cp));
-          }
-          return res;
-        })
-        .catch(() => hit);
-      return hit || net;
+    caches.open(CACHE).then(async (cache) => {
+      const hit = await cache.match(req);
+      if (hit) return hit;
+      try {
+        const res = await fetch(req);
+        if (res.ok) {
+          try { await cache.put(req, res.clone()); } catch (_) {}
+        }
+        return res;
+      } catch (_) {
+        return Response.error();
+      }
     })
   );
 });

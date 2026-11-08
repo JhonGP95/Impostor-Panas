@@ -6,10 +6,12 @@ let soundEnabled = true;
 
 function initAudio() {
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    audioCtx = new AudioContext();
   }
   if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
+    audioCtx.resume().catch(() => {});
   }
 }
 
@@ -18,6 +20,7 @@ function toggleSound() {
   const btn = document.getElementById('sound-toggle');
   btn.textContent = soundEnabled ? '🔊' : '🔇';
   btn.classList.toggle('muted', !soundEnabled);
+  btn.setAttribute('aria-pressed', String(soundEnabled));
 }
 
 function playTone(frequency, duration, type = 'sine', volume = 0.2) {

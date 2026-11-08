@@ -5,30 +5,43 @@
    Formato de cada palabra: { "palabra": "...", "pistas": ["...", "..."] }
    (también se acepta el formato viejo pista1/pista2/pista3).
    ================================================================ */
+function clueKey(value) {
+  return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+function cleanHints(word, hints) {
+  const answer = clueKey(word);
+  const seen = new Set();
+  return hints.filter(hint => {
+    if (typeof hint !== 'string') return false;
+    const key = clueKey(hint);
+    if (!key || seen.has(key) || ` ${key} `.includes(` ${answer} `)) return false;
+    seen.add(key);
+    return true;
+  }).map(hint => hint.trim());
+}
+
 const DB = {
   categories: [],
 
   add(cat) {
     if (!cat || !cat.categoria) { console.warn('[DB] categoría sin nombre, ignorada'); return; }
+    if (!Array.isArray(cat.palabras)) { console.warn('[DB] categoría sin lista de palabras, ignorada'); return; }
     const palabras = [];
-    (cat.palabras || []).forEach(w => {
+    cat.palabras.forEach(w => {
       if (!w || !w.palabra || !String(w.palabra).trim()) {
         console.warn('[DB] entrada sin palabra en "' + cat.categoria + '"'); return;
       }
-      const pistas = Array.isArray(w.pistas)
-        ? w.pistas.filter(Boolean)
-        : [w.pista1, w.pista2, w.pista3].filter(Boolean);
+      const palabra = String(w.palabra).trim();
+      const pistas = cleanHints(palabra, Array.isArray(w.pistas)
+        ? w.pistas : [w.pista1, w.pista2, w.pista3]);
       if (pistas.length === 0) {
         console.warn('[DB] "' + w.palabra + '" (' + cat.categoria + ') no tiene pistas');
       }
-      palabras.push({
-        palabra: String(w.palabra).trim(),
-        pista1: pistas[0],
-        pista2: pistas[1],
-        pistas
-      });
+      palabras.push({ palabra, pistas });
     });
-    this.categories.push({ categoria: cat.categoria, palabras });
+    if (palabras.length) this.categories.push({ categoria: cat.categoria, palabras });
   },
 
   all() { return this.categories; },

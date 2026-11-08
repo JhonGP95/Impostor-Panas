@@ -1,4 +1,4 @@
-// 📦 🌏 Historia y Mitología — 71 palabras
+// 📦 🌏 Historia y Mitología — 70 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -29,7 +29,7 @@ DB.add({
     { "palabra": "Newton", "pistas": ["Manzana","Gravedad"] },
     { "palabra": "Mona Lisa", "pistas": ["Sonrisa","Museo"] },
     { "palabra": "Muro de Berlín", "pistas": ["Caída","Concreto"] },
-    { "palabra": "Cruzadas", "pistas": ["Jerusalén","Cruz"] },
+    { "palabra": "Cruzadas", "pistas": ["Peregrinación","Ejército","Edad Media"] },
     { "palabra": "Esparta", "pistas": ["Guerrero","Escudo"] },
     { "palabra": "Atenas", "pistas": ["Ágora","Democracia"] },
     { "palabra": "Zeus", "pistas": ["Rayo","Olimpo"] },

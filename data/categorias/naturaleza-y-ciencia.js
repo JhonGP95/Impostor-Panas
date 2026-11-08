@@ -11,7 +11,7 @@ DB.add({
     { "palabra": "Tsunami", "pistas": ["Placa","Retroceso"] },
     { "palabra": "Célula", "pistas": ["Núcleo","División"] },
     { "palabra": "Arcoíris", "pistas": ["Refracción","Prisma"] },
-    { "palabra": "Glaciar", "pistas": ["Erosión","Grieta"] },
+    { "palabra": "Glaciar", "pistas": ["Erosión","Grieta","Valle"] },
     { "palabra": "León", "pistas": ["Selva","Melena"] },
     { "palabra": "Elefante", "pistas": ["Trompa","Memoria"] },
     { "palabra": "Jirafa", "pistas": ["Cuello","Acacia"] },
@@ -85,7 +85,6 @@ DB.add({
     { "palabra": "Laguna", "pistas": ["Calma","Poco"] },
     { "palabra": "Ciénaga", "pistas": ["Fango","Pantano"] },
     { "palabra": "Arroyo", "pistas": ["Pequeño","Roca"] },
-    { "palabra": "Glaciar", "pistas": ["Hielo","Lento"] },
     { "palabra": "Nebulosa", "pistas": ["Gas","Cuna"] },
     { "palabra": "Árbol", "pistas": ["Raíz","Copa"] },
     { "palabra": "Flor", "pistas": ["Pétalo","Polinización"] },
@@ -136,5 +135,7 @@ DB.add({
     { "palabra": "Lupa", "pistas": ["Aumenta","Vidrio"] },
     { "palabra": "Dinosauro", "pistas": ["Extinto","Grande"] },
     { "palabra": "Esqueleto", "pistas": ["Huesos","Calavera"] },
+    { "palabra": "Marea roja", "pistas": ["Alga","Costa","Floración"] },
+    { "palabra": "Bioluminiscencia", "pistas": ["Brillo","Organismo","Oscuridad"] },
   ]
 });

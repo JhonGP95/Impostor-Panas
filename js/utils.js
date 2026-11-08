@@ -19,13 +19,23 @@ function pickRandom(arr, k) {
   return shuffle(arr).slice(0, Math.max(0, Math.min(k, arr.length)));
 }
 
-function wordPool() {
+function drawRoundWord(withHints, previousWord) {
   const selected = STATE.config.selectedCategories || [];
   let cats = selected.length > 0
     ? DB.all().filter(c => selected.includes(c.categoria))
     : DB.all();
   if (cats.length === 0) cats = DB.all();
-  return cats.flatMap(c => c.palabras);
+  const pool = cats.flatMap(c => c.palabras.map(word => ({ word, category: c.categoria })));
+  if (!pool.length) return null;
+  const alternatives = previousWord
+    ? pool.filter(({ word }) => clueKey(word.palabra) !== clueKey(previousWord))
+    : pool;
+  const { word, category } = rand(alternatives.length ? alternatives : pool);
+  const currentHint = withHints ? rand(word.pistas) || null : null;
+  return {
+    secretWord: word.palabra, category, allHints: word.pistas,
+    currentHint, usedHints: currentHint ? [currentHint] : []
+  };
 }
 
 function saveToStorage() {
@@ -102,10 +112,12 @@ function saveGameState() {
       usedHints: g.usedHints,
       revealOrder: g.revealOrder,
       revealCount: g.revealCount,
+      phase: g.phase,
       bullets: g.bullets === Infinity ? -1 : g.bullets,
       eliminatedIds: g.eliminated.map(p => p.id),
       pendingUcGuesses: g.pendingUcGuesses || [],
       pendingHeartbreaks: g.pendingHeartbreaks || [],
+      pendingKamikazeId: g.pendingKamikazeId ?? null,
       powersEnabled: g.powersEnabled,
       powersUsed: g.powersUsed,
       couple: g.couple,
@@ -132,26 +144,36 @@ function loadGameState() {
 }
 
 function restoreGame(snap) {
-  const players = snap.players.map(p => ({ ...p }));
+  const players = snap.players.map(p => ({ ...p, partnerId: p.partnerId ?? null }));
   const byId = id => players.find(pl => pl.id === id) || null;
+  const entry = DB.find(snap.category)?.palabras.find(w => clueKey(w.palabra) === clueKey(snap.secretWord));
+  const allHints = entry?.pistas || cleanHints(snap.secretWord, snap.allHints || []);
+  const withHints = snap.withHints !== false;
+  const currentHint = withHints
+    ? (allHints.includes(snap.currentHint) ? snap.currentHint : rand(allHints) || null)
+    : null;
+  const usedHints = (snap.usedHints || []).filter(hint => allHints.includes(hint));
+  if (currentHint && !usedHints.includes(currentHint)) usedHints.push(currentHint);
   STATE.game = {
     players,
     secretWord: snap.secretWord,
     category: snap.category,
-    allHints: snap.allHints || [],
-    currentHint: snap.currentHint,
-    usedHints: snap.usedHints || [],
+    allHints,
+    currentHint,
+    usedHints,
     revealOrder: snap.revealOrder || players.map(p => p.id),
     revealCount: snap.revealCount || 0,
+    phase: snap.phase || (snap.revealCount >= players.length ? 'voting' : 'reveal'),
     bullets: snap.bullets === -1 ? Infinity : snap.bullets,
     eliminated: (snap.eliminatedIds || []).map(byId).filter(Boolean),
     pendingUcGuesses: snap.pendingUcGuesses || [],
     pendingHeartbreaks: snap.pendingHeartbreaks || [],
+    pendingKamikazeId: snap.pendingKamikazeId ?? null,
     powersEnabled: snap.powersEnabled || {},
     powersUsed: snap.powersUsed || { grenade: false, sacrificio: false, revivir: false },
     couple: snap.couple || null,
     randomImpostors: !!snap.randomImpostors,
-    withHints: snap.withHints !== undefined ? !!snap.withHints : true,
+    withHints,
     revealRoles: snap.revealRoles !== undefined ? !!snap.revealRoles : true,
     starter: snap.starterId !== null && snap.starterId !== undefined ? byId(snap.starterId) : null
   };

@@ -1,4 +1,4 @@
-// 📦 🏥 Salud, Enfermedades y Medicina — 30 palabras
+// 📦 🏥 Salud, Enfermedades y Medicina — 29 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -7,7 +7,7 @@ DB.add({
   "categoria": "🏥 Salud, Enfermedades y Medicina",
   "palabras": [
     { "palabra": "Gripe", "pistas": ["Tos","Mocos"] },
-    { "palabra": "Dolor de cabeza", "pistas": ["Cabeza","Pastilla"] },
+    { "palabra": "Dolor de cabeza", "pistas": ["Presión","Luz molesta","Descanso"] },
     { "palabra": "Vacuna", "pistas": ["Inyección","Brazo"] },
     { "palabra": "Pastilla", "pistas": ["Medicina","Tragar"] },
     { "palabra": "Doctor", "pistas": ["Bata","Consulta"] },

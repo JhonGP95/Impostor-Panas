@@ -207,7 +207,7 @@ function applyChaosDeaths(targets) {
     dead.push(pl);
     if (pl.isUndercover) g.pendingUcGuesses.push(pl.id);
     const mate = partnerOf(pl);
-    if (mate && mate.alive && !seen.has(mate.id)) {
+    if (mate && mate.alive) {
       seen.add(mate.id);
       applyHeartbreak(pl); // 💔 corazón roto inmediato, sin salvación
       dead.push(mate);
@@ -227,7 +227,7 @@ function applyChaosDeaths(targets) {
       kill(pl);
     }
   });
-  return { dead, saved };
+  return { dead, saved: saved.filter(pl => pl.alive) };
 }
 
 function roleBadgeFor(pl) {
@@ -281,6 +281,7 @@ function showPowerFlash(color) {
 // 3) reevaluar victoria y volver a la votación
 function finishPowerAction() {
   closeModal();
+  saveGameState();
   processHeartbreakQueue(finishPowerActionRest);
 }
 
@@ -290,7 +291,7 @@ function finishPowerActionRest() {
 
   // Adivinanzas de UC pendientes
   if (g.pendingUcGuesses.length > 0) {
-    openUcGuessModal(g.pendingUcGuesses.shift());
+    openUcGuessModal(g.pendingUcGuesses[0]);
     return;
   }
 
@@ -312,7 +313,11 @@ function finishPowerActionRest() {
 function openUcGuessModal(ucId) {
   const g = STATE.game;
   const uc = g.players.find(pl => pl.id === ucId);
-  if (!uc) { finishPowerAction(); return; }
+  if (!uc) {
+    g.pendingUcGuesses.shift();
+    finishPowerAction();
+    return;
+  }
   openModal(`
     <div style="text-align:center;">
       <div style="font-size:48px;margin-bottom:12px;">🎭</div>
@@ -326,10 +331,11 @@ function openUcGuessModal(ucId) {
         <button class="btn btn-red" onclick="undercoverGuessResult(false, ${uc.id})">❌ No adivinó</button>
       </div>
     </div>
-  `);
+  `, false);
 }
 
 function showCasualtiesModal({ emoji, title, subtitle, dead, saved, accent }) {
+  saveGameState();
   if (saved.length > 0) playSound('angel');
   openModal(`
     <div style="text-align:center;">
@@ -341,7 +347,7 @@ function showCasualtiesModal({ emoji, title, subtitle, dead, saved, accent }) {
       <div style="height:16px;"></div>
       <button class="btn btn-primary" onclick="finishPowerAction()">Continuar</button>
     </div>
-  `);
+  `, false);
 }
 
 /* ================================================================
@@ -363,7 +369,7 @@ function openKamikazeModal(p) {
         <button class="btn btn-ghost" onclick="kamikazeDecline()">🙅 No, me retiro en paz</button>
       </div>
     </div>
-  `);
+  `, false);
 }
 
 // Vecinos vivos más cercanos en el orden de la ronda (circular, izquierda y derecha)
@@ -385,9 +391,9 @@ function kamikazeNeighbors(p) {
 function kamikazeActivate(playerId) {
   const g = STATE.game;
   const p = g.players.find(pl => pl.id === playerId);
-  if (!p) { renderVotingScreen(); return; }
-  if (!p.kamikaze) { renderVotingScreen(); return; } // guard anti doble tap
+  if (!p?.kamikaze || g.pendingKamikazeId !== playerId) return;
   p.kamikaze = false; // se consume al primer toque
+  g.pendingKamikazeId = null;
   closeModal();
 
   const targets = kamikazeNeighbors(p);
@@ -409,17 +415,9 @@ function kamikazeActivate(playerId) {
 }
 
 function kamikazeDecline() {
-  closeModal();
+  STATE.game.pendingKamikazeId = null;
   playSound('eliminate');
-  processHeartbreakQueue(() => {
-    const v = checkVictory();
-    if (v) {
-      renderVictoryScreen(v);
-      navigate('screen-victory');
-      return;
-    }
-    renderVotingScreen();
-  });
+  finishPowerAction();
 }
 
 /* ================================================================
@@ -477,14 +475,13 @@ function executeSacrificio() {
   const innocents = alive.filter(pl => !pl.isImpostor);
   const impostors = alive.filter(pl => pl.isImpostor);
 
-  // Guard: sin inocentes vivos no hay sacrificio posible (no consume el poder)
-  if (innocents.length === 0) {
+  if (!innocents.length || !impostors.length) {
     openModal(`
       <div style="text-align:center;">
         <div style="font-size:48px;margin-bottom:12px;">🤷</div>
-        <div class="title-md" style="margin-bottom:8px;">No hay inocentes a quién sacrificar</div>
+        <div class="title-md" style="margin-bottom:8px;">No se puede hacer el sacrificio</div>
         <div class="body-md" style="color:var(--muted);margin-bottom:24px;">
-          En la mesa solo quedan impostores y Undercover. ¡Se les pasó la mano!
+          Debe quedar al menos un impostor y otro jugador en la mesa.
         </div>
         <button class="btn btn-ghost" onclick="closeModal()">Volver</button>
       </div>
@@ -512,10 +509,9 @@ function executeSacrificio() {
 
   // 2) Grupo de sospechosos con al menos 1 impostor vivo garantizado,
   //    sin incluir a la víctima
-  const pool = alive.filter(pl => pl.id !== victim.id);
+  const pool = alive.filter(pl => pl.alive);
   const groupSize = Math.min(pool.length, SB.GROUP_MIN + randInt(SB.GROUP_MAX - SB.GROUP_MIN + 1));
-  const group = [];
-  if (impostors.length > 0) group.push(rand(impostors));
+  const group = [rand(impostors)];
   pickRandom(pool.filter(pl => !group.includes(pl)), groupSize - group.length)
     .forEach(pl => group.push(pl));
   const groupShown = shuffle(group); // el orden no delata al impostor
@@ -523,6 +519,7 @@ function executeSacrificio() {
   playSound('sacrifice');
   vibrate([80, 40, 160]);
   showPowerFlash('rgba(168,85,247,0.45)');
+  saveGameState();
 
   openModal(`
     <div style="text-align:center;">
@@ -533,7 +530,7 @@ function executeSacrificio() {
           <div class="player-avatar" style="background:${victim.color}22;color:${victim.color};font-size:20px;filter:grayscale(0.7);">${victim.avatar}</div>
           <div class="body-md" style="font-weight:700;">${esc(victim.name)} ha caído</div>
         </div>
-        ${roleBadgeFor(victim)}
+        ${g.revealRoles ? roleBadgeFor(victim) : '<span class="badge badge-left">❓ Sin revelar</span>'}
       </div>
       <div class="card-glass" style="border-color:rgba(168,85,247,0.45);margin-bottom:8px;padding:18px;">
         <div class="caption" style="margin-bottom:12px;letter-spacing:0.1em;text-transform:uppercase;">Entre estos jugadores hay por lo menos 1 impostor</div>
@@ -549,7 +546,7 @@ function executeSacrificio() {
       <div style="height:8px;"></div>
       <button class="btn btn-primary" onclick="finishPowerAction()">Continuar</button>
     </div>
-  `);
+  `, false);
 }
 
 /* ================================================================
@@ -606,10 +603,10 @@ function useRevivir() {
       </div>
       <div style="display:flex;flex-direction:column;">
         ${list.map(pl => `
-          <button class="pick-item" onclick="attemptRevive(${pl.id})" style="${(pl.isImpostor || pl.isUndercover) ? 'opacity:0.7;' : ''}">
+          <button class="pick-item" onclick="attemptRevive(${pl.id})">
             <span class="player-avatar" style="background:${pl.color}22;color:${pl.color};width:34px;height:34px;font-size:16px;filter:grayscale(0.7);">${pl.avatar}</span>
             <span style="flex:1;">${esc(pl.name)}</span>
-            ${roleBadgeFor(pl)}
+            ${g.revealRoles && pl.diedOf !== 'partner-left' ? roleBadgeFor(pl) : ''}
           </button>
         `).join('')}
       </div>
@@ -629,7 +626,9 @@ function attemptRevive(playerId) {
     playSound('error');
     vibrate(80);
     let joke;
-    if (p.isImpostor) {
+    if (!g.revealRoles || p.diedOf === 'partner-left') {
+      joke = 'No se puede revivir a este jugador.';
+    } else if (p.isImpostor) {
       joke = rand([
         '🤨 ¿En serio? ¿Revivir a un impostor?',
         '😅 ¿Revivir al impostor? Ni lo pienses…',
@@ -705,6 +704,7 @@ function executeRevivir(playerId) {
   const extraHint = remaining.includes(g.allHints[1]) ? g.allHints[1]
     : (remaining.length > 0 ? rand(remaining) : null);
   if (extraHint) g.usedHints.push(extraHint);
+  saveGameState();
 
   playSound('revive');
   vibrate([60, 40, 120]);
@@ -727,5 +727,5 @@ function executeRevivir(playerId) {
       <div class="caption" style="margin-bottom:16px;">${g.bullets !== Infinity ? `Costo: 1 bala · quedan ${g.bullets}` : 'Modo sin balas'}</div>
       <button class="btn btn-primary" onclick="finishPowerAction()">Continuar</button>
     </div>
-  `);
+  `, false);
 }

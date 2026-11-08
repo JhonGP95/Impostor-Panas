@@ -1,7 +1,7 @@
 /* ================================================================
    NAVEGACIÓN SPA
    ================================================================ */
-function navigate(toId, back = false) {
+function navigate(toId) {
   const next = $(toId);
   if (!next) return;
 
@@ -11,13 +11,15 @@ function navigate(toId, back = false) {
   const current = (prevId && prevId !== toId) ? $(prevId) : null;
 
   if (current) {
+    current.inert = true;
     current.classList.add('exit-left');
+    current.classList.remove('active');
     setTimeout(() => {
       // Solo si sigue en salida (no fue reactivada por otra navegación)
       if (current.classList.contains('exit-left')) {
         current.classList.remove('active', 'exit-left');
       }
-    }, 350);
+    }, 230);
   }
 
   // Higiene: ninguna otra pantalla debe quedar activa
@@ -25,15 +27,9 @@ function navigate(toId, back = false) {
     if (sc !== next && sc !== current) sc.classList.remove('active', 'exit-left');
   });
 
-  // Entrada 100% sincrónica (sin rAF): en pestañas en segundo plano o con
-  // throttling, requestAnimationFrame puede retrasarse indefinidamente o
-  // ejecutarse tarde y reactivar una pantalla equivocada. El reflow forzado
-  // registra el punto de partida de la transición de forma determinista.
-  next.style.transform = back ? 'translateX(-100%)' : '';
-  void next.offsetWidth; // fuerza reflow
   next.classList.remove('exit-left');
   next.classList.add('active');
-  if (back) next.style.transform = '';
+  next.inert = false;
 
   STATE.currentScreen = toId;
   playSound('whoosh');
@@ -42,15 +38,35 @@ function navigate(toId, back = false) {
 /* ================================================================
    MODALES
    ================================================================ */
-function openModal(html) {
-  $('modal-content').innerHTML = html;
-  $('modal').classList.add('open');
+let modalTrigger = null;
+let modalDismissible = true;
+
+function openModal(html, dismissible = true) {
+  resetHoldState();
+  const modal = $('modal');
+  const content = $('modal-content');
+  if (!modal.classList.contains('open')) modalTrigger = document.activeElement;
+  modalDismissible = dismissible;
+  content.innerHTML = html;
+  content.scrollTop = 0;
+  modal.inert = false;
+  modal.classList.add('open');
+  content.focus({ preventScroll: true });
+  $('app').inert = true;
+  $('sound-toggle').inert = true;
 }
 
 function closeModal() {
-  $('modal').classList.remove('open');
+  const modal = $('modal');
+  modal.classList.remove('open');
+  modal.inert = true;
+  $('app').inert = false;
+  $('sound-toggle').inert = false;
+  $('modal-content').replaceChildren();
+  modalTrigger?.focus({ preventScroll: true });
+  modalTrigger = null;
 }
 
 function closeModalOnBg(e) {
-  if (e.target === $('modal')) closeModal();
+  if (modalDismissible && e.target === $('modal')) closeModal();
 }

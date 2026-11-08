@@ -51,7 +51,7 @@ function startGame() {
 
   for (let i = 0; i < cfg.numPlayers; i++) {
     const input = $(`player-name-${i}`);
-    if (input && input.value) cfg.playerNames[i] = input.value;
+    if (input) cfg.playerNames[i] = input.value.trim();
   }
 
   const n = cfg.numPlayers;
@@ -69,13 +69,11 @@ function startGame() {
   const numUC = Math.min(ucWanted, n - numImp - 1);
 
   // Palabra secreta
-  const pool = wordPool();
-  const chosen = rand(pool);
-  const catName = (DB.all().find(c => c.palabras.includes(chosen)) || {}).categoria || '?';
-
-  const allHints = [chosen.pista1, chosen.pista2].filter(Boolean);
-  let hint = null;
-  if (cfg.withHints && allHints.length > 0) hint = rand(allHints);
+  const word = drawRoundWord(cfg.withHints, STATE.game?.secretWord);
+  if (!word) {
+    openModal('<p class="body-md">No se cargaron las palabras. Vuelve a abrir el juego para intentar de nuevo.</p><button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>');
+    return;
+  }
 
   // Roles: PRD con lástima — repetir como impostor es raro (peso mínimo recién
   // salido del rol) pero las sequías largas aumentan el peso, así que nadie
@@ -145,11 +143,7 @@ function startGame() {
 
   STATE.game = {
     players,
-    secretWord: chosen.palabra,
-    category: catName,
-    allHints,
-    currentHint: hint,
-    usedHints: hint ? [hint] : [],
+    ...word,
     revealOrder: [...Array(n).keys()], // respeta el orden configurado
     revealCount: 0,
     bullets: cfg.infiniteBullets ? Infinity : cfg.numBullets,

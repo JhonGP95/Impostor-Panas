@@ -1,4 +1,4 @@
-// 📦 💄 Cuidado Personal y Belleza — 30 palabras
+// 📦 💄 Cuidado Personal y Belleza — 29 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -9,7 +9,7 @@ DB.add({
     { "palabra": "Jabón", "pistas": ["Limpia","barra"] },
     { "palabra": "Champú", "pistas": ["Lavar","botella"] },
     { "palabra": "Desodorante", "pistas": ["Olor","axila"] },
-    { "palabra": "Cepillo de dientes", "pistas": ["Diente","Crema"] },
+    { "palabra": "Cepillo de dientes", "pistas": ["Rutina","Enjuague","Cerdas"] },
     { "palabra": "Pasta dental", "pistas": ["Menta","Cepillo"] },
     { "palabra": "Labial", "pistas": ["Color","Bolso"] },
     { "palabra": "Rimel", "pistas": ["Pestaña","Pincel"] },
@@ -19,7 +19,7 @@ DB.add({
     { "palabra": "Afeitadora", "pistas": ["Vello","Navaja"] },
     { "palabra": "Crema para manos", "pistas": ["Piel","portatil"] },
     { "palabra": "Tijeras", "pistas": ["Cabello","Filo"] },
-    { "palabra": "Secador de pelo", "pistas": ["Aire","Pelo"] },
+    { "palabra": "Secador de pelo", "pistas": ["Enchufe","Aire caliente","Peinado"] },
     { "palabra": "Peine", "pistas": ["Cabello","madera"] },
     { "palabra": "Copito", "pistas": ["Oido","Algodón"] },
     { "palabra": "Colonia", "pistas": ["Hombre","Frasco"] },

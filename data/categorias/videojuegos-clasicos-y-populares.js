@@ -1,4 +1,4 @@
-// 📦 🎮 Videojuegos Clásicos y Populares — 30 palabras
+// 📦 🎮 Videojuegos Clásicos y Populares — 34 palabras
 // Editá libremente: cada palabra lleva "palabra" y "pistas" (1 a 3).
 // Para agregar o quitar una categoría entera, agregá o borrá este archivo
 // y su línea <script> en index.html.
@@ -13,9 +13,9 @@ DB.add({
     { "palabra": "Minecraft", "pistas": ["Cubo","Construir"] },
     { "palabra": "Fortnite", "pistas": ["Bailar","Isla"] },
     { "palabra": "Pac-Man", "pistas": ["Fantasmas","Comer"] },
-    { "palabra": "Mortal Kombat", "pistas": ["Fatality","Sangre"] },
-    { "palabra": "Street Fighter", "pistas": ["Hadouken","Ryu"] },
-    { "palabra": "Pokémon", "pistas": ["Pikachu","Atrapar"] },
+    { "palabra": "Mortal Kombat", "pistas": ["Duelo","Remate","Arcade"] },
+    { "palabra": "Street Fighter", "pistas": ["Arcade","Combinación","Torneo"] },
+    { "palabra": "Pokémon", "pistas": ["Colección","Duelo","Evolución"] },
     { "palabra": "Call of Duty", "pistas": ["Guerra","Armas"] },
     { "palabra": "The Sims", "pistas": ["Casa","Vivir"] },
     { "palabra": "Sonic", "pistas": ["Veloz","Anillos"] },
@@ -23,18 +23,23 @@ DB.add({
     { "palabra": "Donkey Kong", "pistas": ["Mono","Barriles"] },
     { "palabra": "Crash Bandicoot", "pistas": ["Marsupial","PlayStation"] },
     { "palabra": "Halo", "pistas": ["Espartano","Anillo"] },
-    { "palabra": "Need for Speed", "pistas": ["Carreras","Coches"] },
+    { "palabra": "Need for Speed", "pistas": ["Curva","Taller","Persecución"] },
     { "palabra": "Resident Evil", "pistas": ["Zombis","Susto"] },
     { "palabra": "Among Us", "pistas": ["Impostor","Espacial"] },
-    { "palabra": "Candy Crush", "pistas": ["Dulces","Móvil"] },
+    { "palabra": "Candy Crush", "pistas": ["Colores","Cadena","Rompecabezas"] },
     { "palabra": "Roblox", "pistas": ["Avatares","Online"] },
-    { "palabra": "Age of Empires", "pistas": ["Imperios","Guerreros"] },
+    { "palabra": "Age of Empires", "pistas": ["Recursos","Aldeanos","Conquista"] },
     { "palabra": "Free Fire", "pistas": ["Móvil","Sobrevivir"] },
     { "palabra": "Super Smash Bros", "pistas": ["Nintendo","Personajes"] },
     { "palabra": "World of Warcraft", "pistas": ["Dragones","Orcos"] },
-    { "palabra": "League of Legends", "pistas": ["Campeones","Liga"] },
+    { "palabra": "League of Legends", "pistas": ["Carriles","Equipos","Campeones"] },
     { "palabra": "Tekken", "pistas": ["Rey","Torneo"] },
-    { "palabra": "Tomb Raider", "pistas": ["Lara","Tumbas"] },
+    { "palabra": "Tomb Raider", "pistas": ["Ruinas","Aventura","Escalada"] },
     { "palabra": "Subway Surfers", "pistas": ["Correr","Trenes"] },
+    { "palabra": "Stardew Valley", "pistas": ["Cosecha","Pueblo","Estaciones"] },
+    { "palabra": "Portal", "pistas": ["Laboratorio","Puertas","Rompecabezas"] },
+    { "palabra": "Mario Kart", "pistas": ["Pista","Atajo","Caparazón"] },
+    { "palabra": "Animal Crossing", "pistas": ["Vecinos","Decoración","Reloj"] },
+    { "palabra": "Cuphead", "pistas": ["Caricatura","Duelo","Jazz"] },
   ]
 });

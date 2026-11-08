@@ -2,25 +2,27 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Impostor">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0b0913">
 <meta name="description" content="El Impostor Chazey Panas - Juego de roles para grupos">
 <title>El Impostor · Chazey Panas</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<div class="scanlines"></div>
-<button class="sound-toggle" id="sound-toggle" onclick="toggleSound()">🔊</button>
+<button class="sound-toggle" id="sound-toggle" aria-label="Sonido" aria-pressed="true" onclick="toggleSound()">🔊</button>
 <div id="app"></div>
 
 <!-- MODAL GLOBAL -->
-<div id="modal" class="modal-overlay" onclick="closeModalOnBg(event)">
-  <div class="modal-card" id="modal-content" onclick="event.stopPropagation()"></div>
+<div id="modal" class="modal-overlay" inert onclick="closeModalOnBg(event)">
+  <div class="modal-card" id="modal-content" role="dialog" aria-modal="true" aria-label="El Impostor" tabindex="-1"></div>
 </div>
 
 <!-- Módulos (el orden importa: base primero, init al final) -->
