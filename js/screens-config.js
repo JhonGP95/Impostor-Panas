@@ -36,7 +36,7 @@ function renderSplash() {
         El <span class="glow-violet">Impostor</span>
       </div>
       <div style="color:var(--muted);font-size:15px;margin-top:8px;letter-spacing:0.06em;text-transform:uppercase;">
-        Chazey Panas Edition <span style="color:var(--cyan);">${window.APP_VERSION}</span>
+        <span style="color:var(--cyan);">${window.APP_VERSION}</span>
       </div>
     </div>
     <button class="btn btn-ghost btn-sm install-btn anim-fade-up delay-3" style="display:none;width:auto;margin-top:36px;" onclick="handleInstallClick()">📲 Instalar App</button>
@@ -222,7 +222,7 @@ function renderConfig() {
   <div class="screen" id="screen-config">
     <div class="screen-header config-header">
       <div style="flex:1;">
-        <p class="section-label">👁️ El Impostor · Chazey Panas</p>
+        <p class="section-label">👁️ El Impostor</p>
         <h1 class="title-xl">Configura la partida</h1>
         <p class="caption">Elige quién juega, los roles y las categorías.</p>
       </div>
@@ -230,9 +230,9 @@ function renderConfig() {
     </div>
 
     <div class="scroll-area" id="config-scroll">
-      <a href="preguntas/" class="btn config-game-link">
-        <span aria-hidden="true">≋</span>
-        <span><strong>Entre líneas</strong><small>Preguntas distintas, respuestas sospechosas.</small></span>
+      <a href="preguntas/" class="btn game-link">
+        <span class="game-link-icon" aria-hidden="true">≋</span>
+        <span class="game-link-copy"><strong>Jugar Entre líneas</strong><small>Preguntas distintas, respuestas sospechosas.</small></span>
         <span aria-hidden="true">↗</span>
       </a>
       ${configSection('jugadores', '👥', 'Jugadores', secJugadores)}
@@ -252,7 +252,7 @@ function renderConfig() {
 
     <div class="screen-footer">
       <button class="btn btn-primary" onclick="startGame()">
-        <span>⚡</span> Iniciar Partida
+        <span aria-hidden="true">⚡</span> Iniciar partida
       </button>
     </div>
   </div>`;

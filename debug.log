@@ -1,3 +1,15 @@
 [1108/171109.041:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
 [1108/171317.695:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
 [1108/171317.895:ERROR:ui\gl\angle_platform_impl.cc:47] vulkan_icd.cpp:158 (angle::vk::ScopedVkLoaderEnvironment::ScopedVkLoaderEnvironment): Error setting CWD for Vulkan layers init.
+[1108/172906.224:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
+[1108/172906.242:ERROR:ui\gl\angle_platform_impl.cc:47] vulkan_icd.cpp:158 (angle::vk::ScopedVkLoaderEnvironment::ScopedVkLoaderEnvironment): Error setting CWD for Vulkan layers init.
+[1108/172906.292:WARNING:ui\gl\angle_platform_impl.cc:52] vulkan_icd.cpp:388 (angle::vk::ChoosePhysicalDevice): Preferred device ICD not found. Using default physicalDevice instead.
+[1108/172948.870:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
+[1108/172948.889:ERROR:ui\gl\angle_platform_impl.cc:47] vulkan_icd.cpp:158 (angle::vk::ScopedVkLoaderEnvironment::ScopedVkLoaderEnvironment): Error setting CWD for Vulkan layers init.
+[1108/172948.930:WARNING:ui\gl\angle_platform_impl.cc:52] vulkan_icd.cpp:388 (angle::vk::ChoosePhysicalDevice): Preferred device ICD not found. Using default physicalDevice instead.
+[1108/173615.905:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
+[1108/173615.930:ERROR:ui\gl\angle_platform_impl.cc:47] vulkan_icd.cpp:158 (angle::vk::ScopedVkLoaderEnvironment::ScopedVkLoaderEnvironment): Error setting CWD for Vulkan layers init.
+[1108/173615.974:WARNING:ui\gl\angle_platform_impl.cc:52] vulkan_icd.cpp:388 (angle::vk::ChoosePhysicalDevice): Preferred device ICD not found. Using default physicalDevice instead.
+[1108/173701.175:WARNING:net\dns\dns_config_service_win.cc:609] Failed to read DnsConfig.
+[1108/173701.197:ERROR:ui\gl\angle_platform_impl.cc:47] vulkan_icd.cpp:158 (angle::vk::ScopedVkLoaderEnvironment::ScopedVkLoaderEnvironment): Error setting CWD for Vulkan layers init.
+[1108/173701.239:WARNING:ui\gl\angle_platform_impl.cc:52] vulkan_icd.cpp:388 (angle::vk::ChoosePhysicalDevice): Preferred device ICD not found. Using default physicalDevice instead.

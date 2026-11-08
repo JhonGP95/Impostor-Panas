@@ -1,4 +1,4 @@
-/* Service Worker — El Impostor · Chazey Panas
+/* Service Worker — El Impostor y Entre líneas
    Estrategia:
    - Navegación (index.html): NETWORK-FIRST → si hay internet, siempre la
      versión nueva; sin internet, cae al cache. Así nadie queda pegado a una
@@ -23,6 +23,7 @@ const CORE = [
   "./preguntas/engine.js",
   "./preguntas/app.js",
   "./preguntas/icon.svg",
+  "./css/theme.css",
   "./css/styles.css",
   "./js/version.js",
   "./js/balance.js",
@@ -62,7 +63,7 @@ const CORE = [
   "./data/categorias/prendas-y-accesorios.js",
   "./data/categorias/juguetes-y-juegos-infantiles.js",
   "./data/categorias/espacio-y-astronautas.js",
-  "./data/categorias/chazey-panas.js",
+  "./data/categorias/entre-panas.js",
   "./js/ui.js",
   "./js/pwa.js",
   "./js/screens-config.js",

@@ -44,6 +44,7 @@ test('todos los recursos precargados existen, incluyendo los dos juegos', async 
   assert.ok(urls.includes('preguntas/index.html'));
   assert.ok(urls.includes('index.html'));
   assert.ok(urls.includes('manifest.webmanifest'));
+  assert.ok(urls.includes('css/theme.css'));
   for (const url of urls) assert.ok(fs.existsSync(path.join(root, url)), `Recurso faltante: ${url}`);
 });
 test('las navegaciones online mantienen cada juego en su propia entrada de caché', async () => {

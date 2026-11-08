@@ -19,6 +19,10 @@ function pickRandom(arr, k) {
   return shuffle(arr).slice(0, Math.max(0, Math.min(k, arr.length)));
 }
 
+function currentCategoryName(name) {
+  return name === '🫂🫂Chazey Panas' ? '🫂 Entre panas' : name;
+}
+
 function drawRoundWord(withHints, previousWord) {
   const selected = STATE.config.selectedCategories || [];
   let cats = selected.length > 0
@@ -83,7 +87,9 @@ function loadFromStorage() {
       if (!STATE.config.roles || typeof STATE.config.roles !== 'object') {
         STATE.config.roles = { bufon: true, pareja: true };
       }
-      if (!Array.isArray(STATE.config.selectedCategories)) STATE.config.selectedCategories = [];
+      STATE.config.selectedCategories = Array.isArray(STATE.config.selectedCategories)
+        ? [...new Set(STATE.config.selectedCategories.map(currentCategoryName))]
+        : [];
       if (!Array.isArray(STATE.config.playerNames)) STATE.config.playerNames = [];
     }
   } catch(e) {}
@@ -146,7 +152,8 @@ function loadGameState() {
 function restoreGame(snap) {
   const players = snap.players.map(p => ({ ...p, partnerId: p.partnerId ?? null }));
   const byId = id => players.find(pl => pl.id === id) || null;
-  const entry = DB.find(snap.category)?.palabras.find(w => clueKey(w.palabra) === clueKey(snap.secretWord));
+  const category = currentCategoryName(snap.category);
+  const entry = DB.find(category)?.palabras.find(w => clueKey(w.palabra) === clueKey(snap.secretWord));
   const allHints = entry?.pistas || cleanHints(snap.secretWord, snap.allHints || []);
   const withHints = snap.withHints !== false;
   const currentHint = withHints
@@ -157,7 +164,7 @@ function restoreGame(snap) {
   STATE.game = {
     players,
     secretWord: snap.secretWord,
-    category: snap.category,
+    category,
     allHints,
     currentHint,
     usedHints,

@@ -1,6 +1,6 @@
-# El Impostor · Chazey Panas
+# El Impostor
 
-También incluye **Entre líneas**, el juego de preguntas para pasar el celular: 96 pares de preguntas en español, respuestas privadas y revelación de intrusos al final. Abre `preguntas/` o el acceso «Nuevo · Entre líneas» en la configuración. Instrucciones y edición de la base en [preguntas/README.md](preguntas/README.md).
+También incluye **Entre líneas**, un juego de 160 pares de preguntas en español con respuestas privadas, votación y balas. Abre `preguntas/` o toca «Jugar Entre líneas» en la configuración. Puedes volver a El Impostor desde la configuración de Entre líneas. [Reglas y edición de preguntas](preguntas/README.md)
 
 Juego de fiesta para jugar con un solo celular que se va pasando de mano en mano.
 Cada jugador ve su rol en secreto, después todos discuten dando pistas sobre la
@@ -57,7 +57,8 @@ Antes todo esto era un solo `index.html` de 250 KB y era insostenible. Ahora:
 v5.0/
 ├── index.html          el cascarón: casi no tiene lógica, solo carga módulos
 ├── sw.js               service worker (offline + actualizaciones)
-├── css/styles.css      todos los estilos
+├── css/theme.css       paleta y componentes compartidos
+├── css/styles.css      pantallas de El Impostor
 ├── js/
 │   ├── version.js      la versión, en un solo lugar
 │   ├── balance.js      ⭐ todos los números del juego (ver más abajo)

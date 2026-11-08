@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "El Impostor · Chazey Panas",
-  "short_name": "Impostor",
+  "name": "El Impostor",
+  "short_name": "El Impostor",
   "description": "Un juego de roles para pasar el celular entre amigos.",
   "lang": "es",
   "start_url": "./",

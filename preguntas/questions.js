@@ -10,7 +10,8 @@
     { id: 'vida', name: 'Vida de panas', icon: '☺', description: 'Lo cotidiano tiene sus secretos.' },
     { id: 'fiesta', name: 'De parche', icon: '♫', description: 'Planes, música y malas decisiones.' },
     { id: 'dilemas', name: 'Y si…', icon: '↗', description: 'Situaciones muy poco normales.' },
-    { id: 'confesiones', name: 'Sin filtro', icon: '♡', description: 'Confesiones ligeras para reírse.' }
+    { id: 'confesiones', name: 'Sin filtro', icon: '♡', description: 'Confesiones ligeras para reírse.' },
+    { id: 'picantes', name: 'Picante', icon: '🌶️', description: 'Coqueteo, malas palabras y doble sentido. Solo sale al elegir esta categoría.', optIn: true }
   ];
   // [pregunta de la mayoría, pregunta del intruso, zona de coincidencia]
   const rows = {
@@ -30,7 +31,15 @@
       ['¿Cuántos pares de zapatos usas de verdad?', '¿Cuántos grupos de chat tienes silenciados?', 'De 2 a 10'],
       ['¿Cuántos días aguantarías sin redes sociales?', '¿Cuántos días durarías acampando sin una ducha?', 'De 1 a 7'],
       ['¿Cuántas veces relees un mensaje importante antes de enviarlo?', '¿Cuántas veces miras si cerraste bien la puerta?', 'De 1 a 4'],
-      ['¿Cuántos minutos puedes pasar viendo videos sin darte cuenta?', '¿Cuántos minutos dura tu siesta ideal?', 'De 15 a 60']
+      ['¿Cuántos minutos puedes pasar viendo videos sin darte cuenta?', '¿Cuántos minutos dura tu siesta ideal?', 'De 15 a 60'],
+      ['¿Cuántas fotos borrarías antes de prestarle el celular a tu mamá?', '¿Cuántas fotos de la última salida subirías a redes?', 'De 0 a 10'],
+      ['¿Cuántos segundos mojas una galleta en el café antes de que se deshaga?', '¿Cuántos segundos aguantarías debajo de una ducha helada?', 'De 2 a 10'],
+      ['¿Cuántos minutos esperarías una mesa en tu restaurante favorito?', '¿Cuántos minutos esperarías en una cita antes de pedir sin la otra persona?', 'De 10 a 30'],
+      ['¿Cuántas almohadas usas para dormir?', '¿Cuántas cobijas tienes a mano en tu casa?', 'De 1 a 4'],
+      ['¿A cuántos contactos llamas sin mandarles mensaje primero?', '¿Con cuántas personas compartirías la contraseña del wifi?', 'De 2 a 8'],
+      ['¿Cuántas semanas cuidarías la planta de un amigo?', '¿Cuántas semanas durarías siguiendo un reto de levantarte temprano?', 'De 1 a 4'],
+      ['¿Cuántos mensajes mandarías al grupo si nadie aparece en el lugar acordado?', '¿Cuántos mensajes seguidos mandas cuando tienes un chisme buenísimo?', 'De 2 a 6'],
+      ['¿Cuántos minutos tardas en salir de la cama el domingo?', '¿Cuántos minutos tardas en pedir comida cuando tienes mucha hambre?', 'De 5 a 30']
     ],
     comida: [
       ['¿Qué comida pedirías después de una fiesta?', '¿Qué comida te haría romper una dieta el primer día?', 'Pizza, hamburguesa, tacos…'],
@@ -48,7 +57,15 @@
       ['¿Qué bebida te ayuda a empezar el día?', '¿Qué bebida pedirías en una cafetería durante una cita?', 'Café, té, chocolate…'],
       ['¿Qué sabor de helado pides casi siempre?', '¿Qué sabor elegirías para un pastel?', 'Chocolate, vainilla, fresa…'],
       ['¿Qué plato pedirías en un restaurante italiano?', '¿Qué plato cocinarías para una cena romántica?', 'Pasta, pizza, lasaña…'],
-      ['¿Qué comida no llevarías a una primera cita porque ensucia mucho?', '¿Qué comida comerías feliz usando las manos?', 'Alitas, hamburguesa, tacos…']
+      ['¿Qué comida no llevarías a una primera cita porque ensucia mucho?', '¿Qué comida comerías feliz usando las manos?', 'Alitas, hamburguesa, tacos…'],
+      ['¿Qué pedirías en una tienda de barrio con cinco mil pesos?', '¿Qué comprarías en la tienda para sobrevivir a una tarde de estudio?', 'Galletas, papas, gaseosa'],
+      ['¿Qué ingrediente dejarías fuera de una ensalada de frutas?', '¿Qué fruta comprarías aunque tuvieras que pelarla toda?', 'Mango, piña, manzana'],
+      ['¿Qué llevarías de desayuno a un paseo que empieza a las seis?', '¿Qué comprarías para desayunar cuando se te hizo tarde?', 'Arepa, pan, café, empanada'],
+      ['¿Qué acompañamiento pides antes de mirar el plato fuerte?', '¿Qué sobras te comerías frías al día siguiente?', 'Papas, arroz, ensalada'],
+      ['¿Qué plato de un almuerzo familiar volverías a servirte?', '¿Qué plato de un almuerzo familiar empacarías para llevar?', 'Sancocho, arroz, carne'],
+      ['¿Qué sabor de chicle elegirías antes de una cita?', '¿Qué sabor de dulce llevarías para un viaje en bus?', 'Menta, fresa, canela'],
+      ['¿Qué relleno elegirías para una empanada?', '¿Qué pondrías en un sándwich cuando no hay mucho en la nevera?', 'Queso, pollo, carne'],
+      ['¿Qué comida llevarías para ganarte a un compañero nuevo?', '¿Qué comida llevarías al trabajo para disculparte por una metida de pata?', 'Donas, galletas, empanadas']
     ],
     vida: [
       ['¿Qué objeto pierdes más seguido en tu casa?', '¿Qué objeto revisarías primero antes de salir de viaje?', 'Llaves, celular, billetera…'],
@@ -66,7 +83,15 @@
       ['¿Qué excusa das cuando llegas tarde?', '¿Qué excusa darías para irte temprano de una reunión?', 'Tráfico, trabajo, cansancio…'],
       ['¿Qué cosa de tu cuarto necesita una limpieza urgente?', '¿Qué cosa esconderías antes de una videollamada?', 'Ropa, escritorio, cama…'],
       ['¿Qué haces cuando tienes cinco minutos libres?', '¿Qué haces para evitar una conversación incómoda?', 'Mirar el celular, ir al baño…'],
-      ['¿Qué olor te hace sentir en casa?', '¿Qué olor te hace pensar que ya es fin de semana?', 'Café, comida, ropa limpia…']
+      ['¿Qué olor te hace sentir en casa?', '¿Qué olor te hace pensar que ya es fin de semana?', 'Café, comida, ropa limpia…'],
+      ['¿Qué aparato te da más rabia cuando se descarga?', '¿Qué aparato guardarías en la mochila para un día largo?', 'Celular, audífonos, computador'],
+      ['¿Qué pondrías cerca de la puerta para acordarte de llevarlo?', '¿Qué dejarías al lado de la cama para tenerlo a mano al despertar?', 'Llaves, celular, gafas'],
+      ['¿Qué parte de la casa tiene más cosas que nadie sabe de quién son?', '¿Qué parte de la casa evitarías mostrar en un tour improvisado?', 'Cuarto, cocina, garaje'],
+      ['¿Qué buscas primero en una ferretería si te mudaste ayer?', '¿Qué herramienta le prestarías a un vecino sin esperar que vuelva?', 'Martillo, cinta, destornillador'],
+      ['¿Qué servicio de tu barrio recomendarías a quien acaba de llegar?', '¿Qué negocio del barrio extrañarías más si te mudaras?', 'Panadería, peluquería, tienda'],
+      ['¿Qué compras para hacer más llevadero un lunes?', '¿Qué compras para darte un gusto sin gastar mucho?', 'Café, chocolate, pan'],
+      ['¿Qué prenda te salva cuando no sabes qué ponerte?', '¿Qué prenda guardarías en la oficina por si surge un plan?', 'Chaqueta, camisa, jeans'],
+      ['¿Qué guardas en el cajón que se atasca de tantas cosas?', '¿Qué tirarías si solo tuvieras cinco minutos para ordenar?', 'Papeles, cables, recibos']
     ],
     fiesta: [
       ['¿Qué canción pondrías para animar una fiesta? Escribe el título.', '¿Qué canción cantarías a todo pulmón en un karaoke? Escribe el título.', 'Éxitos conocidos y bailables'],
@@ -84,7 +109,15 @@
       ['¿Qué comida servirías en una fiesta en tu casa?', '¿Qué comida pedirías para compartir con tus amigos un domingo?', 'Pizza, tacos, empanadas…'],
       ['¿Qué prenda te pondrías para bailar toda la noche?', '¿Qué prenda no debería faltar en una maleta para la playa?', 'Camiseta, short, vestido…'],
       ['¿Qué frase dices cuando ya te quieres ir de una reunión?', '¿Qué frase dices cuando vas a cancelar un plan por mensaje?', 'Estoy cansado, mañana madrugo…'],
-      ['¿Qué actividad harías en un paseo con tus amigos?', '¿Qué actividad propondrías para romper el hielo con un grupo nuevo?', 'Juegos, bailar, cantar…']
+      ['¿Qué actividad harías en un paseo con tus amigos?', '¿Qué actividad propondrías para romper el hielo con un grupo nuevo?', 'Juegos, bailar, cantar…'],
+      ['¿Qué excusa darías para salirte del karaoke antes de tu turno?', '¿Qué excusa darías para irte de una fiesta sin despedirte de todo el mundo?', 'Mañana madrugo, me llaman, estoy cansado'],
+      ['¿Qué canción pondrías cuando llega la última persona a la fiesta?', '¿Qué canción pondrías cuando por fin llega la comida?', 'Canciones de celebración, baile o humor'],
+      ['¿Qué premio comprarías para un concurso de disfraces improvisado?', '¿Qué llevarías a un intercambio sin saber a quién te tocó?', 'Dulces, taza, bonos'],
+      ['¿Qué objeto delata que hubo fiesta cuando entras al día siguiente?', '¿Qué objeto recogerías primero antes de que llegue la visita?', 'Vasos, botellas, platos'],
+      ['¿Qué actividad incluirías en un cumpleaños sin música?', '¿Qué actividad propondrías si llueve y nadie puede salir?', 'Cartas, juegos, película'],
+      ['¿Qué llevarías en la maleta para una finca con piscina?', '¿Qué objeto es más probable que alguien olvide después de un paseo?', 'Toalla, sandalias, ropa'],
+      ['¿Qué comida pedirías si el parche aparece de sorpresa en tu casa?', '¿Qué comida pedirías para ver un partido con tus amigos?', 'Pizza, alitas, empanadas'],
+      ['¿Qué disfraz improvisarías con lo que tienes puesto?', '¿Qué personaje elegirías para un concurso de imitaciones?', 'Personajes de series, profesiones, cantantes']
     ],
     dilemas: [
       ['¿Qué superpoder te serviría para llegar a tiempo?', '¿Qué superpoder te serviría para escapar de una cita aburrida?', 'Teletransporte, volar, velocidad…'],
@@ -102,7 +135,15 @@
       ['¿Qué persona de este grupo elegirías para sobrevivir a un apocalipsis? Escribe su nombre.', '¿Qué persona de este grupo elegirías para organizar un viaje? Escribe su nombre.', 'Personas resolutivas del grupo'],
       ['¿Qué objeto de tu casa usarías para espantar a un zombi?', '¿Qué objeto de tu casa hace más ruido cuando se cae?', 'Sartén, silla, escoba…'],
       ['¿Qué harías con un día libre inesperado?', '¿Qué harías si pudieras pausar el mundo por un día?', 'Dormir, viajar, descansar…'],
-      ['¿Qué palabra le enseñarías primero a un extraterrestre?', '¿Qué palabra le enseñarías primero a un loro?', 'Hola, comida, nombres…']
+      ['¿Qué palabra le enseñarías primero a un extraterrestre?', '¿Qué palabra le enseñarías primero a un loro?', 'Hola, comida, nombres…'],
+      ['¿Qué oficio elegirías si despertaras en un pueblo sin internet?', '¿Qué oficio probarías para pasar menos tiempo frente a una pantalla?', 'Panadero, jardinero, carpintero'],
+      ['¿Qué objeto de tu casa pondrías a hacer otro oficio?', '¿Qué objeto de tu casa convertirías en un robot?', 'Sofá, nevera, escoba'],
+      ['¿Qué meterías en una cápsula del tiempo para explicar tu generación?', '¿Qué objeto de hoy le mostrarías a alguien que llega de 1990?', 'Celular, audífonos, ropa'],
+      ['¿Qué compra harías primero si el dinero caducara a medianoche?', '¿Qué comprarías primero si una tienda abre solo cinco minutos?', 'Comida, ropa, tecnología'],
+      ['¿Qué animal te gustaría entender durante cinco minutos?', '¿Qué animal crees que tendría el chisme más bueno de tu barrio?', 'Perro, gato, paloma'],
+      ['¿Qué excusa darías si llegas vestido de gala a una reunión virtual?', '¿Qué excusa darías si llegas en pijama a un almuerzo?', 'Me equivoqué de plan, era un reto, no tuve tiempo'],
+      ['¿Qué ruido usarías como contraseña de una puerta secreta?', '¿Qué ruido imitarías para distraer a alguien que te está buscando?', 'Maullido, silbido, tos'],
+      ['¿Qué comida nombrarías patrimonio oficial de tu casa?', '¿Qué comida llevarías para representar a tu familia en una feria?', 'Arepas, sancocho, arroz con pollo']
     ],
     confesiones: [
       ['¿Qué cosa te da miedo aunque sabes que es inofensiva?', '¿Qué cosa te haría gritar si apareciera de repente en tu cuarto?', 'Arañas, oscuridad, muñecos…'],
@@ -120,7 +161,33 @@
       ['¿Qué canción has repetido hasta cansarte? Escribe el título.', '¿Qué canción dedicarías con un poquito de drama? Escribe el título.', 'Éxitos románticos y despecho'],
       ['¿Qué cosa te distrae aunque tengas algo urgente que hacer?', '¿Qué cosa revisas cuando no quieres saludar a alguien?', 'Celular, redes, reloj…'],
       ['¿Qué cumplido te gusta que te hagan?', '¿Qué cumplido usarías para caerle bien a alguien?', 'Buen gusto, humor, inteligencia…'],
-      ['¿Qué cosa pequeña puede arruinarte la mañana?', '¿Qué cosa pequeña te haría cancelar una videollamada?', 'Mal internet, sueño, café derramado…']
+      ['¿Qué cosa pequeña puede arruinarte la mañana?', '¿Qué cosa pequeña te haría cancelar una videollamada?', 'Mal internet, sueño, café derramado…'],
+      ['¿Qué excusa dirías si te pescan cantando frente al espejo?', '¿Qué excusa dirías si te pescan ensayando una conversación en voz alta?', 'Estaba practicando, hablando solo, grabando un audio'],
+      ['¿Qué pendejada te ha hecho perder una hora entera?', '¿Qué haces para sentir que trabajas cuando estás procrastinando?', 'Organizar, abrir pestañas, mirar el celular'],
+      ['¿Qué cosa te da pena pedir que te expliquen por tercera vez?', '¿Qué cosa finges saber hacer hasta que te pasan los controles?', 'Configurar algo, jugar, manejar'],
+      ['¿Qué frase te delata cuando te acabas de inventar una excusa?', '¿Qué frase te delata cuando estás tratando de vender una idea floja?', 'Te juro, es que, confía en mí'],
+      ['¿Qué fue lo último que dijiste «ni por el putas» y acabaste haciendo?', '¿Qué harías si todos tus amigos insistieran en un plan que odias?', 'Karaoke, ejercicio, salir de madrugada'],
+      ['¿Qué cosa revisas antes de dejar que alguien mire una foto en tu celular?', '¿Qué parte del celular te da pena abrir cuando compartes pantalla?', 'Notificaciones, galería, chats'],
+      ['¿Qué cagada chiquita se vuelve enorme si tratas de arreglarla en secreto?', '¿Qué desastre de casa dejarías para cuando llegue alguien que sepa?', 'Una mancha, una fuga, algo quemado'],
+      ['¿Qué haces cuando te ríes en el momento menos indicado?', '¿Qué haces cuando se te olvida el nombre de alguien a mitad de una presentación?', 'Mirar al piso, toser, cambiar de tema']
+    ],
+    picantes: [
+      ['¿Qué frase dirías para coquetear si te dieran cero puntos por sutileza?', '¿Qué frase dirías para pedir que te inviten a un trago?', '¿Vienes mucho por aquí?, invítame, acompáñame'],
+      ['¿Qué canción pondrías para decir «quédate un rato más» sin hablar?', '¿Qué canción pondrías para bailar pegadito en una fiesta?', 'Salsa romántica, reguetón lento, bachata'],
+      ['¿Qué prenda usarías para hacerte el interesante en una cita?', '¿Qué prenda te pondrías para que tu ex note que te fue bien?', 'Camisa, chaqueta, botas'],
+      ['¿Qué mensaje te tentaría mandar después de medianoche?', '¿Qué mensaje mandarías para revivir un chat que murió hace meses?', '¿Sigues despierto?, ¿qué haces?, te acordaste de mí'],
+      ['¿Qué te haría soltar un «ay, marica» en mitad de una cita?', '¿Qué cosa te haría revisar dos veces antes de mandar una captura?', 'Un ex, un nombre, un mensaje inesperado'],
+      ['¿Qué usarías como excusa para rozarle la mano a quien te gusta?', '¿Qué objeto sacarías para que alguien se siente más cerca a verlo?', 'Celular, cartas, una foto'],
+      ['¿Qué dirías si te toca despedirte justo cuando iba a haber beso?', '¿Qué dirías si te toca salir de una cita antes de pedir el postre?', 'Me tengo que ir, seguimos después, qué pena'],
+      ['¿Qué halago te haría sonrojar aunque lo dijeran en broma?', '¿Qué halago le harías a alguien para ganarte otro baile?', 'Qué bien te ves, tienes estilo, me gusta tu sonrisa'],
+      ['¿Qué emoji usarías para decir «estoy coqueteando»?', '¿Qué emoji usarías para dejar un mensaje incómodo en chiste?', 'Guiño, diablito, risa, fuego'],
+      ['¿Qué lugar elegirías para un beso de película?', '¿Qué lugar elegirías para soltar una confesión sin que te interrumpan?', 'Carro, terraza, parque, balcón'],
+      ['¿Qué sonido arruinaría un beso en el peor momento?', '¿Qué sonido te haría pensar «jueputa, nos pillaron»?', 'Timbre, llamada, llave en la puerta'],
+      ['¿Qué palabra suena coqueta con el tono correcto y rara con el tono equivocado?', '¿Qué palabra suena a reclamo si la lees sin emoji?', 'Bueno, ven, ajá, cariño'],
+      ['¿Qué detalle te haría decir «mierda, sí me gusta»?', '¿Qué detalle te haría querer invitar a alguien a una segunda cita?', 'Su risa, su humor, cómo escucha, la química'],
+      ['¿Qué objeto en el bolsillo te traicionaría si intentas verte seductor?', '¿Qué objeto sacarías del bolsillo para salvar un silencio incómodo?', 'Llaves, pañuelo, chicle, recibo'],
+      ['¿Qué excusa pondrías para salir cinco minutos de una cita y llamar a un amigo?', '¿Qué excusa usarías para salir un momento de una cena con los suegros?', 'Voy al baño, necesito aire, me llaman'],
+      ['¿Qué plan propondrías para alargar una cita que salió muy bien?', '¿Qué plan improvisarías cuando ya cerraron el bar?', 'Caminar, comer algo, bailar, tomar café']
     ]
   };
   const pairs = categories.flatMap(category => rows[category.id].map((row, index) => ({
@@ -129,7 +196,7 @@
     type: category.id === 'numeros' ? 'number' : 'text',
     proper: row[0], intruder: row[1], overlap: row[2]
   })));
-  const database = { version: 1, categories, pairs };
+  const database = { version: 2, categories, pairs };
   if (typeof module !== 'undefined' && module.exports) module.exports = database;
   else root.QuestionsDB = database;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
